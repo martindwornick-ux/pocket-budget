@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 22, 12:05 AM"</script>
+<script>window.PB_BUILD="Oct 22, 12:10 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1055,7 +1055,7 @@ function selHTML(id,opts,val){return '<label class="isel"><select id="'+id+'">'+
 
 function paceReadHTML(p,d){const [y,m]=p.ym.split("-").map(Number);const dt=MONTHS[m-1].slice(0,3)+" "+d;
   const pace=round2(p.planned*d/p.dim);const has=d<=p.dayNow;const pj=!has&&p.proj&&p.proj[d]!=null;const sp=has?p.cum[d]:(pj?p.proj[d]:null);
-  return '<span class="pd">'+dt+'</span><span><i style="background:var(--link)'+(pj?';opacity:.5':'')+'"></i>'+(sp!=null?(pj?"≈":"")+money(sp):"—")+'</span><span><i style="background:var(--muted)"></i>'+money(pace)+'</span>'+(sp!=null&&p.planned>0?'<span class="'+(sp>pace?"bad":"ok")+'">'+(sp>pace?"+":"−")+money(Math.abs(round2(sp-pace))).replace("-","")+'</span>':'')}
+  return '<span class="pd">'+dt+'</span><span><i style="background:var(--link)'+(pj?';opacity:.5':'')+'"></i>'+(sp!=null?(pj?"≈":"")+money(sp):"—")+'</span>'+(p.planned>0?'<span><i style="background:var(--muted)"></i>'+money(pace)+'</span>':'')+(sp!=null&&p.planned>0?'<span class="'+(sp>pace?"bad":"ok")+'">'+(sp>pace?"+":"−")+money(Math.abs(round2(sp-pace))).replace("-","")+'</span>':'')}
 function paceScrub(svg,clientX){
   let p;try{p=JSON.parse(svg.dataset.p)}catch(e){return}
   const r=svg.getBoundingClientRect(),vx=(clientX-r.left)/r.width*p.W,pw=p.W-p.L-p.R,ph=p.H-p.T-p.B;
@@ -1084,7 +1084,7 @@ function paceCard(fh){
   const daysLeft=dim-dayNow,committed=cur?round2(full-spentNow):0,free=round2(planned-spentNow-committed),perDay=cur&&daysLeft>0&&planned>0?round2(Math.max(free,0)/daysLeft):0;
   let proj=null;if(cur&&daysLeft>0&&(planned>0||committed>0)){proj=new Array(dim+1).fill(null);proj[dayNow]=spentNow;for(let d=dayNow+1;d<=dim;d++)proj[d]=round2(proj[d-1]+perDay+day[d])}
   const W=340,H=220,L=44,R=12,T=14,B=26,pw=W-L-R,ph=H-T-B;
-  const max=niceMax(Math.max(planned,dayNow?Math.max(...cum.slice(0,dayNow+1)):0,cur?0:full,proj?proj[dim]:0));
+  const max=niceMax(Math.max(planned,dayNow?Math.max(...cum.slice(0,dayNow+1)):0,cur?0:full,proj?Math.max(...proj.filter(v=>v!=null)):0));
   const X=d=>L+pw*d/dim,Y=v=>T+ph-ph*Math.max(0,v)/max;
   let g='';for(let i=0;i<=4;i++){const yy=T+ph-ph*i/4;g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" class="grid"/><text x="'+(L-6)+'" y="'+(yy+4)+'" class="ax" text-anchor="end">'+kfmt(max*i/4)+'</text>'}
   [1,8,15,22,dim].forEach(d=>g+='<text x="'+X(d)+'" y="'+(H-8)+'" class="ax" text-anchor="middle">'+(d===1?shortM(ym)+" 1":d)+'</text>');
@@ -1100,9 +1100,14 @@ function paceCard(fh){
   const pd={ym,dim,dayNow,planned,max,W,H,L,R,T,B,cum:cum.slice(0,dim+1),proj};
   h+='<div class="pread num" id="paceRead">'+paceReadHTML(pd,dayNow||1)+'</div>';
   h+='<svg class="chart pscrub" id="paceSvg" data-p="'+esc(JSON.stringify(pd))+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cumulative spending versus on-track pace for '+esc(label)+'. Drag across to see each day.">'+g+'<g id="paceHover"></g></svg>';
-  h+='<div class="legend"><span><i style="background:var(--link)"></i>Spent so far</span><span><i style="background:var(--muted)"></i>Pace</span>'+(proj?'<span><i style="background:var(--link);opacity:.5"></i>Projected</span>':'')+'</div>';
+  h+='<div class="legend"><span><i style="background:var(--link)"></i>Spent so far</span>'+(planned>0?'<span><i style="background:var(--muted)"></i>Pace</span>':'')+(proj?'<span><i style="background:var(--link);opacity:.5"></i>Projected</span>':'')+'</div>';
   if(!dayNow){h+='<p class="note" style="margin:12px 0 0">This month hasn\'t started yet. Planned: '+money(planned)+'.</p>';return h+'</section>'}
   const ref=cur?paceNow:planned,ou=round2(spentNow-ref),isOver=ou>0;
+  if(planned<=0){
+    h+='<div class="pstat"><div><small>Spent</small><b class="num">'+money(spentNow)+'</b></div><div><small>'+(cur?"Scheduled":"Refunds")+'</small><b class="num">'+money(cur?committed:round2(txOf(ym).filter(t=>t.type==="refund"&&(!IS.group||groupNameOf(t,ym)===IS.group)&&(!IS.item||itemNameOf(t,ym)===IS.item)).reduce((a,t)=>a+(+t.amount||0),0)))+'</b></div><div><small>Total</small><b class="num">'+money(cur?round2(spentNow+committed):full)+'</b></div></div>';
+    h+='<p class="note" style="margin:12px 0 0">Nothing planned for '+esc(label)+(cur?' this month, so there\'s no pace to compare against.':' that month.')+(cur&&committed?' The dotted line shows what\'s already scheduled.':'')+'</p>';
+    return h+'</section>';
+  }
   h+='<div class="pstat"><div><small>Spent</small><b class="num">'+money(spentNow)+'</b></div><div><small>'+(cur?"Pace":"Planned")+'</small><b class="num">'+money(ref)+'</b></div><div><small>'+(isOver?"Over":"Under")+'</small><b class="num" style="color:'+(isOver?"var(--over)":"var(--ok)")+'">'+money(Math.abs(ou))+'</b></div></div>';
   if(planned<=0)h+='<p class="note" style="margin:12px 0 0">Nothing planned for '+esc(label)+' this month, so there\'s no pace to compare against.</p>';
   else if(cur){const diff=round2(spentNow-paceNow),dl=daysLeft?" ("+money(perDay)+"/day for "+daysLeft+" day"+(daysLeft===1?"":"s")+")":"";
