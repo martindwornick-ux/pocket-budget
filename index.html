@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 22, 12:30 AM"</script>
+<script>window.PB_BUILD="Oct 22, 12:45 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -473,13 +473,17 @@ nav.tabs button[aria-current="page"]{color:var(--g-blue)}
 main.peek{position:fixed;left:0;right:0;bottom:0;margin:0 auto;overflow:hidden;pointer-events:none;z-index:3;will-change:transform}
 main.peek>*{flex-shrink:0}
 /* interactive donut */
-.donut.di{width:min(270px,82%);overflow:visible;-webkit-tap-highlight-color:transparent}
+.donut.di{width:min(270px,82%);overflow:visible;margin-top:22px;-webkit-tap-highlight-color:transparent}
 .di .dseg{cursor:pointer;transition:transform .45s cubic-bezier(.2,.9,.3,1.25),stroke-width .35s ease,opacity .3s ease}
 .di .dseg.on{stroke-width:42}
-.di .dseg.dim{opacity:.28}
+.di .dseg.dim{opacity:.3}
 .di.anim .dseg{animation:dgrow .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d)}
 @keyframes dgrow{from{stroke-dasharray:0 var(--len,600)}}
 .di .dhit{cursor:pointer}
+.donut.di{touch-action:none;user-select:none;-webkit-user-select:none}
+.di .wheel{transform-origin:130px 130px;transform-box:view-box}
+.di .dptr{fill:var(--muted);opacity:.55;transition:fill .25s,opacity .25s}
+.di .dseg.on~.x{}
 .di .dcen{pointer-events:none}
 .di .dcen text{transition:opacity .14s ease}
 .di .dcen.swap text{opacity:0}
@@ -498,6 +502,8 @@ main.peek>*{flex-shrink:0}
 .dlegend.anim .drow{animation:dup .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d)}
 @keyframes dup{from{opacity:0;transform:translateY(8px)}}
 .dhint{text-align:center;margin:12px 0 0}
+#dpanel{transition:opacity .2s ease}
+#dpanel.stale{opacity:.35}
 .dpanel{margin-top:14px;padding:16px;border-radius:16px;background:color-mix(in srgb,var(--c) 9%,#fff);border:1px solid color-mix(in srgb,var(--c) 22%,transparent);animation:dpop .38s cubic-bezier(.2,.9,.3,1.15) both}
 @keyframes dpop{from{opacity:0;transform:translateY(10px) scale(.98)}}
 .dph{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -1105,12 +1111,13 @@ function donutI(keys,vals,cm,total,anim){
   keys.forEach((k,i)=>{const v=vals[k];if(v<=0)return;const len=DC*v/total,mid=(acc+len/2)/DC*2*Math.PI;
     const dash=Math.max(.5,len-gap);
     const on=IS.sel===k,dim=IS.sel&&!on,off=on?"translate("+(Math.cos(mid)*9).toFixed(1)+"px,"+(Math.sin(mid)*9).toFixed(1)+"px)":"";
-    g+='<circle class="dseg'+(on?" on":"")+(dim?" dim":"")+'" data-dkey="'+esc(k)+'" data-mid="'+mid.toFixed(4)+'" cx="130" cy="130" r="'+DR+'" fill="none" stroke="'+cm[k]+'" stroke-width="'+DW+'" stroke-dasharray="'+dash.toFixed(2)+' '+DC.toFixed(2)+'" stroke-dashoffset="'+(-acc).toFixed(2)+'" style="--len:'+dash.toFixed(2)+';--d:'+(i*0.07).toFixed(2)+'s'+(off?';transform:'+off:'')+'"><title>'+esc(k)+' · '+money(round2(v))+'</title></circle>';
+    g+='<circle class="dseg'+(on?" on":"")+(dim?" dim":"")+'" data-dkey="'+esc(k)+'" data-mid="'+mid.toFixed(4)+'" data-a0="'+(acc/DC*360).toFixed(3)+'" data-a1="'+((acc+len)/DC*360).toFixed(3)+'" cx="130" cy="130" r="'+DR+'" fill="none" stroke="'+cm[k]+'" stroke-width="'+DW+'" stroke-dasharray="'+dash.toFixed(2)+' '+DC.toFixed(2)+'" stroke-dashoffset="'+(-acc).toFixed(2)+'" style="--len:'+dash.toFixed(2)+';--d:'+(i*0.07).toFixed(2)+'s'+(off?';transform:'+off:'')+'"><title>'+esc(k)+' · '+money(round2(v))+'</title></circle>';
     acc+=len});
   const sel=IS.sel&&IS.dd&&IS.dd[IS.sel];
   const c=sel?[esc(IS.sel),money(round2(sel.v)).replace(/\.00$/,""),sel.pct+"%"]:[(IS.group?esc(IS.group):"Total Spent"),money(Math.round(total)).replace(/\.00$/,""),""];
   return '<svg class="donut di'+(anim?" anim":"")+'" viewBox="0 0 260 260" role="img" aria-label="Spending by '+(IS.group?"item":"group")+'">'+
-    '<g transform="rotate(-90 130 130)">'+(total>0?g:'<circle cx="130" cy="130" r="'+DR+'" fill="none" stroke="var(--trk)" stroke-width="'+DW+'"/>')+'</g>'+
+    '<g class="wheel" style="transform:rotate('+(IS.sel?(IS.rot||0):0).toFixed(2)+'deg)"><g transform="rotate(-90 130 130)">'+(total>0?g:'<circle cx="130" cy="130" r="'+DR+'" fill="none" stroke="var(--trk)" stroke-width="'+DW+'"/>')+'</g></g>'+
+    '<path class="dptr" d="M121 -12 L139 -12 L130 0 Z"'+(sel?' style="fill:'+sel.c+'"':'')+'/>'+
     '<circle class="dhit" data-dcenter="1" cx="130" cy="130" r="'+(DR-DW/2-4)+'" fill="transparent"/>'+
     '<g id="dcen" class="dcen" data-total="'+total+'"><text x="130" y="116" text-anchor="middle" class="dl">'+c[0]+'</text><text x="130" y="146" text-anchor="middle" class="dv num">'+c[1]+'</text><text x="130" y="168" text-anchor="middle" class="dp num">'+c[2]+'</text></g></svg>';
 }
@@ -1153,28 +1160,100 @@ function dPanelHTML(k){
   h+='<div class="btnrow">'+(IS.group?'':'<button class="btn" data-ddrill="'+esc(k)+'">Break down '+esc(k)+'</button>')+'<button class="btn sec" data-dtrend="'+esc(k)+'">Month by month</button></div></div>';
   return h;
 }
-function selectSlice(k){
-  IS.sel=k||null;try{haptic()}catch(_){}
-  const svg=document.querySelector("#main svg.di");if(!svg){render();return}
-  svg.classList.remove("anim");
-  svg.querySelectorAll(".dseg").forEach(c=>{const on=c.dataset.dkey===IS.sel,mid=+c.dataset.mid;
+/* the wheel: drag or flick to spin, the slice under the top pointer is the selected one */
+const WH={raf:0,drag:null,lastTop:null,live:false};
+const dsvg=()=>document.querySelector("#main svg.di");
+const dsegs=()=>[...document.querySelectorAll("#main svg.di .dseg")];
+const nrm=a=>{a%=360;return a<0?a+360:a};
+function setRot(r){IS.rot=r;const w=document.querySelector("#main svg.di .wheel");if(w)w.style.transform="rotate("+r.toFixed(2)+"deg)"}
+function sliceAt(a){a=nrm(a);const s=dsegs();for(const c of s)if(a>=+c.dataset.a0&&a<+c.dataset.a1)return c;return s[0]||null}
+const topSlice=()=>sliceAt(-(IS.rot||0));
+const midDeg=c=>(+c.dataset.a0+ +c.dataset.a1)/2;
+function rotFor(c){const cur=IS.rot||0;let d=nrm(-midDeg(c)-cur);if(d>180)d-=360;return cur+d}
+// show k as the selected slice (null = whole view); panel only once the wheel is at rest
+function highlight(k,panel,fade){
+  IS.sel=k||null;const svg=dsvg();if(!svg)return;svg.classList.remove("anim");
+  dsegs().forEach(c=>{const on=c.dataset.dkey===IS.sel,mid=+c.dataset.mid;
     c.classList.toggle("on",on);c.classList.toggle("dim",!!IS.sel&&!on);
     c.style.transform=on?"translate("+(Math.cos(mid)*9).toFixed(1)+"px,"+(Math.sin(mid)*9).toFixed(1)+"px)":""});
   document.querySelectorAll("#main .drow").forEach(r=>{r.classList.toggle("on",r.dataset.dkey===IS.sel);r.classList.toggle("dim",!!IS.sel&&r.dataset.dkey!==IS.sel)});
-  const cen=svg.querySelector("#dcen"),d=IS.sel&&IS.dd[IS.sel],[l,v,p]=cen.querySelectorAll("text");
-  cen.classList.add("swap");
-  setTimeout(()=>{if(d){l.textContent=IS.sel;v.textContent=money(round2(d.v)).replace(/\.00$/,"");p.textContent=d.pct+"%"}
-    else{l.textContent=IS.group||"Total Spent";v.textContent=money(Math.round(+cen.dataset.total)).replace(/\.00$/,"");p.textContent=""}
-    cen.classList.remove("swap")},140);
-  const pn=$("#dpanel");if(pn)pn.innerHTML=IS.sel?dPanelHTML(IS.sel):DHINT;
-  if(IS.sel){const r=pn&&pn.getBoundingClientRect();if(r&&r.top>innerHeight-180)window.scrollBy({top:Math.min(260,r.top-innerHeight+260),behavior:"smooth"})}
+  const d=IS.sel&&IS.dd&&IS.dd[IS.sel],ptr=svg.querySelector(".dptr");if(ptr)ptr.style.fill=d?d.c:"";
+  const cen=svg.querySelector("#dcen"),[l,v,p]=cen.querySelectorAll("text");
+  const put=()=>{if(d){l.textContent=IS.sel;v.textContent=money(round2(d.v)).replace(/\.00$/,"");p.textContent=d.pct+"%"}
+    else{l.textContent=IS.group||"Total Spent";v.textContent=money(Math.round(+cen.dataset.total)).replace(/\.00$/,"");p.textContent=""}};
+  if(fade){cen.classList.add("swap");setTimeout(()=>{put();cen.classList.remove("swap")},130)}else put();
+  if(panel!==false){const pn=$("#dpanel");if(pn){pn.classList.remove("stale");const want=IS.sel?dPanelHTML(IS.sel):DHINT;if(pn.dataset.k!==String(IS.sel)){pn.innerHTML=want;pn.dataset.k=String(IS.sel)}}
+    if(IS.sel&&pn){const r=pn.getBoundingClientRect();if(r.top>innerHeight-200)window.scrollBy({top:Math.min(280,r.top-innerHeight+280),behavior:"smooth"})}}
 }
+function liveTop(){const pn=$("#dpanel");if(pn)pn.classList.add("stale");const c=topSlice();if(!c)return;if(c.dataset.dkey!==WH.lastTop){WH.lastTop=c.dataset.dkey;try{haptic()}catch(_){}highlight(c.dataset.dkey,false,false)}}
+function spinTo(target,ms,done,v0){
+  cancelAnimationFrame(WH.raf);const from=IS.rot||0,dist=target-from;
+  if(Math.abs(dist)<.05||matchMedia("(prefers-reduced-motion:reduce)").matches){setRot(target);done&&done();return}
+  // ease-out whose starting speed matches the flick (v0 in deg/ms), so a spin glides to rest
+  const t0=performance.now();
+  const k0=v0&&Math.sign(v0)===Math.sign(dist)?Math.min(4,Math.abs(v0)*ms/Math.abs(dist)):1.8;
+  const ease=t=>{const a=k0,b=3-2*a,c=a-2;return Math.min(1,a*t+b*t*t+c*t*t*t)};
+  (function f(now){const t=Math.min(1,(now-t0)/ms);setRot(from+dist*ease(t));if(WH.live)liveTop();if(t<1)WH.raf=requestAnimationFrame(f);else{setRot(target);done&&done()}})(t0);
+}
+function focusSlice(k){
+  const c=dsegs().find(x=>x.dataset.dkey===k);if(!c)return;
+  const target=rotFor(c),dist=Math.abs(target-(IS.rot||0));
+  WH.live=false;WH.lastTop=k;highlight(k,false,IS.sel!==k);try{haptic()}catch(_){}
+  spinTo(target,Math.round(Math.max(260,Math.min(650,260+dist*2.2))),()=>highlight(k,true,false));
+}
+function wholeView(){
+  if(!IS.sel&&!(IS.rot%360))return;
+  WH.live=false;WH.lastTop=null;highlight(null,true,true);
+  const cur=IS.rot||0,target=Math.round(cur/360)*360;
+  spinTo(target,Math.round(Math.max(280,Math.min(700,280+Math.abs(target-cur)*2))),()=>{IS.rot=0;setRot(0)});
+}
+const ptAngle=(svg,x,y)=>{const r=svg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;return{a:Math.atan2(x-cx,-(y-cy))*180/Math.PI,d:Math.hypot(x-cx,y-cy)/(r.width/260)}};
+$("#main").addEventListener("pointerdown",e=>{
+  const svg=e.target.closest&&e.target.closest("svg.di");if(!svg||!dsegs().length)return;
+  const p=ptAngle(svg,e.clientX,e.clientY);
+  const onRing=p.d>DR-DW/2-10&&p.d<DR+DW/2+14;
+  WH.drag={svg,id:e.pointerId,x:e.clientX,y:e.clientY,a:p.a,rot0:IS.rot||0,acc:0,moved:false,onRing,t:performance.now(),v:0,lt:performance.now(),la:p.a};
+  cancelAnimationFrame(WH.raf);
+  try{svg.setPointerCapture(e.pointerId)}catch(_){}
+});
+$("#main").addEventListener("pointermove",e=>{
+  const D=WH.drag;if(!D||e.pointerId!==D.id)return;
+  if(!D.moved&&Math.hypot(e.clientX-D.x,e.clientY-D.y)<6)return;
+  if(!D.moved){D.moved=true;D.svg.classList.remove("anim");WH.live=true;WH.lastTop=null;D.rot0=IS.rot||0}
+  const p=ptAngle(D.svg,e.clientX,e.clientY);let da=p.a-D.la;if(da>180)da-=360;if(da<-180)da+=360;
+  if(p.d<18)da=0; // too close to the middle to read an angle reliably
+  D.acc+=da;D.la=p.a;const now=performance.now();if(now>D.lt){D.v=.65*D.v+.35*(da/(now-D.lt));D.lt=now}
+  setRot(D.rot0+D.acc);liveTop();
+});
+const wheelUp=e=>{
+  const D=WH.drag;if(!D||e.pointerId!==D.id)return;WH.drag=null;
+  if(!D.moved){ // a tap
+    if(!D.onRing){wholeView();return}
+    const p=ptAngle(D.svg,e.clientX,e.clientY),c=sliceAt(p.a-(IS.rot||0));
+    if(!c)return;if(c.dataset.dkey===IS.sel){wholeView();return}
+    focusSlice(c.dataset.dkey);return;
+  }
+  // a drag or flick: coast, then settle the slice under the pointer at the top
+  const v=Math.abs(performance.now()-D.lt)>90?0:D.v,cur=IS.rot||0;
+  const proj=cur+v*Math.min(900,Math.abs(v)*600);
+  const c=sliceAt(-proj)||topSlice();if(!c)return;
+  let target=-midDeg(c);target+=Math.round((proj-target)/360)*360;
+  const dist=Math.abs(target-cur),ms=Math.round(Math.max(280,Math.min(1400,Math.abs(v)>.05?2.2*dist/Math.abs(v):300+dist*2)));
+  WH.live=true;
+  spinTo(target,ms,()=>{WH.live=false;const t=topSlice();if(t){WH.lastTop=t.dataset.dkey;highlight(t.dataset.dkey,true,false)}},v);
+};
+$("#main").addEventListener("pointerup",wheelUp);$("#main").addEventListener("pointercancel",wheelUp);
 $("#main").addEventListener("click",e=>{
-  const k=e.target.closest("[data-dkey]");if(k){selectSlice(k.dataset.dkey===IS.sel?null:k.dataset.dkey);return}
-  if(e.target.closest("[data-dcenter]")){if(IS.sel)selectSlice(null);return}
-  const dr=e.target.closest("[data-ddrill]");if(dr){IS.group=dr.dataset.ddrill;IS.item="";IS.sel=null;try{haptic()}catch(_){}render();return}
-  const tr=e.target.closest("[data-dtrend]");if(tr){if(IS.group)IS.item=tr.dataset.dtrend;else{IS.group=tr.dataset.dtrend;IS.item=""}IS.sub="details";ls.set("pb.isub","details");IS.sel=null;render();window.scrollTo(0,0);return}
-  if(e.target.closest("[data-dback]")){IS.group="";IS.item="";IS.sel=null;render();return}
+  const k=e.target.closest(".drow[data-dkey]");if(k){if(k.dataset.dkey===IS.sel)wholeView();else focusSlice(k.dataset.dkey);return}
+  const dr=e.target.closest("[data-ddrill]");if(dr){IS.group=dr.dataset.ddrill;IS.item="";IS.sel=null;IS.rot=0;try{haptic()}catch(_){}render();return}
+  const tr=e.target.closest("[data-dtrend]");if(tr){if(IS.group)IS.item=tr.dataset.dtrend;else{IS.group=tr.dataset.dtrend;IS.item=""}IS.sub="details";ls.set("pb.isub","details");IS.sel=null;IS.rot=0;render();window.scrollTo(0,0);return}
+  if(e.target.closest("[data-dback]")){IS.group="";IS.item="";IS.sel=null;IS.rot=0;render();return}
+});
+// tapping anywhere off the wheel, its rows or its card details returns to the whole view
+document.addEventListener("click",e=>{
+  if(!IS.sel||S.tab!=="insights"||IS.sub!=="totals")return;
+  if(e.target.closest&&e.target.closest("svg.di,.drow,#dpanel,select,.isel,header,nav.tabs,.fab,#sheetRoot,#padRoot,.dback,.pbx-scrim"))return;
+  wholeView();
 });
 function donut(keys,vals,cm,total){
   const R=110,r=74,cx=130,cy=130;let a0=-Math.PI/2,g='';const gap=keys.length>1?0.012:0;
@@ -1383,11 +1462,11 @@ function renderInsights(groups,sm){
     if(!keys.length)return h+donutI([],{},cm,0,false)+'<p class="note" style="text-align:center">No spending logged for this period yet.</p></section>';
     const akey=[IS.range,IS.group,Math.round(total),keys.join("|")].join("~");
     const anim=!pending&&IS.donutKey!==akey;if(!pending)IS.donutKey=akey;
-    if(IS.sel&&!keys.includes(IS.sel))IS.sel=null;
+    if(IS.sel&&!keys.includes(IS.sel)){IS.sel=null;IS.rot=0}
     IS.dd=donutDetails(keys,byKey,byMonth,months,cm,total);
     h+=donutI(keys,byKey,cm,total,anim);
     h+='<div class="dlegend'+(anim?' anim':'')+'">'+keys.map((k,i)=>'<button class="drow'+(IS.sel?(IS.sel===k?' on':' dim'):'')+'" data-dkey="'+esc(k)+'" style="--d:'+(0.25+i*0.05).toFixed(2)+'s"><i style="background:'+cm[k]+'"></i><span class="dn">'+esc(k)+'</span><span class="dpct num">'+IS.dd[k].pct+'%</span><b class="num">'+money(round2(byKey[k]))+'</b></button>').join("")+'</div>';
-    h+='<div id="dpanel">'+(IS.sel?dPanelHTML(IS.sel):DHINT)+'</div>';
+    h+='<div id="dpanel" data-k="'+esc(String(IS.sel))+'">'+(IS.sel?dPanelHTML(IS.sel):DHINT)+'</div>';
     if(anim)setTimeout(dCountUp,60);
     return h+'</section>';
   }
@@ -1823,8 +1902,8 @@ document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target
 $("#monthBtn").onclick=monthSheet;
 $("#addBtnTop").onclick=()=>txSheet();$("#fab").onclick=()=>txSheet();
 $("#main").addEventListener("change",e=>{const id=e.target.id;
-  if(id==="i-range"){IS.sel=null;IS.range=+e.target.value;IS.ranges=IS.ranges||{};IS.ranges[IS.sub]=IS.range;ls.set("pb.irange."+IS.sub,String(IS.range));render()}
-  else if(id==="i-group"){IS.group=e.target.value;IS.item="";IS.sel=null;render()}
+  if(id==="i-range"){IS.sel=null;IS.rot=0;IS.range=+e.target.value;IS.ranges=IS.ranges||{};IS.ranges[IS.sub]=IS.range;ls.set("pb.irange."+IS.sub,String(IS.range));render()}
+  else if(id==="i-group"){IS.group=e.target.value;IS.item="";IS.sel=null;IS.rot=0;render()}
   else if(id==="i-item"){IS.item=e.target.value;render()}
   else if(id==="wd-var"){IS.wdVar=e.target.checked;ls.set("pb.wdvar",IS.wdVar?"1":"0");render()}});
 $("#hisub").addEventListener("click",e=>{const b=e.target.closest("[data-isub]");if(!b||IS.sub===b.dataset.isub)return;IS.sub=b.dataset.isub;ls.set("pb.isub",IS.sub);render();window.scrollTo(0,0)});
@@ -1911,7 +1990,7 @@ async function refreshNow(){
   const rubber=d=>{const dim=Math.max(320,innerHeight*.75);return(1-1/(d*.55/dim+1))*dim};
   const atTop=()=>window.scrollY<=0;
   const atBottom=()=>window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
-  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest("input,textarea,select,.pscrub"));
+  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest("input,textarea,select,.pscrub,svg.di"));
   let y0=null,x0=0,startY=0,mode=0,busy=false,armed=false,pull=0,raf=0,want=0,settleT=0;
   function paint(p){
     main.style.transform=p?"translate3d(0,"+p.toFixed(2)+"px,0)":"";
@@ -1955,7 +2034,7 @@ async function refreshNow(){
 /* ---------- swipe left / right between tabs (pages sit side by side like cards) ---------- */
 (()=>{
   const TABS=["budget","tx","insights"],main=$("#main"),EASE="cubic-bezier(.25,.9,.3,1)";
-  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest(".pscrub,input,textarea,select,.isel,nav.tabs,.pad"));
+  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest(".pscrub,svg.di,input,textarea,select,.isel,nav.tabs,.pad"));
   let x0=null,y0=0,on=false,dx=0,onRow=false,raf=0,busy=false,lastX=0,lastT=0,vel=0,peek=null,side=0;
   const W=()=>innerWidth;
   const pageHTML=tab=>{const g=groupsFor(S.ym);return tab==="budget"?renderBudget(g,spentMap()):tab==="tx"?renderTx(g):renderInsights(g,spentMap())};
