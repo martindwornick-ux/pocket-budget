@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 22, 1:30 AM"</script>
+<script>window.PB_BUILD="Oct 22, 1:50 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -506,22 +506,26 @@ main.peek>*{flex-shrink:0}
 .dwrap{position:relative;z-index:3;padding-top:22px}
 .dbub{position:relative;transform-origin:0 0;width:min(270px,82%);margin:0 auto 6px;will-change:transform}
 .dbub .donut.di{width:100%;margin:0;display:block}
-.dbub.docking .dcen{opacity:calc(1 - var(--e,0)*1.6)}
-.dbub.docking{filter:drop-shadow(0 6px 14px rgba(60,64,67,calc(var(--e,0)*.25)))}
 .di.spinning .dcen{opacity:0!important;transition:opacity .12s ease}
 .di.spinning .dseg{transition:transform .25s ease,stroke-width .25s ease,opacity .2s ease}
-.dmini{width:46px;height:46px;flex:none;display:block;margin:-6px 4px -6px -4px;opacity:0;cursor:pointer}
-.dmini.on{opacity:1}
-.dmini svg{width:100%;height:100%;overflow:visible;display:block}
-.dmsvg .wheel{transform-origin:130px 130px;transform-box:view-box}
-.dmsvg .dseg.dim{opacity:.3}.dmsvg .dseg.on{stroke-width:42}
-.dmsvg .dptr{fill:var(--muted)}
+.dbar{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + var(--hh,120px) + 8px);z-index:4;max-width:608px;margin:0 auto;
+  display:flex;align-items:center;gap:4px;padding:4px;border-radius:16px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+  border:1px solid rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(60,64,67,.1),0 8px 24px rgba(60,64,67,.14);
+  opacity:0;transform:translateY(-10px) scale(.98);pointer-events:none;transition:opacity .22s ease,transform .3s cubic-bezier(.2,.9,.3,1.15)}
+.dbar.on{opacity:1;transform:none;pointer-events:auto}
+.dbar .dbp{width:40px;height:40px;border-radius:12px;font-size:24px;line-height:1;color:var(--muted);flex:none}
+.dbar .dbp:active{background:var(--sel)}
+.dbar .dbm{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:16px;text-align:left}
+.dbar .dbm i{width:12px;height:12px;border-radius:50%;background:var(--c);flex:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}
+.dbar .dbn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.dbar .dbv{font-weight:700}
+.dbar .dbpct{color:var(--muted);font-size:14px;min-width:34px;text-align:right}
 .dbub .donut.di{width:100%;margin:22px auto 6px}
 #dpanel.stale{opacity:.35}
 .dpanel{margin-top:14px;padding:16px;border-radius:16px;background:color-mix(in srgb,var(--c) 9%,#fff);border:1px solid color-mix(in srgb,var(--c) 22%,transparent);animation:dpop .38s cubic-bezier(.2,.9,.3,1.15) both}
 @keyframes dpop{from{opacity:0;transform:translateY(10px) scale(.98)}}
 .dph{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.dph{min-height:46px}
+.dph i{width:12px;height:12px;border-radius:50%;background:var(--c)}
 .dph b{font-size:18px}.dph span{color:var(--muted);font-size:14px;margin-left:auto}
 .dstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
 .dstats div{background:rgba(255,255,255,.75);border-radius:12px;padding:9px 10px;min-width:0}
@@ -1178,7 +1182,7 @@ function dPanelHTML(k){
   const d=IS.dd&&IS.dd[k];if(!d)return DHINT;
   const n=d.series.length,mx=Math.max(...d.series,0.01);
   const tr=d.trend===null?"—":d.trend>=200?"↑ "+(d.trend/100+1).toFixed(1)+"×":(d.trend>0?"↑ ":d.trend<0?"↓ ":"")+Math.abs(d.trend)+"%";
-  let h='<div class="dpanel" style="--c:'+d.c+'"><div class="dph"><span class="dmini" role="button" aria-label="Back to the wheel"></span><b>'+esc(k)+'</b><span class="num">'+d.pct+'% of '+(IS.group?esc(IS.group):"all spending")+'</span></div>';
+  let h='<div class="dpanel" style="--c:'+d.c+'"><div class="dph"><i></i><b>'+esc(k)+'</b><span class="num">'+d.pct+'% of '+(IS.group?esc(IS.group):"all spending")+'</span></div>';
   h+='<div class="dstats"><div><small>Monthly avg</small><b class="num">'+money(d.avg)+'</b></div><div><small>Top month</small><b class="num">'+esc(d.topM)+'</b><span class="num">'+money(d.topV)+'</span></div><div><small>Trend</small><b class="num'+(d.trend>0?" up":d.trend<0?" down":"")+'">'+tr+'</b><span>'+(n>=2?"recent vs earlier":"needs 2+ months")+'</span></div></div>';
   if(n>=2)h+='<div class="dspark" role="img" aria-label="Monthly amounts">'+d.series.map((x,i)=>'<div title="'+esc(d.mLabel(d.months[i]))+' · '+money(x)+'"><i style="height:'+Math.max(x>0?6:2,x/mx*100).toFixed(1)+'%;--d:'+(i*0.04).toFixed(2)+'s"></i><span>'+esc(shortM(d.months[i]).slice(0,1))+'</span></div>').join("")+'</div>';
   if(d.parts.length){const pm=d.parts[0][1];
@@ -1221,7 +1225,10 @@ function settle(k){
     if(d){l.textContent=IS.sel;v.textContent=money(round2(d.v)).replace(/\.00$/,"");p.textContent=d.pct+"%"}
     else{l.textContent=IS.group||"Total Spent";v.textContent=money(Math.round(+cen.dataset.total)).replace(/\.00$/,"");p.textContent=""}
     cen.classList.remove("swap")},90);
-  const pn=$("#dpanel");if(pn){pn.classList.remove("stale");if(pn.dataset.k!==String(IS.sel)){pn.innerHTML=IS.sel?dPanelHTML(IS.sel):DHINT;pn.dataset.k=String(IS.sel)}syncMini()}
+  const pn=$("#dpanel");if(pn){pn.classList.remove("stale");if(pn.dataset.k!==String(IS.sel)){
+      // while you're reading the details (bar showing), keep the page from shrinking under you as the card changes
+      pn.style.minHeight=DBAR.el&&DBAR.el.classList.contains("on")?Math.max(pn.offsetHeight,parseFloat(pn.style.minHeight)||0)+"px":"";
+      pn.innerHTML=IS.sel?dPanelHTML(IS.sel):DHINT;pn.dataset.k=String(IS.sel)}}
   dock();
 }
 function spinTo(target,ms,done,v0){
@@ -1256,7 +1263,7 @@ function wholeView(){
 }
 const ptAngle=(svg,x,y)=>{const r=svg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;return{a:Math.atan2(x-cx,-(y-cy))*180/Math.PI,d:Math.hypot(x-cx,y-cy)/(r.width/260)}};
 $("#main").addEventListener("pointerdown",e=>{
-  const svg=e.target.closest&&e.target.closest("svg.di");if(!svg||!dsegs().length||DOCK.p>.15)return;
+  const svg=e.target.closest&&e.target.closest("svg.di");if(!svg||!dsegs().length)return;
   const p=ptAngle(svg,e.clientX,e.clientY);
   if(p.d>DR+DW/2+40)return;
   WH.drag={svg,id:e.pointerId,x:e.clientX,y:e.clientY,rot0:IS.rot||0,acc:0,moved:false,onRing:p.d>DR-DW/2-8&&p.d<DR+DW/2+18,la:p.a,hist:[[performance.now(),0]]};
@@ -1288,41 +1295,38 @@ const wheelUp=e=>{
 $("#main").addEventListener("pointerup",wheelUp);$("#main").addEventListener("pointercancel",wheelUp);
 $("#main").addEventListener("click",e=>{
   const k=e.target.closest(".drow[data-dkey]");if(k){if(k.dataset.dkey===IS.sel)wholeView();else focusSlice(k.dataset.dkey);return}
-  if(e.target.closest(".dmini")){window.scrollTo({top:0,behavior:"smooth"});return}
   const dr=e.target.closest("[data-ddrill]");if(dr){IS.group=dr.dataset.ddrill;IS.item="";IS.sel=null;IS.rot=0;try{haptic()}catch(_){}render();return}
   const tr=e.target.closest("[data-dtrend]");if(tr){if(IS.group)IS.item=tr.dataset.dtrend;else{IS.group=tr.dataset.dtrend;IS.item=""}IS.sub="details";ls.set("pb.isub","details");IS.sel=null;IS.rot=0;render();window.scrollTo(0,0);return}
   if(e.target.closest("[data-dback]")){IS.group="";IS.item="";IS.sel=null;IS.rot=0;render();return}
 });
-/* scrolling down to the details: the wheel flies down and shrinks into the badge in the card's header */
-const DOCK={p:0,raf:0};
-function syncMini(){
-  const slot=document.querySelector("#main #dpanel .dmini"),svg=dsvg();if(!slot||!svg)return;
-  const c=svg.cloneNode(true);c.removeAttribute("aria-label");c.setAttribute("aria-hidden","true");
-  c.classList.remove("di","anim","spinning");c.classList.add("dmsvg");
-  c.querySelectorAll("#dcen,.dhit").forEach(x=>x.remove());c.querySelectorAll("[id]").forEach(x=>x.removeAttribute("id"));
-  slot.innerHTML="";slot.appendChild(c);
+/* once the wheel scrolls out of sight, a slim bar under the header keeps the selected slice in view */
+const DBAR={raf:0,el:null};
+function dbarEl(){
+  if(DBAR.el)return DBAR.el;
+  const el=document.createElement("div");el.className="dbar";el.setAttribute("role","region");el.setAttribute("aria-label","Selected category");
+  el.innerHTML='<button class="dbp" data-dstep="-1" aria-label="Previous category">‹</button><button class="dbm" aria-label="Back to the wheel"><i></i><span class="dbn"></span><b class="num dbv"></b><span class="dbpct num"></span></button><button class="dbp" data-dstep="1" aria-label="Next category">›</button>';
+  el.addEventListener("click",e=>{const st=e.target.closest("[data-dstep]");
+    if(st){const ks=Object.keys(IS.dd||{});if(!ks.length)return;const i=ks.indexOf(IS.sel);const k=ks[(i+ +st.dataset.dstep+ks.length)%ks.length];
+      try{haptic()}catch(_){}spinning(true);const c=dsegs().find(x=>x.dataset.dkey===k);setRot(c?rotFor(c):IS.rot);settle(k);return}
+    if(e.target.closest(".dbm")){const w=document.querySelector("#main .dwrap");if(w)window.scrollTo({top:Math.max(0,scrollY+w.getBoundingClientRect().top-(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120)-8),behavior:"smooth"})}});
+  document.body.appendChild(el);DBAR.el=el;return el;
 }
 function dock(){
-  DOCK.raf=0;const wrap=document.querySelector("#main .dwrap"),bub=wrap&&wrap.firstElementChild,slot=document.querySelector("#main #dpanel .dmini");
-  if(!bub)return;
-  const reset=()=>{DOCK.p=0;bub.style.transform="";bub.style.visibility="";bub.classList.remove("docking");if(slot)slot.classList.remove("on")};
-  if(!slot||!IS.sel){reset();return}
-  const pin=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120)+10;
-  const W=wrap.getBoundingClientRect(),bx=W.left+bub.offsetLeft,by=W.top+bub.offsetTop,bw=bub.offsetWidth;
-  if(by>=pin){reset();return}
-  // the wheel holds just under the header and shrinks as the card rises; it docks when the badge reaches it
-  const S=slot.getBoundingClientRect(),gap=Math.max(1,S.top-by),e=Math.max(0,Math.min(1,1-(S.top-pin)/gap));DOCK.p=e;
-  const tx=bx+(S.left-bx)*e,ty=e>=1?S.top:pin,s=1+(S.width/bw-1)*e;
-  bub.style.transform="translate3d("+(tx-bx).toFixed(1)+"px,"+(ty-by).toFixed(1)+"px,0) scale("+s.toFixed(4)+")";
-  bub.style.setProperty("--e",e.toFixed(3));bub.classList.toggle("docking",e<1);
-  const done=e>=.999;bub.style.visibility=done?"hidden":"";slot.classList.toggle("on",done);
+  DBAR.raf=0;const w=document.querySelector("#main .dwrap"),el=dbarEl();
+  const d=IS.sel&&IS.dd&&IS.dd[IS.sel];
+  const hh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120;
+  const show=!!(w&&d&&S.tab==="insights"&&IS.sub==="totals"&&w.getBoundingClientRect().bottom<hh+24);
+  if(d){el.style.setProperty("--c",d.c);el.querySelector(".dbn").textContent=IS.sel;el.querySelector(".dbv").textContent=money(round2(d.v));el.querySelector(".dbpct").textContent=d.pct+"%"}
+  el.classList.toggle("on",show);
 }
-addEventListener("scroll",()=>{if(!DOCK.raf)DOCK.raf=requestAnimationFrame(dock)},{passive:true});
-addEventListener("resize",()=>{if(!DOCK.raf)DOCK.raf=requestAnimationFrame(dock)});
+addEventListener("scroll",()=>{if(!DBAR.raf)DBAR.raf=requestAnimationFrame(dock)},{passive:true});
+addEventListener("resize",()=>{if(!DBAR.raf)DBAR.raf=requestAnimationFrame(dock)});
+function syncMini(){}
 // tapping anywhere off the wheel, its rows or its card details returns to the whole view
 document.addEventListener("click",e=>{
+  if(!e.isTrusted||(e.target.closest&&e.target.closest(".pbhap")))return; // the haptic tick works by clicking a hidden switch; only real taps count
   if(!IS.sel||S.tab!=="insights"||IS.sub!=="totals")return;
-  if(e.target.closest&&e.target.closest("svg.di,.dbub,.drow,#dpanel,select,.isel,header,nav.tabs,.fab,#sheetRoot,#padRoot,.dback,.pbx-scrim"))return;
+  if(e.target.closest&&e.target.closest("svg.di,.dbub,.drow,#dpanel,.dbar,select,.isel,header,nav.tabs,.fab,#sheetRoot,#padRoot,.dback,.pbx-scrim"))return;
   wholeView();
 });
 function donut(keys,vals,cm,total){
@@ -1562,7 +1566,7 @@ function renderInsights(groups,sm){
   h+='<div class="isum"><span>Income</span><b class="num">'+money(tI)+'</b></div><div class="isum"><span>Spent</span><b class="num">'+money(tS)+'</b></div><div class="isum"><span>'+(net>=0?"Saved":"Overspent")+'</span><b class="num" style="color:'+(net>=0?"var(--ok)":"var(--over)")+'">'+money(Math.abs(net))+'</b></div>';
   return h+'</section>';
 }
-function render(){
+function render(){if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.classList.remove("on");
   renderHeader();
   const groups=groupsFor(S.ym), sm=spentMap();
   renderBanner(groups,sm);
@@ -1966,7 +1970,7 @@ async function exportCsv(){
 $("#seg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.view=b.dataset.v;ls.set("pb.view",S.view);render()});
 // Haptic tick: iOS Safari/WebKit fires a light haptic when a native switch toggles; Android uses vibrate.
 const haptic=(()=>{let lab=null;return()=>{try{if(navigator.vibrate&&navigator.vibrate(8))return;
-  if(!lab){lab=document.createElement("label");lab.setAttribute("aria-hidden","true");lab.style.cssText="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0";const i=document.createElement("input");i.type="checkbox";i.setAttribute("switch","");i.tabIndex=-1;lab.appendChild(i);document.body.appendChild(lab)}
+  if(!lab){lab=document.createElement("label");lab.className="pbhap";lab.setAttribute("aria-hidden","true");lab.style.cssText="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0";const i=document.createElement("input");i.type="checkbox";i.setAttribute("switch","");i.tabIndex=-1;lab.appendChild(i);document.body.appendChild(lab)}
   lab.click()}catch(e){}}})();
 document.addEventListener("click",e=>{const b=e.target.closest("#seg button,[data-isub],#f-kind button");if(b&&b.getAttribute("aria-pressed")!=="true")haptic()},true);
 document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(S.tab!==b.dataset.tab)haptic();S.tab=b.dataset.tab;S.upcoming=false;render();window.scrollTo(0,0)});
