@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 22, 1:05 AM"</script>
+<script>window.PB_BUILD="Oct 22, 1:30 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -503,19 +503,25 @@ main.peek>*{flex-shrink:0}
 @keyframes dup{from{opacity:0;transform:translateY(8px)}}
 .dhint{text-align:center;margin:12px 0 0}
 #dpanel{transition:opacity .2s ease}
-.dsent{height:0}
-.dwrap{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hh,120px));z-index:2;pointer-events:none;margin:0 -22px;padding:0 22px}
-.dbub{position:relative;pointer-events:auto;transform-origin:50% 0;width:min(290px,86%);margin:0 auto;border-radius:50%;will-change:transform}
-/* when pinned, the small wheel sits on a solid strip so the details scroll cleanly underneath it */
-.dwrap::before{content:"";position:absolute;left:0;right:0;top:0;height:var(--bh,0);background:#fff;
-  box-shadow:0 10px 18px -14px rgba(60,64,67,.45);border-radius:0 0 20px 20px;opacity:0;transition:opacity .18s ease;pointer-events:none}
-.dwrap.pinned::before{opacity:1}
+.dwrap{position:relative;z-index:3;padding-top:22px}
+.dbub{position:relative;transform-origin:0 0;width:min(270px,82%);margin:0 auto 6px;will-change:transform}
+.dbub .donut.di{width:100%;margin:0;display:block}
+.dbub.docking .dcen{opacity:calc(1 - var(--e,0)*1.6)}
+.dbub.docking{filter:drop-shadow(0 6px 14px rgba(60,64,67,calc(var(--e,0)*.25)))}
+.di.spinning .dcen{opacity:0!important;transition:opacity .12s ease}
+.di.spinning .dseg{transition:transform .25s ease,stroke-width .25s ease,opacity .2s ease}
+.dmini{width:46px;height:46px;flex:none;display:block;margin:-6px 4px -6px -4px;opacity:0;cursor:pointer}
+.dmini.on{opacity:1}
+.dmini svg{width:100%;height:100%;overflow:visible;display:block}
+.dmsvg .wheel{transform-origin:130px 130px;transform-box:view-box}
+.dmsvg .dseg.dim{opacity:.3}.dmsvg .dseg.on{stroke-width:42}
+.dmsvg .dptr{fill:var(--muted)}
 .dbub .donut.di{width:100%;margin:22px auto 6px}
 #dpanel.stale{opacity:.35}
 .dpanel{margin-top:14px;padding:16px;border-radius:16px;background:color-mix(in srgb,var(--c) 9%,#fff);border:1px solid color-mix(in srgb,var(--c) 22%,transparent);animation:dpop .38s cubic-bezier(.2,.9,.3,1.15) both}
 @keyframes dpop{from{opacity:0;transform:translateY(10px) scale(.98)}}
 .dph{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.dph i{width:12px;height:12px;border-radius:50%;background:var(--c)}
+.dph{min-height:46px}
 .dph b{font-size:18px}.dph span{color:var(--muted);font-size:14px;margin-left:auto}
 .dstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
 .dstats div{background:rgba(255,255,255,.75);border-radius:12px;padding:9px 10px;min-width:0}
@@ -1125,6 +1131,7 @@ function donutI(keys,vals,cm,total,anim){
   const sel=IS.sel&&IS.dd&&IS.dd[IS.sel];
   const c=sel?[esc(IS.sel),money(round2(sel.v)).replace(/\.00$/,""),sel.pct+"%"]:[(IS.group?esc(IS.group):"Total Spent"),money(Math.round(total)).replace(/\.00$/,""),""];
   return '<svg class="donut di'+(anim?" anim":"")+'" viewBox="0 0 260 260" role="img" aria-label="Spending by '+(IS.group?"item":"group")+'">'+
+    '<circle class="dbg" cx="130" cy="130" r="'+(DR+DW/2+3)+'" fill="#fff"/>'+
     '<g class="wheel" style="transform:rotate('+(IS.sel?(IS.rot||0):0).toFixed(2)+'deg)"><g transform="rotate(-90 130 130)">'+(total>0?g:'<circle cx="130" cy="130" r="'+DR+'" fill="none" stroke="var(--trk)" stroke-width="'+DW+'"/>')+'</g></g>'+
     '<path class="dptr" d="M121 -12 L139 -12 L130 0 Z"'+(sel?' style="fill:'+sel.c+'"':'')+'/>'+
     '<circle class="dhit" data-dcenter="1" cx="130" cy="130" r="'+(DR-DW/2-4)+'" fill="transparent"/>'+
@@ -1171,7 +1178,7 @@ function dPanelHTML(k){
   const d=IS.dd&&IS.dd[k];if(!d)return DHINT;
   const n=d.series.length,mx=Math.max(...d.series,0.01);
   const tr=d.trend===null?"—":d.trend>=200?"↑ "+(d.trend/100+1).toFixed(1)+"×":(d.trend>0?"↑ ":d.trend<0?"↓ ":"")+Math.abs(d.trend)+"%";
-  let h='<div class="dpanel" style="--c:'+d.c+'"><div class="dph"><i></i><b>'+esc(k)+'</b><span class="num">'+d.pct+'% of '+(IS.group?esc(IS.group):"all spending")+'</span></div>';
+  let h='<div class="dpanel" style="--c:'+d.c+'"><div class="dph"><span class="dmini" role="button" aria-label="Back to the wheel"></span><b>'+esc(k)+'</b><span class="num">'+d.pct+'% of '+(IS.group?esc(IS.group):"all spending")+'</span></div>';
   h+='<div class="dstats"><div><small>Monthly avg</small><b class="num">'+money(d.avg)+'</b></div><div><small>Top month</small><b class="num">'+esc(d.topM)+'</b><span class="num">'+money(d.topV)+'</span></div><div><small>Trend</small><b class="num'+(d.trend>0?" up":d.trend<0?" down":"")+'">'+tr+'</b><span>'+(n>=2?"recent vs earlier":"needs 2+ months")+'</span></div></div>';
   if(n>=2)h+='<div class="dspark" role="img" aria-label="Monthly amounts">'+d.series.map((x,i)=>'<div title="'+esc(d.mLabel(d.months[i]))+' · '+money(x)+'"><i style="height:'+Math.max(x>0?6:2,x/mx*100).toFixed(1)+'%;--d:'+(i*0.04).toFixed(2)+'s"></i><span>'+esc(shortM(d.months[i]).slice(0,1))+'</span></div>').join("")+'</div>';
   if(d.parts.length){const pm=d.parts[0][1];
@@ -1181,7 +1188,7 @@ function dPanelHTML(k){
   return h;
 }
 /* the wheel: drag or flick to spin, the slice under the top pointer is the selected one */
-const WH={raf:0,drag:null,lastTop:null,live:false};
+const WH={raf:0,drag:null,lastTop:null,gen:0};
 const dsvg=()=>document.querySelector("#main svg.di");
 const dsegs=()=>[...document.querySelectorAll("#main svg.di .dseg")];
 const nrm=a=>{a%=360;return a<0?a+360:a};
@@ -1190,71 +1197,80 @@ function sliceAt(a){a=nrm(a);const s=dsegs();for(const c of s)if(a>=+c.dataset.a
 const topSlice=()=>sliceAt(-(IS.rot||0));
 const midDeg=c=>(+c.dataset.a0+ +c.dataset.a1)/2;
 function rotFor(c){const cur=IS.rot||0;let d=nrm(-midDeg(c)-cur);if(d>180)d-=360;return cur+d}
-// show k as the selected slice (null = whole view); panel only once the wheel is at rest
-function highlight(k,panel,fade){
-  IS.sel=k||null;const svg=dsvg();if(!svg)return;svg.classList.remove("anim");
+// while the wheel moves, nothing on it changes except the arrow's tint: no centre text, no pops
+function spinning(on){const svg=dsvg();if(!svg)return;svg.classList.remove("anim");
+  if(on&&!svg.classList.contains("spinning")){svg.classList.add("spinning");WH.gen++;
+    dsegs().forEach(c=>{c.classList.remove("on","dim");c.style.transform=""});
+    document.querySelectorAll("#main .drow").forEach(r=>r.classList.remove("on","dim"));
+    const pn=$("#dpanel");if(pn)pn.classList.add("stale")}
+  else if(!on)svg.classList.remove("spinning")}
+function tintArrow(){const svg=dsvg(),c=topSlice();if(!svg||!c)return;const ptr=svg.querySelector(".dptr");if(ptr)ptr.style.fill=c.getAttribute("stroke");
+  if(c.dataset.dkey!==WH.lastTop){WH.lastTop=c.dataset.dkey;try{haptic()}catch(_){}}}
+// the wheel is at rest: show k as selected (null = whole view), fade the centre in, open its card
+function settle(k){
+  IS.sel=k||null;const svg=dsvg();if(!svg)return;const gen=++WH.gen;
+  svg.classList.remove("spinning","anim");
   dsegs().forEach(c=>{const on=c.dataset.dkey===IS.sel,mid=+c.dataset.mid;
     c.classList.toggle("on",on);c.classList.toggle("dim",!!IS.sel&&!on);
     c.style.transform=on?"translate("+(Math.cos(mid)*9).toFixed(1)+"px,"+(Math.sin(mid)*9).toFixed(1)+"px)":""});
   document.querySelectorAll("#main .drow").forEach(r=>{r.classList.toggle("on",r.dataset.dkey===IS.sel);r.classList.toggle("dim",!!IS.sel&&r.dataset.dkey!==IS.sel)});
   const d=IS.sel&&IS.dd&&IS.dd[IS.sel],ptr=svg.querySelector(".dptr");if(ptr)ptr.style.fill=d?d.c:"";
   const cen=svg.querySelector("#dcen"),[l,v,p]=cen.querySelectorAll("text");
-  const put=()=>{if(d){l.textContent=IS.sel;v.textContent=money(round2(d.v)).replace(/\.00$/,"");p.textContent=d.pct+"%"}
-    else{l.textContent=IS.group||"Total Spent";v.textContent=money(Math.round(+cen.dataset.total)).replace(/\.00$/,"");p.textContent=""}};
-  if(fade){cen.classList.add("swap");setTimeout(()=>{put();cen.classList.remove("swap")},130)}else put();
-  if(panel!==false){const pn=$("#dpanel");if(pn){pn.classList.remove("stale");const want=IS.sel?dPanelHTML(IS.sel):DHINT;if(pn.dataset.k!==String(IS.sel)){pn.innerHTML=want;pn.dataset.k=String(IS.sel)}}
+  cen.classList.add("swap");
+  setTimeout(()=>{if(gen!==WH.gen)return;
+    if(d){l.textContent=IS.sel;v.textContent=money(round2(d.v)).replace(/\.00$/,"");p.textContent=d.pct+"%"}
+    else{l.textContent=IS.group||"Total Spent";v.textContent=money(Math.round(+cen.dataset.total)).replace(/\.00$/,"");p.textContent=""}
+    cen.classList.remove("swap")},90);
+  const pn=$("#dpanel");if(pn){pn.classList.remove("stale");if(pn.dataset.k!==String(IS.sel)){pn.innerHTML=IS.sel?dPanelHTML(IS.sel):DHINT;pn.dataset.k=String(IS.sel)}syncMini()}
+  dock();
 }
-}
-function liveTop(){const pn=$("#dpanel");if(pn)pn.classList.add("stale");const c=topSlice();if(!c)return;if(c.dataset.dkey!==WH.lastTop){WH.lastTop=c.dataset.dkey;try{haptic()}catch(_){}highlight(c.dataset.dkey,false,false)}}
 function spinTo(target,ms,done,v0){
   cancelAnimationFrame(WH.raf);const from=IS.rot||0,dist=target-from;
   if(Math.abs(dist)<.05||matchMedia("(prefers-reduced-motion:reduce)").matches){setRot(target);done&&done();return}
-  // ease-out whose starting speed matches the flick (v0 in deg/ms), so a spin glides to rest
   const t0=performance.now();
-  const k0=v0&&Math.sign(v0)===Math.sign(dist)?Math.min(4,Math.abs(v0)*ms/Math.abs(dist)):1.8;
+  const k0=v0&&Math.sign(v0)===Math.sign(dist)?Math.min(3,Math.abs(v0)*ms/Math.abs(dist)):1.8;
   const ease=t=>{const a=k0,b=3-2*a,c=a-2;return Math.min(1,a*t+b*t*t+c*t*t*t)};
-  (function f(now){const t=Math.min(1,(now-t0)/ms);setRot(from+dist*ease(t));if(WH.live)liveTop();if(t<1)WH.raf=requestAnimationFrame(f);else{setRot(target);done&&done()}})(t0);
+  (function f(now){const t=Math.min(1,(now-t0)/ms);setRot(from+dist*ease(t));tintArrow();if(t<1)WH.raf=requestAnimationFrame(f);else{setRot(target);done&&done()}})(t0);
 }
 function coast(v){
-  cancelAnimationFrame(WH.raf);WH.live=true;
-  v=Math.max(-3,Math.min(3,v));let last=performance.now();
-  const stop=()=>{WH.live=false;const t=topSlice();if(t){WH.lastTop=t.dataset.dkey;highlight(t.dataset.dkey,true,false)}};
-  if(Math.abs(v)<.02){stop();return}
+  cancelAnimationFrame(WH.raf);
+  const stop=()=>{const t=topSlice();settle(t?t.dataset.dkey:null)};
+  if(!v){stop();return}
+  v=Math.max(-2.5,Math.min(2.5,v));let last=performance.now();
   (function f(now){const dt=Math.min(40,now-last);last=now;
-    setRot((IS.rot||0)+v*dt);liveTop();
-    v*=Math.pow(.998,dt); // light friction: a firm flick spins freely for a couple of seconds
-    if(Math.abs(v)>.012)WH.raf=requestAnimationFrame(f);else stop()})(last);
+    setRot((IS.rot||0)+v*dt);tintArrow();
+    v*=Math.pow(.9975,dt); // light friction: a real flick spins freely, then eases to a stop
+    if(Math.abs(v)>.01)WH.raf=requestAnimationFrame(f);else stop()})(last);
 }
 function focusSlice(k){
   const c=dsegs().find(x=>x.dataset.dkey===k);if(!c)return;
   const target=rotFor(c),dist=Math.abs(target-(IS.rot||0));
-  WH.live=false;WH.lastTop=k;highlight(k,false,IS.sel!==k);try{haptic()}catch(_){}
-  spinTo(target,Math.round(Math.max(260,Math.min(650,260+dist*2.2))),()=>highlight(k,true,false));
+  spinning(true);try{haptic()}catch(_){}
+  spinTo(target,Math.round(Math.max(260,Math.min(620,260+dist*2))),()=>settle(k));
 }
 function wholeView(){
   if(!IS.sel&&!(IS.rot%360))return;
-  WH.live=false;WH.lastTop=null;highlight(null,true,true);
+  spinning(true);
   const cur=IS.rot||0,target=Math.round(cur/360)*360;
-  spinTo(target,Math.round(Math.max(280,Math.min(700,280+Math.abs(target-cur)*2))),()=>{IS.rot=0;setRot(0)});
+  spinTo(target,Math.round(Math.max(280,Math.min(650,280+Math.abs(target-cur)*1.8))),()=>{setRot(0);settle(null)});
 }
 const ptAngle=(svg,x,y)=>{const r=svg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;return{a:Math.atan2(x-cx,-(y-cy))*180/Math.PI,d:Math.hypot(x-cx,y-cy)/(r.width/260)}};
 $("#main").addEventListener("pointerdown",e=>{
-  const svg=e.target.closest&&e.target.closest("svg.di");if(!svg||!dsegs().length)return;
+  const svg=e.target.closest&&e.target.closest("svg.di");if(!svg||!dsegs().length||DOCK.p>.15)return;
   const p=ptAngle(svg,e.clientX,e.clientY);
-  const onRing=p.d>DR-DW/2-8&&p.d<DR+DW/2+18;
   if(p.d>DR+DW/2+40)return;
-  WH.drag={svg,id:e.pointerId,x:e.clientX,y:e.clientY,a:p.a,rot0:IS.rot||0,acc:0,moved:false,onRing,t:performance.now(),v:0,lt:performance.now(),la:p.a};
+  WH.drag={svg,id:e.pointerId,x:e.clientX,y:e.clientY,rot0:IS.rot||0,acc:0,moved:false,onRing:p.d>DR-DW/2-8&&p.d<DR+DW/2+18,la:p.a,hist:[[performance.now(),0]]};
   cancelAnimationFrame(WH.raf);
   try{svg.setPointerCapture(e.pointerId)}catch(_){}
 });
 $("#main").addEventListener("pointermove",e=>{
   const D=WH.drag;if(!D||e.pointerId!==D.id)return;
   if(!D.moved&&Math.hypot(e.clientX-D.x,e.clientY-D.y)<6)return;
-  if(!D.moved){D.moved=true;D.svg.classList.remove("anim");WH.live=true;WH.lastTop=null;D.rot0=IS.rot||0}
+  if(!D.moved){D.moved=true;D.rot0=IS.rot||0;spinning(true)}
   const p=ptAngle(D.svg,e.clientX,e.clientY);let da=p.a-D.la;if(da>180)da-=360;if(da<-180)da+=360;
-  if(p.d<18)da=0; // too close to the middle to read an angle reliably
-  D.acc+=da;D.la=p.a;const now=performance.now();if(now>D.lt){D.v=.65*D.v+.35*(da/(now-D.lt));D.lt=now}
-  setRot(D.rot0+D.acc);liveTop();
+  if(p.d<22)da=0; // too close to the middle to read an angle reliably
+  D.acc+=da;D.la=p.a;const now=performance.now();D.hist.push([now,D.acc]);while(D.hist.length>2&&now-D.hist[0][0]>90)D.hist.shift();
+  setRot(D.rot0+D.acc);tintArrow();
 });
 const wheelUp=e=>{
   const D=WH.drag;if(!D||e.pointerId!==D.id)return;WH.drag=null;
@@ -1264,29 +1280,49 @@ const wheelUp=e=>{
     if(!c)return;if(c.dataset.dkey===IS.sel){wholeView();return}
     focusSlice(c.dataset.dkey);return;
   }
-  // a drag or flick: coast on its own momentum and slow down gradually, then select what's under the arrow
-  coast(Math.abs(performance.now()-D.lt)>80?0:D.v);
+  // only a real flick coasts; a slow, deliberate drag stays exactly where you let go
+  const now=performance.now(),hs=D.hist.filter(x=>now-x[0]<=90);let v=0;
+  if(hs.length>=2&&now-hs[hs.length-1][0]<50){const f=hs[0],l=hs[hs.length-1];if(l[0]>f[0])v=(l[1]-f[1])/(l[0]-f[0])}
+  coast(Math.abs(v)>=.35?v:0);
 };
 $("#main").addEventListener("pointerup",wheelUp);$("#main").addEventListener("pointercancel",wheelUp);
 $("#main").addEventListener("click",e=>{
   const k=e.target.closest(".drow[data-dkey]");if(k){if(k.dataset.dkey===IS.sel)wholeView();else focusSlice(k.dataset.dkey);return}
+  if(e.target.closest(".dmini")){window.scrollTo({top:0,behavior:"smooth"});return}
   const dr=e.target.closest("[data-ddrill]");if(dr){IS.group=dr.dataset.ddrill;IS.item="";IS.sel=null;IS.rot=0;try{haptic()}catch(_){}render();return}
   const tr=e.target.closest("[data-dtrend]");if(tr){if(IS.group)IS.item=tr.dataset.dtrend;else{IS.group=tr.dataset.dtrend;IS.item=""}IS.sub="details";ls.set("pb.isub","details");IS.sel=null;IS.rot=0;render();window.scrollTo(0,0);return}
   if(e.target.closest("[data-dback]")){IS.group="";IS.item="";IS.sel=null;IS.rot=0;render();return}
 });
-// as you scroll down to the details, the wheel pins under the header and shrinks to about half size
-(()=>{let raf=0;
-  const upd=()=>{raf=0;const w=document.querySelector("#main .dwrap"),s=document.querySelector("#main .dsent");if(!w||!s)return;
-    const top=parseFloat(getComputedStyle(w).top)||0,p=Math.max(0,Math.min(1,(top-s.getBoundingClientRect().top)/230));
-    const b=w.firstElementChild,sc=1-.5*p;b.style.transform=p?"scale("+sc.toFixed(4)+")":"";w.classList.toggle("pinned",p>0);
-    w.style.setProperty("--bh",(b.offsetHeight*sc+6).toFixed(1)+"px")};
-  addEventListener("scroll",()=>{if(!raf)raf=requestAnimationFrame(upd)},{passive:true});
-  new MutationObserver(()=>{if(!raf)raf=requestAnimationFrame(upd)}).observe($("#main"),{childList:true});
-})();
+/* scrolling down to the details: the wheel flies down and shrinks into the badge in the card's header */
+const DOCK={p:0,raf:0};
+function syncMini(){
+  const slot=document.querySelector("#main #dpanel .dmini"),svg=dsvg();if(!slot||!svg)return;
+  const c=svg.cloneNode(true);c.removeAttribute("aria-label");c.setAttribute("aria-hidden","true");
+  c.classList.remove("di","anim","spinning");c.classList.add("dmsvg");
+  c.querySelectorAll("#dcen,.dhit").forEach(x=>x.remove());c.querySelectorAll("[id]").forEach(x=>x.removeAttribute("id"));
+  slot.innerHTML="";slot.appendChild(c);
+}
+function dock(){
+  DOCK.raf=0;const wrap=document.querySelector("#main .dwrap"),bub=wrap&&wrap.firstElementChild,slot=document.querySelector("#main #dpanel .dmini");
+  if(!bub)return;
+  const reset=()=>{DOCK.p=0;bub.style.transform="";bub.style.visibility="";bub.classList.remove("docking");if(slot)slot.classList.remove("on")};
+  if(!slot||!IS.sel){reset();return}
+  const pin=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120)+10;
+  const W=wrap.getBoundingClientRect(),bx=W.left+bub.offsetLeft,by=W.top+bub.offsetTop,bw=bub.offsetWidth;
+  if(by>=pin){reset();return}
+  // the wheel holds just under the header and shrinks as the card rises; it docks when the badge reaches it
+  const S=slot.getBoundingClientRect(),gap=Math.max(1,S.top-by),e=Math.max(0,Math.min(1,1-(S.top-pin)/gap));DOCK.p=e;
+  const tx=bx+(S.left-bx)*e,ty=e>=1?S.top:pin,s=1+(S.width/bw-1)*e;
+  bub.style.transform="translate3d("+(tx-bx).toFixed(1)+"px,"+(ty-by).toFixed(1)+"px,0) scale("+s.toFixed(4)+")";
+  bub.style.setProperty("--e",e.toFixed(3));bub.classList.toggle("docking",e<1);
+  const done=e>=.999;bub.style.visibility=done?"hidden":"";slot.classList.toggle("on",done);
+}
+addEventListener("scroll",()=>{if(!DOCK.raf)DOCK.raf=requestAnimationFrame(dock)},{passive:true});
+addEventListener("resize",()=>{if(!DOCK.raf)DOCK.raf=requestAnimationFrame(dock)});
 // tapping anywhere off the wheel, its rows or its card details returns to the whole view
 document.addEventListener("click",e=>{
   if(!IS.sel||S.tab!=="insights"||IS.sub!=="totals")return;
-  if(e.target.closest&&e.target.closest("svg.di,.drow,#dpanel,select,.isel,header,nav.tabs,.fab,#sheetRoot,#padRoot,.dback,.pbx-scrim"))return;
+  if(e.target.closest&&e.target.closest("svg.di,.dbub,.drow,#dpanel,select,.isel,header,nav.tabs,.fab,#sheetRoot,#padRoot,.dback,.pbx-scrim"))return;
   wholeView();
 });
 function donut(keys,vals,cm,total){
@@ -1498,10 +1534,11 @@ function renderInsights(groups,sm){
     const anim=!pending&&IS.donutKey!==akey;if(!pending)IS.donutKey=akey;
     if(IS.sel&&!keys.includes(IS.sel)){IS.sel=null;IS.rot=0}
     IS.dd=donutDetails(keys,byKey,byMonth,months,cm,total);
-    h+='<div class="dsent"></div><div class="dwrap"><div class="dbub">'+donutI(keys,byKey,cm,total,anim)+'</div></div>';
+    h+='<div class="dwrap"><div class="dbub">'+donutI(keys,byKey,cm,total,anim)+'</div></div>';
     h+='<div class="dlegend'+(anim?' anim':'')+'">'+keys.map((k,i)=>'<button class="drow'+(IS.sel?(IS.sel===k?' on':' dim'):'')+'" data-dkey="'+esc(k)+'" style="--d:'+(0.25+i*0.05).toFixed(2)+'s"><i style="background:'+cm[k]+'"></i><span class="dn">'+esc(k)+'</span><span class="dpct num">'+IS.dd[k].pct+'%</span><b class="num">'+money(round2(byKey[k]))+'</b></button>').join("")+'</div>';
     h+='<div id="dpanel" data-k="'+esc(String(IS.sel))+'">'+(IS.sel?dPanelHTML(IS.sel):DHINT)+'</div>';
     if(anim)setTimeout(dCountUp,60);
+    setTimeout(()=>{syncMini();dock()},0);
     return h+'</section>';
   }
   if(IS.sub==="details"){
