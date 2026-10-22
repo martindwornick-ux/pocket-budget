@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 22, 12:10 AM"</script>
+<script>window.PB_BUILD="Oct 22, 12:30 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -472,6 +472,61 @@ nav.tabs button[aria-current="page"]{color:var(--g-blue)}
 @keyframes ptrspin{to{transform:rotate(360deg)}}
 main.peek{position:fixed;left:0;right:0;bottom:0;margin:0 auto;overflow:hidden;pointer-events:none;z-index:3;will-change:transform}
 main.peek>*{flex-shrink:0}
+/* interactive donut */
+.donut.di{width:min(270px,82%);overflow:visible;-webkit-tap-highlight-color:transparent}
+.di .dseg{cursor:pointer;transition:transform .45s cubic-bezier(.2,.9,.3,1.25),stroke-width .35s ease,opacity .3s ease}
+.di .dseg.on{stroke-width:42}
+.di .dseg.dim{opacity:.28}
+.di.anim .dseg{animation:dgrow .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d)}
+@keyframes dgrow{from{stroke-dasharray:0 var(--len,600)}}
+.di .dhit{cursor:pointer}
+.di .dcen{pointer-events:none}
+.di .dcen text{transition:opacity .14s ease}
+.di .dcen.swap text{opacity:0}
+.di .dl{fill:var(--muted);font-size:14px;font-family:var(--body)}
+.di .dv{fill:var(--fg);font-size:28px;font-weight:800;font-family:var(--display)}
+.di .dp{fill:var(--muted);font-size:13px;font-weight:600;font-family:var(--body)}
+.dback{color:var(--link);font-weight:600;font-size:15px;padding:4px 0 0}
+.dlegend{margin-top:8px}
+.drow{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px;margin:0 -8px;width:calc(100% + 16px);border-radius:12px;font-size:16px;text-align:left;transition:background .2s,opacity .25s}
+.drow i{width:12px;height:12px;border-radius:50%;flex:none;transition:transform .3s cubic-bezier(.2,.9,.3,1.4)}
+.drow .dn{flex:1;min-width:0;overflow-wrap:anywhere}
+.drow .dpct{color:var(--muted);font-size:14px;min-width:42px;text-align:right}
+.drow b{font-weight:600;min-width:92px;text-align:right}
+.drow.on{background:var(--sel)}.drow.on i{transform:scale(1.35)}
+.drow.dim{opacity:.5}
+.dlegend.anim .drow{animation:dup .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d)}
+@keyframes dup{from{opacity:0;transform:translateY(8px)}}
+.dhint{text-align:center;margin:12px 0 0}
+.dpanel{margin-top:14px;padding:16px;border-radius:16px;background:color-mix(in srgb,var(--c) 9%,#fff);border:1px solid color-mix(in srgb,var(--c) 22%,transparent);animation:dpop .38s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes dpop{from{opacity:0;transform:translateY(10px) scale(.98)}}
+.dph{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dph i{width:12px;height:12px;border-radius:50%;background:var(--c)}
+.dph b{font-size:18px}.dph span{color:var(--muted);font-size:14px;margin-left:auto}
+.dstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.dstats div{background:rgba(255,255,255,.75);border-radius:12px;padding:9px 10px;min-width:0}
+.dstats small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+.dstats b{display:block;margin-top:3px;font-size:clamp(14px,4.2vw,17px)}
+.dstats span{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.dstats b.up{color:var(--over)}.dstats b.down{color:var(--ok)}
+.dspark{display:flex;align-items:flex-end;gap:4px;height:64px;margin-top:12px;padding-bottom:16px;position:relative}
+.dspark div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}
+.dspark i{display:block;width:100%;max-width:26px;border-radius:5px 5px 2px 2px;background:var(--c);transform-origin:bottom;animation:dbar .55s cubic-bezier(.2,.9,.3,1.2) both;animation-delay:var(--d)}
+.dspark span{position:absolute;bottom:-16px;font-size:10px;color:var(--muted)}
+@keyframes dbar{from{transform:scaleY(0)}}
+.dparts{margin-top:12px}
+.dparts h5{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.dpart{display:grid;grid-template-columns:minmax(0,1.2fr) 1fr auto;align-items:center;gap:10px;padding:6px 0;font-size:15px}
+.dpart .pn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dpart .pb{height:7px;border-radius:7px;background:rgba(60,64,67,.08);overflow:hidden}
+.dpart .pb i{display:block;height:100%;border-radius:7px;background:var(--c);transform-origin:left;animation:dgrowx .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d)}
+@keyframes dgrowx{from{transform:scaleX(0)}}
+.dpart b{font-weight:600;font-size:14px}
+.dbig{margin:10px 0 0;font-size:14px;color:var(--muted);line-height:1.4}
+.dbig b{color:var(--fg)}
+.dpanel .btnrow{margin-top:14px}
+.dpanel .btn{padding:11px 12px;font-size:15px}
+@media (prefers-reduced-motion:reduce){.di.anim .dseg,.dlegend.anim .drow,.dpanel,.dspark i,.dpart .pb i{animation:none}}
 .alrt{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:24px;background:rgba(32,33,36,0);transition:background .2s}
 .alrt.in{background:rgba(32,33,36,.32)}
 .alrt .abox{width:min(300px,100%);text-align:center;border-radius:22px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:saturate(180%) blur(30px);backdrop-filter:saturate(180%) blur(30px);border:1px solid rgba(255,255,255,.9);box-shadow:0 20px 50px rgba(0,0,0,.22);padding:20px 18px 14px;transform:scale(1.08);opacity:0;transition:transform .22s cubic-bezier(.2,1.2,.4,1),opacity .18s}
@@ -1042,6 +1097,85 @@ function groupedChart(months,a,b,ca,cb){
     g+='<text x="'+cx+'" y="'+(H-8)+'" class="ax" text-anchor="middle">'+shortM(ym)+'</text>'});
   return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Income vs spent by month">'+g+'</svg>';
 }
+/* ---------- interactive donut (Spending Totals) ---------- */
+const DHINT='<p class="note dhint">Tap a slice or a row to see what\'s behind it.</p>';
+const DR=92,DW=34,DC=2*Math.PI*DR;
+function donutI(keys,vals,cm,total,anim){
+  let g='',acc=0;const gap=keys.length>1?2.2:0;
+  keys.forEach((k,i)=>{const v=vals[k];if(v<=0)return;const len=DC*v/total,mid=(acc+len/2)/DC*2*Math.PI;
+    const dash=Math.max(.5,len-gap);
+    const on=IS.sel===k,dim=IS.sel&&!on,off=on?"translate("+(Math.cos(mid)*9).toFixed(1)+"px,"+(Math.sin(mid)*9).toFixed(1)+"px)":"";
+    g+='<circle class="dseg'+(on?" on":"")+(dim?" dim":"")+'" data-dkey="'+esc(k)+'" data-mid="'+mid.toFixed(4)+'" cx="130" cy="130" r="'+DR+'" fill="none" stroke="'+cm[k]+'" stroke-width="'+DW+'" stroke-dasharray="'+dash.toFixed(2)+' '+DC.toFixed(2)+'" stroke-dashoffset="'+(-acc).toFixed(2)+'" style="--len:'+dash.toFixed(2)+';--d:'+(i*0.07).toFixed(2)+'s'+(off?';transform:'+off:'')+'"><title>'+esc(k)+' · '+money(round2(v))+'</title></circle>';
+    acc+=len});
+  const sel=IS.sel&&IS.dd&&IS.dd[IS.sel];
+  const c=sel?[esc(IS.sel),money(round2(sel.v)).replace(/\.00$/,""),sel.pct+"%"]:[(IS.group?esc(IS.group):"Total Spent"),money(Math.round(total)).replace(/\.00$/,""),""];
+  return '<svg class="donut di'+(anim?" anim":"")+'" viewBox="0 0 260 260" role="img" aria-label="Spending by '+(IS.group?"item":"group")+'">'+
+    '<g transform="rotate(-90 130 130)">'+(total>0?g:'<circle cx="130" cy="130" r="'+DR+'" fill="none" stroke="var(--trk)" stroke-width="'+DW+'"/>')+'</g>'+
+    '<circle class="dhit" data-dcenter="1" cx="130" cy="130" r="'+(DR-DW/2-4)+'" fill="transparent"/>'+
+    '<g id="dcen" class="dcen" data-total="'+total+'"><text x="130" y="116" text-anchor="middle" class="dl">'+c[0]+'</text><text x="130" y="146" text-anchor="middle" class="dv num">'+c[1]+'</text><text x="130" y="168" text-anchor="middle" class="dp num">'+c[2]+'</text></g></svg>';
+}
+function dCountUp(){
+  const v=document.querySelector("#main #dcen .dv");if(!v||IS.sel)return;const tot=+document.querySelector("#main #dcen").dataset.total||0;
+  if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+  const t0=performance.now(),dur=900;(function f(now){const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);if(!v.isConnected||IS.sel)return;v.textContent=money(Math.round(tot*e)).replace(/\.00$/,"");if(k<1)requestAnimationFrame(f)})(t0);
+}
+function donutDetails(keys,byKey,byMonth,months,cm,total){
+  const td=today(),out={},span=months.length&&months[0].slice(0,4)!==months[months.length-1].slice(0,4);
+  const mLabel=ym=>shortM(ym)+(span?" \u2019"+ym.slice(2,4):"");
+  keys.forEach(k=>{
+    const series=months.map(ym=>round2((byMonth[ym]||{})[k]||0)),n=series.length,v=byKey[k];
+    let ti=0;series.forEach((x,i)=>{if(x>series[ti])ti=i});
+    let trend=null;if(n>=2){const hf=Math.floor(n/2),a=series.slice(0,hf).reduce((s,x)=>s+x,0)/hf,b=series.slice(n-hf).reduce((s,x)=>s+x,0)/hf;trend=a>0?Math.round((b-a)/a*100):(b>0?100:0)}
+    const parts={};let big=null;
+    months.forEach(ym=>txOf(ym).forEach(t=>{
+      if(t.type==="income"||t.date>td)return;
+      const g=groupNameOf(t,ym),it=itemNameOf(t,ym);
+      if(IS.group){if(g!==IS.group||it!==k)return}else if(g!==k)return;
+      const name=IS.group?(String(t.merchant||"Purchase").replace(/^\s*venmo\s*:\s*/i,"").trim()||"Purchase"):it;
+      parts[name]=(parts[name]||0)+sAmt(t);
+      if(t.type!=="refund"&&(!big||+t.amount>big.a))big={m:t.merchant||"Purchase",a:+t.amount||0,d:t.date};
+    }));
+    const pk=Object.keys(parts).filter(x=>parts[x]>0).sort((a,b)=>parts[b]-parts[a]).slice(0,5).map(x=>[x,round2(parts[x])]);
+    out[k]={v,c:cm[k],pct:total>0?(v/total*100<1?(v/total*100).toFixed(1):Math.round(v/total*100)):0,avg:round2(v/Math.max(1,n)),series,months,topM:n?mLabel(months[ti]):"",topV:series[ti]||0,trend,parts:pk,big,mLabel};
+  });
+  return out;
+}
+function dPanelHTML(k){
+  const d=IS.dd&&IS.dd[k];if(!d)return DHINT;
+  const n=d.series.length,mx=Math.max(...d.series,0.01);
+  const tr=d.trend===null?"—":d.trend>=200?"↑ "+(d.trend/100+1).toFixed(1)+"×":(d.trend>0?"↑ ":d.trend<0?"↓ ":"")+Math.abs(d.trend)+"%";
+  let h='<div class="dpanel" style="--c:'+d.c+'"><div class="dph"><i></i><b>'+esc(k)+'</b><span class="num">'+d.pct+'% of '+(IS.group?esc(IS.group):"all spending")+'</span></div>';
+  h+='<div class="dstats"><div><small>Monthly avg</small><b class="num">'+money(d.avg)+'</b></div><div><small>Top month</small><b class="num">'+esc(d.topM)+'</b><span class="num">'+money(d.topV)+'</span></div><div><small>Trend</small><b class="num'+(d.trend>0?" up":d.trend<0?" down":"")+'">'+tr+'</b><span>'+(n>=2?"recent vs earlier":"needs 2+ months")+'</span></div></div>';
+  if(n>=2)h+='<div class="dspark" role="img" aria-label="Monthly amounts">'+d.series.map((x,i)=>'<div title="'+esc(d.mLabel(d.months[i]))+' · '+money(x)+'"><i style="height:'+Math.max(x>0?6:2,x/mx*100).toFixed(1)+'%;--d:'+(i*0.04).toFixed(2)+'s"></i><span>'+esc(shortM(d.months[i]).slice(0,1))+'</span></div>').join("")+'</div>';
+  if(d.parts.length){const pm=d.parts[0][1];
+    h+='<div class="dparts"><h5>'+(IS.group?"Top merchants":"Biggest items")+'</h5>'+d.parts.map(([nm,v],i)=>'<div class="dpart"><span class="pn">'+esc(nm)+'</span><span class="pb"><i style="width:'+Math.max(3,v/pm*100).toFixed(1)+'%;--d:'+(0.1+i*0.05).toFixed(2)+'s"></i></span><b class="num">'+money(v)+'</b></div>').join("")+'</div>'}
+  if(d.big)h+='<p class="dbig">Biggest purchase: <b>'+esc(d.big.m)+'</b> · <span class="num">'+money(d.big.a)+'</span> · '+esc(new Date(d.big.d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}))+'</p>';
+  h+='<div class="btnrow">'+(IS.group?'':'<button class="btn" data-ddrill="'+esc(k)+'">Break down '+esc(k)+'</button>')+'<button class="btn sec" data-dtrend="'+esc(k)+'">Month by month</button></div></div>';
+  return h;
+}
+function selectSlice(k){
+  IS.sel=k||null;try{haptic()}catch(_){}
+  const svg=document.querySelector("#main svg.di");if(!svg){render();return}
+  svg.classList.remove("anim");
+  svg.querySelectorAll(".dseg").forEach(c=>{const on=c.dataset.dkey===IS.sel,mid=+c.dataset.mid;
+    c.classList.toggle("on",on);c.classList.toggle("dim",!!IS.sel&&!on);
+    c.style.transform=on?"translate("+(Math.cos(mid)*9).toFixed(1)+"px,"+(Math.sin(mid)*9).toFixed(1)+"px)":""});
+  document.querySelectorAll("#main .drow").forEach(r=>{r.classList.toggle("on",r.dataset.dkey===IS.sel);r.classList.toggle("dim",!!IS.sel&&r.dataset.dkey!==IS.sel)});
+  const cen=svg.querySelector("#dcen"),d=IS.sel&&IS.dd[IS.sel],[l,v,p]=cen.querySelectorAll("text");
+  cen.classList.add("swap");
+  setTimeout(()=>{if(d){l.textContent=IS.sel;v.textContent=money(round2(d.v)).replace(/\.00$/,"");p.textContent=d.pct+"%"}
+    else{l.textContent=IS.group||"Total Spent";v.textContent=money(Math.round(+cen.dataset.total)).replace(/\.00$/,"");p.textContent=""}
+    cen.classList.remove("swap")},140);
+  const pn=$("#dpanel");if(pn)pn.innerHTML=IS.sel?dPanelHTML(IS.sel):DHINT;
+  if(IS.sel){const r=pn&&pn.getBoundingClientRect();if(r&&r.top>innerHeight-180)window.scrollBy({top:Math.min(260,r.top-innerHeight+260),behavior:"smooth"})}
+}
+$("#main").addEventListener("click",e=>{
+  const k=e.target.closest("[data-dkey]");if(k){selectSlice(k.dataset.dkey===IS.sel?null:k.dataset.dkey);return}
+  if(e.target.closest("[data-dcenter]")){if(IS.sel)selectSlice(null);return}
+  const dr=e.target.closest("[data-ddrill]");if(dr){IS.group=dr.dataset.ddrill;IS.item="";IS.sel=null;try{haptic()}catch(_){}render();return}
+  const tr=e.target.closest("[data-dtrend]");if(tr){if(IS.group)IS.item=tr.dataset.dtrend;else{IS.group=tr.dataset.dtrend;IS.item=""}IS.sub="details";ls.set("pb.isub","details");IS.sel=null;render();window.scrollTo(0,0);return}
+  if(e.target.closest("[data-dback]")){IS.group="";IS.item="";IS.sel=null;render();return}
+});
 function donut(keys,vals,cm,total){
   const R=110,r=74,cx=130,cy=130;let a0=-Math.PI/2,g='';const gap=keys.length>1?0.012:0;
   keys.forEach(k=>{const v=vals[k];if(v<=0)return;const a1=a0+2*Math.PI*v/total;
@@ -1245,8 +1379,16 @@ function renderInsights(groups,sm){
   const cm=colorMap(IS.group?keys:gnames.concat(keys.filter(k=>!gnames.includes(k))));
   const total=round2(keys.reduce((a,k)=>a+byKey[k],0));
   if(IS.sub==="totals"){
-    h+=donut(keys,byKey,cm,total);
-    h+=keys.length?legendHTML(keys,cm,byKey):'<p class="note" style="text-align:center">No spending logged for this period yet.</p>';
+    if(IS.group)h+='<button class="dback" data-dback>‹ All groups</button>';
+    if(!keys.length)return h+donutI([],{},cm,0,false)+'<p class="note" style="text-align:center">No spending logged for this period yet.</p></section>';
+    const akey=[IS.range,IS.group,Math.round(total),keys.join("|")].join("~");
+    const anim=!pending&&IS.donutKey!==akey;if(!pending)IS.donutKey=akey;
+    if(IS.sel&&!keys.includes(IS.sel))IS.sel=null;
+    IS.dd=donutDetails(keys,byKey,byMonth,months,cm,total);
+    h+=donutI(keys,byKey,cm,total,anim);
+    h+='<div class="dlegend'+(anim?' anim':'')+'">'+keys.map((k,i)=>'<button class="drow'+(IS.sel?(IS.sel===k?' on':' dim'):'')+'" data-dkey="'+esc(k)+'" style="--d:'+(0.25+i*0.05).toFixed(2)+'s"><i style="background:'+cm[k]+'"></i><span class="dn">'+esc(k)+'</span><span class="dpct num">'+IS.dd[k].pct+'%</span><b class="num">'+money(round2(byKey[k]))+'</b></button>').join("")+'</div>';
+    h+='<div id="dpanel">'+(IS.sel?dPanelHTML(IS.sel):DHINT)+'</div>';
+    if(anim)setTimeout(dCountUp,60);
     return h+'</section>';
   }
   if(IS.sub==="details"){
@@ -1681,8 +1823,8 @@ document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target
 $("#monthBtn").onclick=monthSheet;
 $("#addBtnTop").onclick=()=>txSheet();$("#fab").onclick=()=>txSheet();
 $("#main").addEventListener("change",e=>{const id=e.target.id;
-  if(id==="i-range"){IS.range=+e.target.value;IS.ranges=IS.ranges||{};IS.ranges[IS.sub]=IS.range;ls.set("pb.irange."+IS.sub,String(IS.range));render()}
-  else if(id==="i-group"){IS.group=e.target.value;IS.item="";render()}
+  if(id==="i-range"){IS.sel=null;IS.range=+e.target.value;IS.ranges=IS.ranges||{};IS.ranges[IS.sub]=IS.range;ls.set("pb.irange."+IS.sub,String(IS.range));render()}
+  else if(id==="i-group"){IS.group=e.target.value;IS.item="";IS.sel=null;render()}
   else if(id==="i-item"){IS.item=e.target.value;render()}
   else if(id==="wd-var"){IS.wdVar=e.target.checked;ls.set("pb.wdvar",IS.wdVar?"1":"0");render()}});
 $("#hisub").addEventListener("click",e=>{const b=e.target.closest("[data-isub]");if(!b||IS.sub===b.dataset.isub)return;IS.sub=b.dataset.isub;ls.set("pb.isub",IS.sub);render();window.scrollTo(0,0)});
