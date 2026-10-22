@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 21, 11:50 PM"</script>
+<script>window.PB_BUILD="Oct 22, 12:05 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -484,6 +484,21 @@ main.peek>*{flex-shrink:0}
 .alrt .abtns .adel{background:var(--over);color:#fff}
 .alrt .abtns button:disabled{opacity:.5}
 
+/* one header layout on every tab: month row, a 36px control row, the status banner */
+#seg,#hisub{height:36px;margin-top:6px;align-items:stretch}
+#seg button,#hisub button{display:flex;align-items:center;justify-content:center;padding:0 2px;line-height:1;font-size:15px}
+#hisub{grid-template-columns:repeat(5,1fr)}
+#hisub button{font-size:14px}
+#hsearch{padding-top:6px}
+#hsearch .search{height:36px}
+#hsearch .search input{padding:0;height:100%}
+header .hrow{min-height:44px}
+
+/* cards that scroll and slide skip the live blur (the costly part on iPhone); fixed bars keep it */
+main .card,main .tile,main .search,main.peek .card{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.80)}
+/* room to scroll the last card clear of the + button */
+body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
+
 /* merchant suggestions under the Merchant field */
 .txs .msug{margin:0 -18px;border-top:1px solid var(--line)}
 .txs .msug+.trow{border-top:1px solid var(--line)}
@@ -508,6 +523,7 @@ main.peek>*{flex-shrink:0}
     <button id="v-remaining" data-v="remaining" aria-pressed="true">Remaining</button>
   </div>
   <div id="hsearch" hidden><div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="txq" type="search" enterkeyhint="search" autocomplete="off" aria-label="Search transactions"><button id="txqClear" aria-label="Clear search" hidden>✕</button></div></div>
+  <div class="seg hsub" id="hisub" role="group" aria-label="Insight" hidden></div>
   <div class="banner" id="banner"><span>Loading your budget…</span></div>
 </header>
 <main id="main"></main>
@@ -762,13 +778,16 @@ function confirmDelete(id){
         if(!S.db||S.readOnly){toast("Saving isn't available here");b.disabled=false;return}
         try{await S.db.doc("tx/"+id).delete();SW.openRow=null;closeSheet();toast("Deleted")}catch(e){b.disabled=false;toast("Couldn't delete. Try again.")}}});
 }
+const ISUBS=[["totals","Totals"],["details","Details"],["cal","Calendar"],["pace","Pace"],["wd","Weekday"]];
 function renderHeader(){
   renderDoodle();
   const [y,m]=S.ym.split("-");$("#mName").textContent=MONTHS[+m-1];$("#mYear").textContent=y;
   document.querySelectorAll("#seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===S.view)));
   $("#seg").hidden=S.tab!=="budget";
   const onTx=S.tab==="tx";
-  $("header .hrow").hidden=onTx;$("#banner").hidden=S.tab!=="budget";$("#hsearch").hidden=!onTx;
+  $("header .hrow").hidden=false;$("#banner").hidden=false;$("#hsearch").hidden=!onTx;
+  const hs=$("#hisub");hs.hidden=S.tab!=="insights";
+  if(!hs.hidden){const want=ISUBS.map(([k,l])=>'<button data-isub="'+k+'" aria-pressed="'+(IS.sub===k)+'">'+l+'</button>').join("");if(hs.innerHTML!==want)hs.innerHTML=want}
   if(onTx){const i=$("#txq");i.placeholder="Search "+MONTHS[+S.ym.slice(5)-1]+" transactions";if(document.activeElement!==i&&i.value!==(S.q||""))i.value=S.q||"";$("#txqClear").hidden=!(S.q||"").trim()}
   document.querySelectorAll("nav.tabs button").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
 }
@@ -1191,7 +1210,7 @@ function renderInsights(groups,sm){
   const pending=months.some(ym=>ym!==S.ym&&!IS.hist[ym]);
   const subs=[["totals","Spending Totals"],["details","Spending Details"],["cal","Daily Calendar"],["pace","Spending Pace"],["wd","By Weekday"]];
   if(!subs.some(x=>x[0]===IS.sub))IS.sub="totals";
-  let h='<div class="seg isub" role="group" aria-label="Insight">'+subs.map(([k,l])=>'<button data-isub="'+k+'" aria-pressed="'+(IS.sub===k)+'">'+l+'</button>').join("")+'</div>';
+  let h='';
   const rangeSel=selHTML("i-range",[["1","This Month"],["3","Past 3 Months"],["6","Past 6 Months"],["12","Past 12 Months"]],String(IS.range));
   const gnames=allGroupNames(months);
   if(IS.group&&!gnames.includes(IS.group))IS.group="";
@@ -1661,6 +1680,7 @@ $("#main").addEventListener("change",e=>{const id=e.target.id;
   else if(id==="i-group"){IS.group=e.target.value;IS.item="";render()}
   else if(id==="i-item"){IS.item=e.target.value;render()}
   else if(id==="wd-var"){IS.wdVar=e.target.checked;ls.set("pb.wdvar",IS.wdVar?"1":"0");render()}});
+$("#hisub").addEventListener("click",e=>{const b=e.target.closest("[data-isub]");if(!b||IS.sub===b.dataset.isub)return;IS.sub=b.dataset.isub;ls.set("pb.isub",IS.sub);render();window.scrollTo(0,0)});
 $("#hsearch").addEventListener("input",e=>{if(e.target.id==="txq"){S.q=e.target.value;render()}});
 // Open Venmo via an iOS Shortcut. The page runs in a framed viewer, so try the top window first,
 // then fall back to a new window and finally this frame if the app didn't switch away.
@@ -1800,7 +1820,7 @@ async function refreshNow(){
     peek=document.createElement("main");peek.className="peek";peek.setAttribute("aria-hidden","true");peek.dataset.tab=t;
     peek.style.top="calc(env(safe-area-inset-top,0px) + "+headerFor(t)+"px)";
     peek.innerHTML=pageHTML(t);S.upcoming=up;
-    document.body.appendChild(peek);side=s;
+    peek.style.transform="translate3d("+(s*W())+"px,0,0)";document.body.appendChild(peek);side=s;
   }
   function dropPeek(){if(peek){peek.remove();peek=null}side=0}
   function paint(x){
@@ -1812,10 +1832,11 @@ async function refreshNow(){
     x0=t.clientX;y0=t.clientY;lastT=Date.now();lastX=x0;vel=0;onRow=!!(e.target.closest&&e.target.closest(".swr"))},{passive:true});
   document.addEventListener("touchmove",e=>{if(x0===null)return;const t=e.touches[0],ddx=t.clientX-x0,ddy=t.clientY-y0;
     if(!on){
-      if(GEST&&GEST!=="tabs"){x0=null;return}
-      if(Math.abs(ddy)>10&&Math.abs(ddy)>=Math.abs(ddx)){x0=null;return}
+      if(GEST&&GEST!=="tabs"){x0=null;dropPeek();return}
+      if(Math.abs(ddy)>10&&Math.abs(ddy)>=Math.abs(ddx)){x0=null;dropPeek();return}
+      if(onRow&&(ddx<0||SW.openRow)){if(Math.abs(ddx)>8){x0=null;dropPeek()}return} // left on a row = Delete; an open row closes first
+      if(!peek&&Math.abs(ddx)>5&&Math.abs(ddx)>Math.abs(ddy)*1.4){const s=ddx<0?1:-1;if(TABS[TABS.indexOf(S.tab)+s])makePeek(s)}
       if(Math.abs(ddx)<12||Math.abs(ddx)<Math.abs(ddy)*1.4)return;
-      if(onRow&&(ddx<0||SW.openRow)){x0=null;return} // left on a row = Delete; an open row closes first
       on=true;GEST="tabs";x0=t.clientX;main.style.transition="none";main.style.willChange="transform";
     }
     e.preventDefault();
@@ -1824,20 +1845,25 @@ async function refreshNow(){
     if(d&&has&&side!==s)makePeek(s);
     if(!has){if(peek)dropPeek();d=d/(1+Math.abs(d)/120)*.5} // first/last tab: stretch and spring back
     dx=d;if(!raf)raf=requestAnimationFrame(()=>{raf=0;if(on)paint(dx)})},{passive:false});
-  function animate(x,ms,done){
-    const tr="transform "+ms+"ms "+EASE;main.style.transition=tr;if(peek)peek.style.transition=tr;
+  // carry the finger's speed into the slide: the curve starts at the release velocity, then eases to rest
+  function glide(x,done){
+    const dist=x-dx,ad=Math.abs(dist);
+    const ms=Math.round(Math.max(280,Math.min(480,240+ad*.55)));
+    const s=ad>1&&Math.sign(vel)===Math.sign(dist)?Math.abs(vel)*ms/ad:0;
+    const y1=Math.max(0,Math.min(1,.28*s));
+    const tr="transform "+ms+"ms cubic-bezier(.28,"+y1.toFixed(3)+",.32,1)";
+    main.style.transition=tr;if(peek)peek.style.transition=tr;
     paint(x);setTimeout(done,ms+20);
   }
-  const end=()=>{const was=on;on=false;x0=null;if(GEST==="tabs")GEST=null;if(!was)return;
+  const end=()=>{const was=on;on=false;x0=null;if(GEST==="tabs")GEST=null;if(!was){if(peek&&!busy)dropPeek();return}
     if(raf){cancelAnimationFrame(raf);raf=0}
     const w=W(),i=TABS.indexOf(S.tab);
     const go=peek&&((side===1&&(dx<-w*.25||vel<-.3))||(side===-1&&(dx>w*.25||vel>.3)));
     busy=true;
     if(!go){
-      animate(0,320,()=>{dropPeek();main.style.transition="";main.style.willChange="";busy=false});dx=0;return;
+      glide(0,()=>{dropPeek();main.style.transition="";main.style.willChange="";busy=false});dx=0;return;
     }
-    const target=-side*w,left=Math.abs(target-dx),speed=Math.max(1.2,Math.abs(vel));
-    animate(target,Math.round(Math.max(160,Math.min(340,left/speed))),()=>{
+    glide(-side*w,()=>{
       S.tab=TABS[i+side];S.upcoming=false;
       main.style.transition="none";main.style.transform="";
       render();window.scrollTo(0,0);dropPeek();main.style.willChange="";dx=0;busy=false;
