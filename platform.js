@@ -246,7 +246,7 @@ function openSettings(){
     '<section class="pbx-sec"><h3>Backup</h3><p>Save a copy of everything, or bring in a backup file. Importing replaces records with the same month or ID and keeps the rest.</p>'+
       '<button class="pbx-btn sec" id="pbx-exp">Save a backup</button><div style="height:10px"></div>'+importBlock+'</section>'+
     '<section class="pbx-sec"><h3>Account</h3><p>Signed in as <b>'+esc(P.user&&P.user.email)+'</b></p><button class="pbx-btn danger" id="pbx-out">Sign out</button></section>'+
-    '<button class="pbx-btn sec" id="pbx-close">Done</button></div>';
+    '<p class="pbx-note" style="text-align:center;margin:0 0 12px">App version: '+esc(window.PB_BUILD||"unknown")+'</p><button class="pbx-btn sec" id="pbx-close">Done</button></div>';
   document.body.appendChild(sc);document.body.style.overflow="hidden";
   sc.addEventListener("click",e=>{if(e.target===sc)closeSettings()});
   const st=sc.querySelector("[data-pbx-sstat]"),val=()=>({url:sc.querySelector("#pbx-url").value.trim(),key:sc.querySelector("#pbx-key").value.trim()});

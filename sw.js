@@ -1,5 +1,5 @@
 /* Pocket Budget service worker: opens offline, picks up updates when online. */
-const VERSION = "pb-2026-10-21d";
+const VERSION = "pb-2026-10-21e";
 const SHELL = ["./", "./index.html", "./platform.js", "./config.js", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
@@ -15,7 +15,7 @@ self.addEventListener("fetch", e => {
   const url = new URL(req.url);
   // app files: network first so updates arrive, cached copy when offline
   if (url.origin === location.origin) {
-    e.respondWith(fetch(req).then(r => {
+    e.respondWith(fetch(req, { cache: "no-cache" }).then(r => {
       if (r.ok) { const copy = r.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
       return r;
     }).catch(() => caches.match(req).then(r => r || caches.match("./index.html"))));
