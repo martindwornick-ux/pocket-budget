@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 22, 12:45 AM"</script>
+<script>window.PB_BUILD="Oct 22, 1:05 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -503,6 +503,14 @@ main.peek>*{flex-shrink:0}
 @keyframes dup{from{opacity:0;transform:translateY(8px)}}
 .dhint{text-align:center;margin:12px 0 0}
 #dpanel{transition:opacity .2s ease}
+.dsent{height:0}
+.dwrap{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hh,120px));z-index:2;pointer-events:none;margin:0 -22px;padding:0 22px}
+.dbub{position:relative;pointer-events:auto;transform-origin:50% 0;width:min(290px,86%);margin:0 auto;border-radius:50%;will-change:transform}
+/* when pinned, the small wheel sits on a solid strip so the details scroll cleanly underneath it */
+.dwrap::before{content:"";position:absolute;left:0;right:0;top:0;height:var(--bh,0);background:#fff;
+  box-shadow:0 10px 18px -14px rgba(60,64,67,.45);border-radius:0 0 20px 20px;opacity:0;transition:opacity .18s ease;pointer-events:none}
+.dwrap.pinned::before{opacity:1}
+.dbub .donut.di{width:100%;margin:22px auto 6px}
 #dpanel.stale{opacity:.35}
 .dpanel{margin-top:14px;padding:16px;border-radius:16px;background:color-mix(in srgb,var(--c) 9%,#fff);border:1px solid color-mix(in srgb,var(--c) 22%,transparent);animation:dpop .38s cubic-bezier(.2,.9,.3,1.15) both}
 @keyframes dpop{from{opacity:0;transform:translateY(10px) scale(.98)}}
@@ -1108,7 +1116,8 @@ const DHINT='<p class="note dhint">Tap a slice or a row to see what\'s behind it
 const DR=92,DW=34,DC=2*Math.PI*DR;
 function donutI(keys,vals,cm,total,anim){
   let g='',acc=0;const gap=keys.length>1?2.2:0;
-  keys.forEach((k,i)=>{const v=vals[k];if(v<=0)return;const len=DC*v/total,mid=(acc+len/2)/DC*2*Math.PI;
+  const disp=dispFracs(keys.map(k=>Math.max(0,vals[k]||0)));
+  keys.forEach((k,i)=>{const v=vals[k];if(v<=0)return;const len=DC*disp[i],mid=(acc+len/2)/DC*2*Math.PI;
     const dash=Math.max(.5,len-gap);
     const on=IS.sel===k,dim=IS.sel&&!on,off=on?"translate("+(Math.cos(mid)*9).toFixed(1)+"px,"+(Math.sin(mid)*9).toFixed(1)+"px)":"";
     g+='<circle class="dseg'+(on?" on":"")+(dim?" dim":"")+'" data-dkey="'+esc(k)+'" data-mid="'+mid.toFixed(4)+'" data-a0="'+(acc/DC*360).toFixed(3)+'" data-a1="'+((acc+len)/DC*360).toFixed(3)+'" cx="130" cy="130" r="'+DR+'" fill="none" stroke="'+cm[k]+'" stroke-width="'+DW+'" stroke-dasharray="'+dash.toFixed(2)+' '+DC.toFixed(2)+'" stroke-dashoffset="'+(-acc).toFixed(2)+'" style="--len:'+dash.toFixed(2)+';--d:'+(i*0.07).toFixed(2)+'s'+(off?';transform:'+off:'')+'"><title>'+esc(k)+' · '+money(round2(v))+'</title></circle>';
@@ -1120,6 +1129,17 @@ function donutI(keys,vals,cm,total,anim){
     '<path class="dptr" d="M121 -12 L139 -12 L130 0 Z"'+(sel?' style="fill:'+sel.c+'"':'')+'/>'+
     '<circle class="dhit" data-dcenter="1" cx="130" cy="130" r="'+(DR-DW/2-4)+'" fill="transparent"/>'+
     '<g id="dcen" class="dcen" data-total="'+total+'"><text x="130" y="116" text-anchor="middle" class="dl">'+c[0]+'</text><text x="130" y="146" text-anchor="middle" class="dv num">'+c[1]+'</text><text x="130" y="168" text-anchor="middle" class="dp num">'+c[2]+'</text></g></svg>';
+}
+// every slice gets at least ~11° of the ring (less when there are many) so thin ones are easy to land on
+function dispFracs(vs){
+  const tot=vs.reduce((a,b)=>a+b,0),n=vs.filter(v=>v>0).length;if(!tot)return vs.map(()=>0);
+  const m=Math.min(11/360,.55/n),orig=vs.map(v=>v/tot);let small=new Set();
+  for(let it=0;it<8;it++){
+    const rest=1-m*small.size,big=orig.reduce((a,f,i)=>a+(small.has(i)||!f?0:f),0);
+    let changed=false;orig.forEach((f,i)=>{if(f>0&&!small.has(i)&&f*rest/big<m){small.add(i);changed=true}});
+    if(!changed)return orig.map((f,i)=>!f?0:small.has(i)?m:f*rest/big);
+  }
+  return orig;
 }
 function dCountUp(){
   const v=document.querySelector("#main #dcen .dv");if(!v||IS.sel)return;const tot=+document.querySelector("#main #dcen").dataset.total||0;
@@ -1183,7 +1203,7 @@ function highlight(k,panel,fade){
     else{l.textContent=IS.group||"Total Spent";v.textContent=money(Math.round(+cen.dataset.total)).replace(/\.00$/,"");p.textContent=""}};
   if(fade){cen.classList.add("swap");setTimeout(()=>{put();cen.classList.remove("swap")},130)}else put();
   if(panel!==false){const pn=$("#dpanel");if(pn){pn.classList.remove("stale");const want=IS.sel?dPanelHTML(IS.sel):DHINT;if(pn.dataset.k!==String(IS.sel)){pn.innerHTML=want;pn.dataset.k=String(IS.sel)}}
-    if(IS.sel&&pn){const r=pn.getBoundingClientRect();if(r.top>innerHeight-200)window.scrollBy({top:Math.min(280,r.top-innerHeight+280),behavior:"smooth"})}}
+}
 }
 function liveTop(){const pn=$("#dpanel");if(pn)pn.classList.add("stale");const c=topSlice();if(!c)return;if(c.dataset.dkey!==WH.lastTop){WH.lastTop=c.dataset.dkey;try{haptic()}catch(_){}highlight(c.dataset.dkey,false,false)}}
 function spinTo(target,ms,done,v0){
@@ -1194,6 +1214,16 @@ function spinTo(target,ms,done,v0){
   const k0=v0&&Math.sign(v0)===Math.sign(dist)?Math.min(4,Math.abs(v0)*ms/Math.abs(dist)):1.8;
   const ease=t=>{const a=k0,b=3-2*a,c=a-2;return Math.min(1,a*t+b*t*t+c*t*t*t)};
   (function f(now){const t=Math.min(1,(now-t0)/ms);setRot(from+dist*ease(t));if(WH.live)liveTop();if(t<1)WH.raf=requestAnimationFrame(f);else{setRot(target);done&&done()}})(t0);
+}
+function coast(v){
+  cancelAnimationFrame(WH.raf);WH.live=true;
+  v=Math.max(-3,Math.min(3,v));let last=performance.now();
+  const stop=()=>{WH.live=false;const t=topSlice();if(t){WH.lastTop=t.dataset.dkey;highlight(t.dataset.dkey,true,false)}};
+  if(Math.abs(v)<.02){stop();return}
+  (function f(now){const dt=Math.min(40,now-last);last=now;
+    setRot((IS.rot||0)+v*dt);liveTop();
+    v*=Math.pow(.998,dt); // light friction: a firm flick spins freely for a couple of seconds
+    if(Math.abs(v)>.012)WH.raf=requestAnimationFrame(f);else stop()})(last);
 }
 function focusSlice(k){
   const c=dsegs().find(x=>x.dataset.dkey===k);if(!c)return;
@@ -1211,7 +1241,8 @@ const ptAngle=(svg,x,y)=>{const r=svg.getBoundingClientRect(),cx=r.left+r.width/
 $("#main").addEventListener("pointerdown",e=>{
   const svg=e.target.closest&&e.target.closest("svg.di");if(!svg||!dsegs().length)return;
   const p=ptAngle(svg,e.clientX,e.clientY);
-  const onRing=p.d>DR-DW/2-10&&p.d<DR+DW/2+14;
+  const onRing=p.d>DR-DW/2-8&&p.d<DR+DW/2+18;
+  if(p.d>DR+DW/2+40)return;
   WH.drag={svg,id:e.pointerId,x:e.clientX,y:e.clientY,a:p.a,rot0:IS.rot||0,acc:0,moved:false,onRing,t:performance.now(),v:0,lt:performance.now(),la:p.a};
   cancelAnimationFrame(WH.raf);
   try{svg.setPointerCapture(e.pointerId)}catch(_){}
@@ -1233,14 +1264,8 @@ const wheelUp=e=>{
     if(!c)return;if(c.dataset.dkey===IS.sel){wholeView();return}
     focusSlice(c.dataset.dkey);return;
   }
-  // a drag or flick: coast, then settle the slice under the pointer at the top
-  const v=Math.abs(performance.now()-D.lt)>90?0:D.v,cur=IS.rot||0;
-  const proj=cur+v*Math.min(900,Math.abs(v)*600);
-  const c=sliceAt(-proj)||topSlice();if(!c)return;
-  let target=-midDeg(c);target+=Math.round((proj-target)/360)*360;
-  const dist=Math.abs(target-cur),ms=Math.round(Math.max(280,Math.min(1400,Math.abs(v)>.05?2.2*dist/Math.abs(v):300+dist*2)));
-  WH.live=true;
-  spinTo(target,ms,()=>{WH.live=false;const t=topSlice();if(t){WH.lastTop=t.dataset.dkey;highlight(t.dataset.dkey,true,false)}},v);
+  // a drag or flick: coast on its own momentum and slow down gradually, then select what's under the arrow
+  coast(Math.abs(performance.now()-D.lt)>80?0:D.v);
 };
 $("#main").addEventListener("pointerup",wheelUp);$("#main").addEventListener("pointercancel",wheelUp);
 $("#main").addEventListener("click",e=>{
@@ -1249,6 +1274,15 @@ $("#main").addEventListener("click",e=>{
   const tr=e.target.closest("[data-dtrend]");if(tr){if(IS.group)IS.item=tr.dataset.dtrend;else{IS.group=tr.dataset.dtrend;IS.item=""}IS.sub="details";ls.set("pb.isub","details");IS.sel=null;IS.rot=0;render();window.scrollTo(0,0);return}
   if(e.target.closest("[data-dback]")){IS.group="";IS.item="";IS.sel=null;IS.rot=0;render();return}
 });
+// as you scroll down to the details, the wheel pins under the header and shrinks to about half size
+(()=>{let raf=0;
+  const upd=()=>{raf=0;const w=document.querySelector("#main .dwrap"),s=document.querySelector("#main .dsent");if(!w||!s)return;
+    const top=parseFloat(getComputedStyle(w).top)||0,p=Math.max(0,Math.min(1,(top-s.getBoundingClientRect().top)/230));
+    const b=w.firstElementChild,sc=1-.5*p;b.style.transform=p?"scale("+sc.toFixed(4)+")":"";w.classList.toggle("pinned",p>0);
+    w.style.setProperty("--bh",(b.offsetHeight*sc+6).toFixed(1)+"px")};
+  addEventListener("scroll",()=>{if(!raf)raf=requestAnimationFrame(upd)},{passive:true});
+  new MutationObserver(()=>{if(!raf)raf=requestAnimationFrame(upd)}).observe($("#main"),{childList:true});
+})();
 // tapping anywhere off the wheel, its rows or its card details returns to the whole view
 document.addEventListener("click",e=>{
   if(!IS.sel||S.tab!=="insights"||IS.sub!=="totals")return;
@@ -1464,7 +1498,7 @@ function renderInsights(groups,sm){
     const anim=!pending&&IS.donutKey!==akey;if(!pending)IS.donutKey=akey;
     if(IS.sel&&!keys.includes(IS.sel)){IS.sel=null;IS.rot=0}
     IS.dd=donutDetails(keys,byKey,byMonth,months,cm,total);
-    h+=donutI(keys,byKey,cm,total,anim);
+    h+='<div class="dsent"></div><div class="dwrap"><div class="dbub">'+donutI(keys,byKey,cm,total,anim)+'</div></div>';
     h+='<div class="dlegend'+(anim?' anim':'')+'">'+keys.map((k,i)=>'<button class="drow'+(IS.sel?(IS.sel===k?' on':' dim'):'')+'" data-dkey="'+esc(k)+'" style="--d:'+(0.25+i*0.05).toFixed(2)+'s"><i style="background:'+cm[k]+'"></i><span class="dn">'+esc(k)+'</span><span class="dpct num">'+IS.dd[k].pct+'%</span><b class="num">'+money(round2(byKey[k]))+'</b></button>').join("")+'</div>';
     h+='<div id="dpanel" data-k="'+esc(String(IS.sel))+'">'+(IS.sel?dPanelHTML(IS.sel):DHINT)+'</div>';
     if(anim)setTimeout(dCountUp,60);
