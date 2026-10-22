@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 21, 11:25 PM"</script>
+<script>window.PB_BUILD="Oct 21, 11:40 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -725,7 +725,7 @@ function swClose(row,anim=true){if(!row)return;row.classList.toggle("anim",anim)
 $("#main").addEventListener("touchstart",e=>{if(e.target.closest("[data-del]"))return;const row=e.target.closest(".swr .txrow");if(SW.openRow&&SW.openRow!==row)swClose(SW.openRow);if(!row||e.touches.length!==1)return;
   SW.row=row;SW.x0=e.touches[0].clientX;SW.y0=e.touches[0].clientY;SW.dx=0;SW.mode=0;SW.base=SW.openRow===row?-SWW:0;row.classList.remove("anim")},{passive:true});
 $("#main").addEventListener("touchmove",e=>{const row=SW.row;if(!row)return;const t=e.touches[0],dx=t.clientX-SW.x0,dy=t.clientY-SW.y0;
-  if(SW.mode===0){if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)*1.2)SW.mode=1;else if(Math.abs(dy)>8){SW.mode=-1;return}else return}
+  if(SW.mode===0){if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)*1.2){if(dx>0&&SW.base===0){SW.row=null;return}SW.mode=1}else if(Math.abs(dy)>8){SW.mode=-1;return}else return}
   if(SW.mode!==1)return;e.preventDefault();row.parentNode.classList.add("on");let x=SW.base+dx;if(x>0)x=x/4;if(x<-SWW)x=-SWW+(x+SWW)/3;SW.dx=dx;row.style.transform="translateX("+x+"px)"},{passive:false});
 function swEnd(){const row=SW.row;SW.row=null;if(!row||SW.mode!==1)return;SW.justSwiped=true;setTimeout(()=>SW.justSwiped=false,350);
   const x=SW.base+SW.dx;row.classList.add("anim");
@@ -1719,6 +1719,7 @@ async function init(){
   setTimeout(merchLoad,1200);
 }
 /* ---------- pull down to refresh ---------- */
+let GEST=null; // which page gesture owns the current touch: "pull" | "tabs"
 async function refreshNow(){
   if(!S.db)return;
   const ym=S.ym;
@@ -1765,19 +1766,64 @@ async function refreshNow(){
   document.addEventListener("touchmove",e=>{if(y0===null)return;const t=e.touches[0];
     if(!mode){const dy=t.clientY-y0,dx=t.clientX-x0;
       if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){y0=null;return}
-      if(dy>3&&atTop())mode=1;else if(dy<-3&&atBottom())mode=-1;else{if(Math.abs(dy)>3)y0=null;return}
+      if(GEST&&GEST!=="pull"){y0=null;return}
+      if(dy>3&&dy>Math.abs(dx)*1.2&&atTop())mode=1;else if(dy<-3&&-dy>Math.abs(dx)*1.2&&atBottom())mode=-1;else{if(Math.abs(dy)>3)y0=null;return}
+      GEST="pull";
       startY=t.clientY;clearTimeout(settleT);main.style.transition=el.style.transition=svg.style.transition="none";main.style.willChange="transform"}
     e.preventDefault();
     const d=t.clientY-startY;
     if(mode===1){const p=rubber(Math.max(0,d));
       if(p>=TH&&!armed){armed=true;try{haptic()}catch(_){}}else if(p<TH-8)armed=false;live(p)}
     else live(-rubber(Math.max(0,-d)))},{passive:false});
-  const end=async()=>{const m=mode;mode=0;y0=null;if(!m)return;
+  const end=async()=>{const m=mode;mode=0;y0=null;if(GEST==="pull")GEST=null;if(!m)return;
     if(m===-1||pull<TH){settle(0,480,true);return}
     busy=true;el.classList.add("spin");lines.forEach((l,i)=>l.style.opacity=BASE[i]);svg.style.transform="";settle(REST,380);
     const t0=Date.now();
     try{await refreshNow()}catch(e){toast("Couldn't refresh. Check your connection.")}
     setTimeout(()=>{busy=false;settle(0,520,true);setTimeout(()=>el.classList.remove("spin"),520)},Math.max(0,750-(Date.now()-t0)))};
+  document.addEventListener("touchend",end);document.addEventListener("touchcancel",end);
+})();
+/* ---------- swipe left / right between tabs ---------- */
+(()=>{
+  const TABS=["budget","tx","insights"],main=$("#main"),EASE="cubic-bezier(.22,1,.36,1)";
+  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest(".pscrub,input,textarea,select,.isel,nav.tabs,.pad"));
+  let x0=null,y0=0,t0=0,on=false,dx=0,onRow=false,raf=0,busy=false,lastX=0,lastT=0,vel=0;
+  const W=()=>Math.max(320,innerWidth);
+  const paint=x=>{main.style.transform=x?"translate3d("+x.toFixed(1)+"px,0,0)":""};
+  document.addEventListener("touchstart",e=>{x0=null;on=false;if(busy||e.touches.length!==1||blocked(e.target))return;
+    const t=e.touches[0];if(t.clientX<16||t.clientX>innerWidth-8)return; // leave the screen edges to iOS
+    x0=t.clientX;y0=t.clientY;t0=lastT=Date.now();lastX=x0;vel=0;onRow=!!(e.target.closest&&e.target.closest(".swr"))},{passive:true});
+  document.addEventListener("touchmove",e=>{if(x0===null)return;const t=e.touches[0],ddx=t.clientX-x0,ddy=t.clientY-y0;
+    if(!on){
+      if(GEST&&GEST!=="tabs"){x0=null;return}
+      if(Math.abs(ddy)>10&&Math.abs(ddy)>=Math.abs(ddx)){x0=null;return}
+      if(Math.abs(ddx)<12||Math.abs(ddx)<Math.abs(ddy)*1.4)return;
+      if(onRow&&(ddx<0||SW.openRow)){x0=null;return} // left on a row = Delete; an open row closes first
+      on=true;GEST="tabs";main.style.transition="none";main.style.willChange="transform";
+    }
+    e.preventDefault();
+    const now=Date.now();if(now>lastT){vel=(t.clientX-lastX)/(now-lastT);lastX=t.clientX;lastT=now}
+    const i=TABS.indexOf(S.tab);let d=ddx-(ddx>0?12:-12);
+    if((i===0&&d>0)||(i===TABS.length-1&&d<0))d=d/(1+Math.abs(d)/90)*.6; // resist past the first/last tab
+    dx=d;if(!raf)raf=requestAnimationFrame(()=>{raf=0;if(on)paint(dx)})},{passive:false});
+  const settle=(ms)=>{main.style.transition="transform "+ms+"ms "+EASE+",opacity "+ms+"ms ease";paint(0);main.style.opacity="";
+    setTimeout(()=>{main.style.transition="";main.style.willChange=""},ms+40)};
+  const end=()=>{if(x0===null&&!on)return;const was=on;on=false;x0=null;if(GEST==="tabs")GEST=null;if(!was)return;
+    if(raf){cancelAnimationFrame(raf);raf=0}
+    const i=TABS.indexOf(S.tab),w=W();
+    let to=i;
+    if((dx<-w*.25||(vel<-.35&&dx<-24))&&i<TABS.length-1)to=i+1;
+    else if((dx>w*.25||(vel>.35&&dx>24))&&i>0)to=i-1;
+    if(to===i){settle(380);dx=0;return}
+    const dir=to>i?-1:1;busy=true;
+    main.style.transition="transform 170ms cubic-bezier(.4,0,1,1),opacity 170ms ease";paint(dir*w*.55);main.style.opacity="0";
+    setTimeout(()=>{
+      S.tab=TABS[to];S.upcoming=false;try{haptic()}catch(_){}
+      render();window.scrollTo(0,0);
+      main.style.transition="none";paint(-dir*w*.3);main.style.opacity="0";void main.offsetHeight;
+      requestAnimationFrame(()=>{settle(320);dx=0;setTimeout(()=>busy=false,330)});
+    },170);
+  };
   document.addEventListener("touchend",end);document.addEventListener("touchcancel",end);
 })();
 init();
