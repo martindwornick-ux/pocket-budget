@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Pocket Budget</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 22, 2:15 AM"</script>
+<script>window.PB_BUILD="Oct 24, 10:25 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -170,6 +170,8 @@ button.pday:active{opacity:.6}
 .pace .dot{fill:var(--link);stroke:var(--card);stroke-width:2.5}
 .pace .proj{fill:none;stroke:var(--link);stroke-width:2.5;stroke-dasharray:2 5;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
 .pace .pdot{fill:var(--card);stroke:var(--link);stroke-width:2}
+html,body{touch-action:manipulation}
+.pzwrap{position:relative}
 .pscrub{touch-action:pan-y;cursor:crosshair;-webkit-user-select:none;user-select:none}
 .pace .hov{stroke:var(--fg);stroke-width:1.2;opacity:.45}
 .pace .hdot2{fill:var(--muted);stroke:var(--card);stroke-width:2}
@@ -690,6 +692,42 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 .txs .msug button:active,.txs .msug button.hl{background:var(--sel)}
 .txs .msug .mn{min-width:0;overflow-wrap:anywhere;color:var(--muted)}
 .txs .msug .mn b{color:var(--fg);font-weight:700}
+.txs .crow input.tin{padding-right:2px}
+.txs .cbrowse{position:relative;flex:none;display:flex;align-items:center;justify-content:center;width:34px;height:40px;margin-right:-8px;color:var(--link)}
+.txs .cbrowse svg{width:18px;height:18px;transform:rotate(90deg)}
+.txs .csug.noq .mn{color:var(--fg)}
+.txs .crow>span:first-child{white-space:nowrap}
+.txs .tlocrow{text-decoration:none;color:inherit}
+.txs .tlocrow .tlv{flex:1;min-width:0;text-align:right;color:var(--muted);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s}
+.txs .tlocrow .tlv.busy{animation:lpulse 1.1s ease-in-out infinite}
+.txs .tlocrow .tlv.off{opacity:.7}
+@keyframes lpulse{50%{opacity:.35}}
+.txs .tglsm{flex:none;gap:0}.txs .tglsm .sw{width:46px;height:28px}.txs .tglsm .sw::after{width:22px;height:22px}.txs .tglsm input:checked+.sw::after{transform:translateX(18px)}
+.txs .near{display:flex;gap:8px;overflow-x:auto;margin:0 -18px;padding:8px 18px 10px;border-top:1px solid var(--line);scrollbar-width:none;align-items:center;animation:dpop .3s ease both}
+.txs .near::-webkit-scrollbar{display:none}
+.txs .near span{flex:none;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.txs .near button{flex:none;padding:7px 12px;border-radius:999px;font-size:15px;background:rgba(26,115,232,.1);color:var(--link);font-weight:600;white-space:nowrap}
+.txs .near button:active{transform:scale(.96)}
+.txs .crow .cauto{display:none;flex:none;margin:0 -10px 0 -4px;color:var(--link)}
+.txs .crow .cauto svg{width:16px;height:16px;display:block}
+.txs .crow.auto .cauto{display:block;animation:dpop .35s cubic-bezier(.2,.9,.3,1.5) both}
+.txs .crow.auto:focus-within .cauto{display:none}
+.txs .crow.auto input.tin{animation:cfill .45s ease both}
+@keyframes cfill{from{opacity:.2;transform:translateX(6px)}}
+.txs .csug .chead2{padding:8px 18px 4px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-top:1px solid var(--line)}
+.txs .csug .chead2:first-child{border-top:0}
+.txs .csug .chead2+button{border-top:0}
+.txs .csug button{animation:dup .22s ease both}
+.txs .cnew{flex:none;font-size:11.5px;font-weight:700;color:#188038;background:rgba(52,168,83,.14);padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+.txs .cplus{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(26,115,232,.12);color:var(--link);font-weight:700;margin-right:8px}
+.txs .cplace{margin:0 -18px;padding:12px 18px 14px;border-top:1px solid var(--line);background:rgba(26,115,232,.05);animation:dpop .28s cubic-bezier(.2,.9,.3,1.2) both}
+.txs .cplace p{margin:0 0 10px;font-size:15px;color:var(--muted)}.txs .cplace p b{color:var(--fg)}
+.txs .cchips2{display:flex;flex-wrap:wrap;gap:8px}
+.txs .cchips2 button{padding:8px 14px;border-radius:999px;font-size:15px;font-weight:600;background:#fff;color:var(--fg);box-shadow:0 0 0 1px rgba(60,64,67,.18)}
+.txs .cchips2 button.sug{background:var(--g-blue,#1a73e8);color:#fff;box-shadow:none}
+.txs .cchips2 button:active{transform:scale(.96)}
+.txs .ccancel{margin-top:10px;font-size:14px;color:var(--muted)}
+.txs .cplace+.trow,.txs .csug+.cplace+.trow{border-top:1px solid var(--line)}
 .txs .msug .mc{flex:none;max-width:45%;text-align:right;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 
@@ -778,8 +816,11 @@ function sheetErrMsg(e){const c=e&&e.code;
 async function pushToSheet(id,t){
   const mcp=await getMcp();
   if(!mcp){await markSheet(id,"failed","Google Sheets isn't available in this view.");return false}
-  const amt=round2((t.type==="refund"||t.type==="income"?1:-1)*(+t.amount||0));
-  const row=[serial(t.date),t.merchant||"Purchase",t.itemName||"Misc",amt,t.note||""];
+  const row=sheetRow(t);
+  if(mcp.pbAppend){ // standalone app: one call that won't double-add a row it already wrote
+    try{await mcp.pbAppend(id,row);await markSheet(id,"synced","");return true}
+    catch(e){await markSheet(id,"failed",sheetErrMsg(e));toast("Saved here, not in your sheet yet");return false}
+  }
   let inserted=false;
   try{
     await mcp.callTool("Google Sheets","insert_dimension",{spreadsheetId:SHEET.id,sheetId:SHEET.tabId,dimension:"ROWS",startIndex:SHEET.row-1,endIndex:SHEET.row,inheritFromBefore:false});
@@ -790,6 +831,17 @@ async function pushToSheet(id,t){
     const msg=sheetErrMsg(e);
     await markSheet(id,"failed",msg);toast("Saved here, not in your sheet yet");return false;
   }
+}
+function sheetRow(t){const amt=round2((t.type==="refund"||t.type==="income"?1:-1)*(+t.amount||0));return[serial(t.date),t.merchant||"Purchase",t.itemName||"Misc",amt,t.note||""]}
+/* A row can land in the sheet even when the phone never hears back (signal drops,
+   app goes to the background). Ask the sheet which "not in sheet" rows it already has. */
+const RC=new Set();let rcBusy=false;
+async function reconcileSheet(){
+  if(rcBusy||S.readOnly||!S.db)return;const mcp=await getMcp();if(!mcp||!mcp.pbCheck)return;
+  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)&&!RC.has(t.id));if(!list.length)return;
+  rcBusy=true;list.forEach(t=>RC.add(t.id));
+  try{const found=await mcp.pbCheck(list.map(t=>({id:t.id,row:sheetRow(t)})));for(const id of found||[])await markSheet(id,"synced","")}catch(e){}
+  rcBusy=false;
 }
 async function markSheet(id,state,msg){try{await S.db.doc("tx/"+id).update({sheet:state,sheetMsg:msg})}catch(e){}}
 function findItem(groups,id){for(const g of groups)for(const it of g.items)if(it.id===id)return{g,it};return null}
@@ -1188,6 +1240,146 @@ function merchMatches(q){
   if(out.length===1&&out[0].name.toLowerCase()===q)return[];
   return out;
 }
+/* ---------- location ----------
+   Saved with new transactions (lat/lng, accuracy, and a readable place from OpenStreetMap).
+   It stays in the app's own storage; the sheet row is unchanged. */
+const LOC={
+  ok(){return !!(navigator.geolocation&&window.isSecureContext)},
+  on(){return ls.get("pb.loc")!=="0"},
+  setOn(v){ls.set("pb.loc",v?"1":"0")},
+  get(){return new Promise((res,rej)=>{let done=false;const t=setTimeout(()=>{if(!done){done=true;rej({code:3})}},15000);
+    try{navigator.geolocation.getCurrentPosition(p=>{if(done)return;done=true;clearTimeout(t);res({lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy||0),at:new Date().toISOString()})},
+      e=>{if(done)return;done=true;clearTimeout(t);rej(e)},{enableHighAccuracy:true,timeout:12000,maximumAge:60000})}catch(e){done=true;clearTimeout(t);rej(e)}})},
+  cache:{},
+  async place(v){if(!v)return null;const k=v.lat.toFixed(4)+","+v.lng.toFixed(4);if(this.cache[k])return this.cache[k];
+    try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),6000);
+      const r=await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat="+v.lat+"&lon="+v.lng,{signal:ctl.signal,headers:{"Accept-Language":"en-US"}});clearTimeout(tm);
+      if(!r.ok)return null;const j=await r.json(),a=j.address||{};
+      const city=a.city||a.town||a.village||a.hamlet||a.suburb||a.county||"",st=(a["ISO3166-2-lvl4"]||"").split("-")[1]||a.state||"";
+      const poi=j.name&&j.name!==a.road&&!/^\d/.test(j.name)?j.name:"";
+      return this.cache[k]={place:[city,st].filter(Boolean).join(", "),poi,road:[a.house_number,a.road].filter(Boolean).join(" ")}}catch(e){return null}},
+  pack(v){const o={lat:v.lat,lng:v.lng,acc:v.acc||0,at:v.at||new Date().toISOString()};if(v.place)o.place=v.place;if(v.poi)o.poi=v.poi;if(v.road)o.road=v.road;return o},
+  // past merchants logged within ~200 m, closest and most used first, plus the place you're standing in
+  nearby(v){
+    const dist=(a,b)=>{const R=6371e3,r=Math.PI/180,dl=(b.lat-a.lat)*r,dg=(b.lng-a.lng)*r,x=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(x))};
+    const by={};txPool().forEach(t=>{if(!t.loc||t.loc.lat==null||!t.merchant)return;const d=dist(v,t.loc);if(d>200+Math.min(150,(v.acc||0)))return;
+      const name=String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"").trim(),k=name.toLowerCase();const e=by[k]||(by[k]={name,n:0,d});e.n++;e.d=Math.min(e.d,d)});
+    const out=Object.values(by).sort((a,b)=>a.d/(1+a.n)-b.d/(1+b.n)).slice(0,3);
+    if(v.poi&&!out.some(e=>e.name.toLowerCase()===v.poi.toLowerCase()))out.push({name:v.poi,poi:true});
+    return out.slice(0,4)}
+};
+function locLabel(l,merchant){if(!l)return"";if(merchant&&l.poi&&!merchKey(merchant).includes(l.poi.toLowerCase().split(" ")[0]))return[l.road,l.place].filter(Boolean).join(" · ")||l.place||"";return l.poi?(l.poi+(l.place?" · "+l.place:"")):(l.place||(l.road)||(l.lat!=null?l.lat.toFixed(4)+", "+l.lng.toFixed(4):""))}
+function locMapUrl(l,name){return"https://maps.apple.com/?ll="+l.lat+","+l.lng+"&q="+encodeURIComponent(String(name||"Purchase").replace(/^\s*venmo\s*:\s*/i,""))}
+/* ---------- budget item suggestions ----------
+   Ideas for categories you don't have yet, with words that hint at them and the group they usually sit in. */
+const CAT_IDEAS=[
+ ["Coffee",["starbucks","dunkin","coffee","cafe","biggby","tim hortons","espresso","latte","peet"],["food","dining"]],
+ ["Restaurants",["restaurant","grill","kitchen","diner","bistro","sushi","thai","pizza","taco","burger","bbq","steakhouse","cantina","eatery"],["food","dining"]],
+ ["Fast Food",["mcdonald","wendy","burger king","taco bell","chick-fil","chipotle","subway","kfc","popeyes","culver","five guys","panera","arby","jimmy john","domino"],["food","dining"]],
+ ["Groceries",["meijer","kroger","aldi","costco","trader joe","whole foods","grocery","market","spartan","sam's club","safeway","publix","fresh thyme"],["food"]],
+ ["Alcohol & Bars",["liquor","wine","brewery","brewing","taproom","pub","bar ","tavern","beer"],["food","fun","entertainment"]],
+ ["Gas",["shell","speedway","bp","marathon","exxon","mobil","sunoco","citgo","chevron","circle k","wawa","sheetz","gas station","fuel"],["transport","auto","car"]],
+ ["Car Maintenance",["autozone","jiffy","oil change","valvoline","tire","firestone","discount tire","advance auto","o'reilly","napa","car wash","mechanic","midas"],["transport","auto","car"]],
+ ["Car Insurance",["progressive","geico","state farm","allstate","auto insurance"],["transport","insurance","bills"]],
+ ["Parking & Tolls",["parking","toll","park mobile","parkmobile","spothero"],["transport"]],
+ ["Rideshare",["uber","lyft","taxi","cab "],["transport"]],
+ ["Public Transit",["transit","metro","bus ","train","amtrak"],["transport"]],
+ ["Flights",["airline","airlines","delta","united","southwest","american air","spirit","frontier","jetblue","alaska air","flight"],["travel","fun"]],
+ ["Hotels",["hotel","marriott","hilton","hyatt","airbnb","vrbo","inn ","resort","motel","holiday inn"],["travel","fun"]],
+ ["Streaming",["netflix","hulu","disney","hbo","max ","peacock","paramount","spotify","youtube","apple tv","sling"],["bills","subscriptions","fun"]],
+ ["Phone",["verizon","t-mobile","at&t","mint mobile","visible","cricket"],["bills","utilities","housing"]],
+ ["Internet",["comcast","xfinity","spectrum","internet","wifi","starlink"],["bills","utilities","housing"]],
+ ["Electric",["consumers energy","dte","electric","power"],["utilities","housing","bills"]],
+ ["Water",["water","sewer"],["utilities","housing","bills"]],
+ ["Gym",["planet fitness","gym","fitness","ymca","crossfit","orangetheory","la fitness","anytime fitness"],["health","personal"]],
+ ["Haircuts",["barber","salon","great clips","supercuts","sport clips","haircut"],["personal","health"]],
+ ["Pharmacy",["cvs","walgreens","rite aid","pharmacy"],["health"]],
+ ["Doctor",["clinic","hospital","medical","urgent care","physician","doctor","copay"],["health"]],
+ ["Dentist",["dental","dentist","orthodont"],["health"]],
+ ["Vet",["vet","animal hospital","banfield"],["pets","health"]],
+ ["Pet Supplies",["petco","petsmart","chewy","pet supplies","tractor supply"],["pets","household"]],
+ ["Home Improvement",["home depot","lowe","menards","ace hardware","hardware","true value"],["housing","home","household"]],
+ ["Furniture",["ikea","wayfair","ashley","furniture","pottery barn","crate & barrel"],["housing","home","household"]],
+ ["Electronics",["best buy","apple store","micro center","newegg","electronics"],["shopping","household"]],
+ ["Amazon",["amazon","amzn"],["shopping","household"]],
+ ["Books",["barnes","book","kindle","audible"],["fun","personal"]],
+ ["Movies",["amc","cinema","theater","theatre","regal","celebration cinema","fandango"],["fun","entertainment"]],
+ ["Concerts & Tickets",["ticketmaster","stubhub","seatgeek","live nation","eventbrite","tickets"],["fun","entertainment"]],
+ ["Video Games",["steam","playstation","xbox","nintendo","epic games","gamestop"],["fun","entertainment"]],
+ ["Golf",["golf","topgolf"],["fun","entertainment"]],
+ ["Charity",["donation","church","gofundme","charity","foundation","tithe"],["giving","gifts"]],
+ ["Laundry & Dry Cleaning",["laundry","dry clean","cleaners","laundromat"],["household","personal"]],
+ ["Childcare",["daycare","childcare","babysit","nanny"],["family","kids"]],
+ ["Education",["tuition","university","college","course","udemy","coursera","school"],["education","personal"]],
+ ["Bank Fees",["fee","overdraft","atm"],["fees","bills"]],
+ ["Renters Insurance",["lemonade","renters insurance"],["insurance","housing"]],
+ ["Investments",["fidelity","vanguard","schwab","robinhood","brokerage","etrade"],["savings"]],
+];
+const catNorm=s=>String(s||"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9]+/g," ").trim();
+const catWords=s=>catNorm(s).split(" ").filter(w=>w&&w!=="and"&&w!=="the").map(w=>w.length>3?w.replace(/s$/,""):w);
+function catExisting(groups,kind){
+  const out=[];
+  if(kind==="refund")incomeFor(S.ym).forEach(x=>out.push({kind:"item",id:x.id,name:x.name,group:"Income"}));
+  groups.forEach(g=>g.items.forEach(it=>{if(it.id!==MISC_ID)out.push({kind:"item",id:it.id,name:it.name,group:g.name})}));
+  const mg=groups.find(g=>g.items.some(it=>it.id===MISC_ID));
+  if(mg){out.push({kind:"item",id:MISC_ID,name:(mg.items.find(it=>it.id===MISC_ID)||{}).name||"Misc",group:mg.name});SUB.list.forEach(n=>out.push({kind:"sub",name:n,group:mg.name}))}
+  return out;
+}
+// an idea "exists" when every word of it shows up in one of your names (Gas → Auto Gas & Oil)
+function ideaTwin(name,ex){const w=catWords(name);return ex.find(e=>{const ew=catWords(e.name);return w.every(x=>ew.includes(x))})||(w[0]&&w[0].length>=4?ex.find(e=>catWords(e.name)[0]===w[0]):null)}
+const GW_STOP=new Set(["the","and","inc","llc","ltd","corp","company","store","shop","online","payment","purchase","pay","com","www","usa","venmo","apple","square","sq","tst","pos","llc","of","for","at","in","on","to","a","co"]);
+const gWords=s=>[...new Set(catNorm(merchKey(s)).split(" ").filter(w=>w.length>=3&&!GW_STOP.has(w)&&!/^\d+$/.test(w)).map(w=>w.length>3?w.replace(/s$/,""):w))];
+function txPool(){const seen=new Map();Object.values(IS.hist).forEach(a=>(a||[]).forEach(t=>seen.set(t.id,t)));S.tx.forEach(t=>seen.set(t.id,t));return[...seen.values()]}
+const exKey=e=>e.kind==="sub"?MISC_ID+"|"+e.name:e.id;
+/* "Hood River Parking" → your past merchants with "parking" in the name were mostly Parking & Rides.
+   Each word votes for the categories of past merchants that contain it (weighted by how consistent
+   and how common that is); a word that's in a category's own name gets an extra vote. */
+function catGuess(merchant,ex){
+  const qw=gWords(merchant);if(!qw.length)return[];
+  const key=merchKey(merchant),mcat={};
+  txPool().forEach(t=>{if(t.type==="income"||!t.itemId)return;const mk=merchKey(t.merchant);if(!mk||mk===key)return;
+    const ck=t.itemId===MISC_ID&&t.sub?MISC_ID+"|"+t.sub:t.itemId;const o=mcat[mk]||(mcat[mk]={});o[ck]=(o[ck]||0)+1});
+  const byWord={};
+  Object.entries(mcat).forEach(([mk,o])=>{const ck=Object.keys(o).sort((a,b)=>o[b]-o[a])[0];const ws=gWords(mk);
+    qw.forEach(w=>{if(ws.includes(w)){const bw=byWord[w]||(byWord[w]={});bw[ck]=(bw[ck]||0)+1}})});
+  const score={};
+  Object.values(byWord).forEach(bw=>{const tot=Object.values(bw).reduce((a,b)=>a+b,0);Object.entries(bw).forEach(([ck,c])=>{score[ck]=(score[ck]||0)+(c/tot)*Math.log2(1+c)})});
+  ex.forEach(e=>{const ew=catWords(e.name);if(qw.some(w=>ew.includes(w)))score[exKey(e)]=(score[exKey(e)]||0)+2.5});
+  return Object.entries(score).filter(([,v])=>v>=1).sort((a,b)=>b[1]-a[1]).map(([ck,v])=>({e:ex.find(e=>exKey(e)===ck),v})).filter(x=>x.e);
+}
+function catHintGroup(name,groups){
+  const idea=CAT_IDEAS.find(i=>catNorm(i[0])===catNorm(name));const hints=idea?idea[2]:[];
+  for(const h of hints){const g=groups.find(g=>catNorm(g.name).includes(h));if(g)return g.id}
+  const mg=groups.find(g=>g.items.some(it=>it.id===MISC_ID));return mg?mg.id:(groups[0]&&groups[0].id)}
+function catSuggest(q,groups,ym,merchant,kind){
+  const ex=catExisting(groups,kind),key=String(merchant||"").toLowerCase().replace(/^\s*venmo\s*:\s*/,"").trim();
+  const keyOf=e=>e.kind+":"+(e.id||"")+":"+e.name.toLowerCase();
+  q=String(q||"").replace(/\s+/g," ").trim();
+  if(!q){ // nothing typed yet: what the merchant hints at, then what you've used lately
+    const out=[],seen=new Set(),add=(e,head)=>{const k=keyOf(e);if(seen.has(k))return;seen.add(k);out.push(Object.assign({head},e))};
+    if(key){
+      const past=merchIndex().find(m=>m.name.toLowerCase()===key);
+      if(past&&past.itemId){const it=past.itemId===MISC_ID&&past.sub?ex.find(e=>e.kind==="sub"&&e.name===past.sub):ex.find(e=>e.kind==="item"&&e.id===past.itemId);if(it)add(it,"Suggested")}
+      const sg=suggestSub(merchant);if(sg){const it=ex.find(e=>e.kind==="sub"&&e.name===sg);if(it)add(it,"Suggested")}
+      catGuess(merchant,ex).slice(0,3).forEach(x=>add(x.e,"Suggested"));
+      CAT_IDEAS.forEach(([n,kw])=>{if(kw.some(w=>(" "+key+" ").includes(w)||key.startsWith(w.trim()))){const tw=ideaTwin(n,ex);add(tw||{kind:"idea",name:n},"Suggested")}});
+    }
+    const rec=sortedTx().filter(t=>t.itemId&&t.type!=="income");
+    for(const t of rec){if(out.length>=7)break;const it=t.itemId===MISC_ID&&t.sub?ex.find(e=>e.kind==="sub"&&e.name===t.sub):ex.find(e=>e.kind==="item"&&e.id===t.itemId);if(it)add(it,"Recent")}
+    return out.slice(0,7);
+  }
+  const ql=q.toLowerCase(),rank=n=>{n=n.toLowerCase();return n.startsWith(ql)?0:n.split(/[^a-z0-9]+/).some(w=>w&&w.startsWith(ql))?1:n.includes(ql)?2:-1};
+  const res=[],seen=new Set();
+  ex.forEach(e=>{const r=rank(e.name);if(r>=0){res.push({e,r,o:0});seen.add(keyOf(e))}});
+  CAT_IDEAS.forEach(([n,kw])=>{let r=rank(n);if(r<0&&ql.length>=3&&kw.some(w=>w.trim().startsWith(ql)||ql.startsWith(w.trim())))r=3;if(r<0)return;
+    const tw=ideaTwin(n,ex);const e=tw||{kind:"idea",name:n};const k=keyOf(e);if(seen.has(k))return;seen.add(k);res.push({e,r,o:tw?0:1})});
+  res.sort((a,b)=>a.r-b.r||a.o-b.o||a.e.name.length-b.e.name.length);
+  const out=res.slice(0,7).map(x=>x.e);
+  const nice=q.replace(/\b\w/g,c=>c.toUpperCase());
+  const starts=res.some(x=>x.r===0);
+  if(!starts&&!out.some(e=>catNorm(e.name)===catNorm(q))&&!ex.some(e=>catNorm(e.name)===catNorm(q)))out.push({kind:"create",name:nice});
+  return out;
+}
 function loadSubs(){if(!S.db)return;S.db.doc("meta/subs").get().then(d=>{if(d&&d.exists){const v=d.data();if(Array.isArray(v.list)&&v.list.length)SUB.list=v.list;if(v.merchants)SUB.merchants=v.merchants}}).catch(()=>{})}
 function spendRows(ym){return txOf(ym).filter(t=>t.type!=="income").map(t=>({g:groupNameOf(t,ym),i:itemNameOf(t,ym),a:sAmt(t)}))}
 function shortM(ym){return MONTHS[+ym.slice(5)-1].slice(0,3)}
@@ -1455,8 +1647,10 @@ function paceReadHTML(p,d){const [y,m]=p.ym.split("-").map(Number);const dt=MONT
 function paceScrub(svg,clientX){
   let p;try{p=JSON.parse(svg.dataset.p)}catch(e){return}
   const r=svg.getBoundingClientRect(),vx=(clientX-r.left)/r.width*p.W,pw=p.W-p.L-p.R,ph=p.H-p.T-p.B;
-  const d=Math.max(1,Math.min(p.dim,Math.round((vx-p.L)/pw*p.dim)));
-  const X=x=>p.L+pw*x/p.dim,Y=v=>p.T+ph-ph*Math.max(0,v)/p.max;
+  const za=0,zb=p.dim;
+  const d=Math.max(Math.max(1,Math.ceil(za)),Math.min(Math.floor(zb),Math.round(za+(vx-p.L)/pw*(zb-za))));
+  const ylo=0,yhi=p.max;
+  const X=x=>p.L+pw*(x-za)/(zb-za),Y=v=>p.T+ph-ph*(Math.max(0,v)-ylo)/(yhi-ylo);
   let g='<line x1="'+X(d)+'" x2="'+X(d)+'" y1="'+p.T+'" y2="'+(p.T+ph)+'" class="hov"/>';
   if(p.planned>0)g+='<circle cx="'+X(d)+'" cy="'+Y(p.planned*d/p.dim)+'" r="4.5" class="hdot2"/>';
   if(d<=p.dayNow)g+='<circle cx="'+X(d)+'" cy="'+Y(p.cum[d])+'" r="6" class="dot"/>';else if(p.proj&&p.proj[d]!=null)g+='<circle cx="'+X(d)+'" cy="'+Y(p.proj[d])+'" r="5" class="pdot"/>';
@@ -1468,6 +1662,31 @@ function paceEnd(svg){let p;try{p=JSON.parse(svg.dataset.p)}catch(e){return}svg.
 $("#main").addEventListener("pointerdown",e=>{const svg=e.target.closest("#paceSvg");if(!svg)return;svg._act=true;try{svg.setPointerCapture(e.pointerId)}catch(_){}paceScrub(svg,e.clientX)});
 $("#main").addEventListener("pointermove",e=>{const svg=e.target.closest("#paceSvg");if(svg&&svg._act)paceScrub(svg,e.clientX)});
 ["pointerup","pointercancel","lostpointercapture"].forEach(t=>$("#main").addEventListener(t,e=>{const svg=e.target.closest&&e.target.closest("#paceSvg");if(svg&&svg._act){svg._act=false;paceEnd(svg)}}));
+/* top of the chart sits just above the highest point drawn; gridlines on round steps below it */
+function paceTop(v){return Math.max(v*1.06,50)}
+function paceStep(top){const st0=top/4,p10=Math.pow(10,Math.floor(Math.log10(st0)));for(const f of [1,2,2.5,5,10])if(f*p10>=st0*0.8)return f*p10;return 10*p10}
+const yfmt=(v,st)=>st>=1000||v<1000?kfmt(v):"$"+Math.round(v).toLocaleString("en-US");
+function paceInner(p,a,b,ys,st){
+  const {dim,dayNow,planned,max,W,H,L,R,T,B,cum,proj,ym,cur}=p,pw=W-L-R,ph=H-T-B,span=b-a;
+  const ylo=0,yhi=max;st=paceStep(max);
+  const X=d=>L+pw*(d-a)/span,Y=v=>T+ph-ph*(Math.max(0,v)-ylo)/(yhi-ylo),f=n=>n.toFixed(1);
+  let g='';for(let val=0;val<=yhi+1e-6;val+=st){const yy=Y(val);g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+f(yy)+'" y2="'+f(yy)+'" class="grid"/>'+'<text x="'+(L-6)+'" y="'+f(yy+4)+'" class="ax" text-anchor="end">'+yfmt(val,st)+'</text>'}
+  g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+T+'" y2="'+T+'" class="grid" style="opacity:.45"/>';
+  g+='<g clip-path="url(#pclip)">';
+  if(planned>0)g+='<line x1="'+f(X(0))+'" y1="'+Y(0)+'" x2="'+f(X(dim))+'" y2="'+f(Y(planned))+'" class="trk"/>';
+  if(dayNow){let pts=[[X(0),Y(0)]];for(let d=1;d<=dayNow;d++)pts.push([X(d),Y(cum[d])]);
+    const ln=pts.map((q,i)=>(i?"L":"M")+f(q[0])+" "+f(q[1])).join("");
+    g+='<path class="area" d="'+ln+"L"+f(X(dayNow))+" "+f(T+ph)+"L"+f(X(0))+" "+f(T+ph)+'z"/><path class="act" pathLength="1" d="'+ln+'"/>';
+    if(proj){let pp=[];for(let d=dayNow;d<=dim;d++)pp.push((d===dayNow?"M":"L")+f(X(d))+" "+f(Y(proj[d])));g+='<path class="proj" d="'+pp.join("")+'"/><circle class="pdot" cx="'+f(X(dim))+'" cy="'+f(Y(proj[dim]))+'" r="4"/>'}
+    if(cur)g+='<line class="now" x1="'+f(X(dayNow))+'" x2="'+f(X(dayNow))+'" y1="'+T+'" y2="'+(T+ph)+'"/>';
+    g+='<circle class="dot" cx="'+f(X(dayNow))+'" cy="'+f(Y(cum[dayNow]))+'" r="5"/>'}
+  g+='</g>';
+  let ticks;if(span>=dim-0.01)ticks=[1,8,15,22,dim];
+  else{const st=span<=8?1:span<=15?2:span<=22?3:5;ticks=[];for(let d=Math.max(1,Math.ceil(a));d<=Math.floor(b);d++)if((d-1)%st===0)ticks.push(d)}
+  const first=ticks[0];
+  ticks.forEach(d=>{const x=X(d);if(x<L-2||x>W-R+2)return;g+='<text x="'+f(x)+'" y="'+(H-8)+'" class="ax" text-anchor="middle">'+(d===first?shortM(ym)+" "+d:d)+'</text>'});
+  return g;
+}
 function paceCard(fh){
   const ym=S.ym,[y,m]=ym.split("-").map(Number),dim=new Date(y,m,0).getDate(),td=today();
   const cur=ymOf(td)===ym,past=ym<ymOf(td),dayNow=cur?+td.slice(8,10):(past?dim:0);
@@ -1480,23 +1699,15 @@ function paceCard(fh){
   const daysLeft=dim-dayNow,committed=cur?round2(full-spentNow):0,free=round2(planned-spentNow-committed),perDay=cur&&daysLeft>0&&planned>0?round2(Math.max(free,0)/daysLeft):0;
   let proj=null;if(cur&&daysLeft>0&&(planned>0||committed>0)){proj=new Array(dim+1).fill(null);proj[dayNow]=spentNow;for(let d=dayNow+1;d<=dim;d++)proj[d]=round2(proj[d-1]+perDay+day[d])}
   const W=340,H=220,L=44,R=12,T=14,B=26,pw=W-L-R,ph=H-T-B;
-  const max=niceMax(Math.max(planned,dayNow?Math.max(...cum.slice(0,dayNow+1)):0,cur?0:full,proj?Math.max(...proj.filter(v=>v!=null)):0));
+  const max=paceTop(Math.max(planned,dayNow?Math.max(...cum.slice(0,dayNow+1)):0,cur?0:full,proj?Math.max(...proj.filter(v=>v!=null)):0));
   const X=d=>L+pw*d/dim,Y=v=>T+ph-ph*Math.max(0,v)/max;
-  let g='';for(let i=0;i<=4;i++){const yy=T+ph-ph*i/4;g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" class="grid"/><text x="'+(L-6)+'" y="'+(yy+4)+'" class="ax" text-anchor="end">'+kfmt(max*i/4)+'</text>'}
-  [1,8,15,22,dim].forEach(d=>g+='<text x="'+X(d)+'" y="'+(H-8)+'" class="ax" text-anchor="middle">'+(d===1?shortM(ym)+" 1":d)+'</text>');
-  if(planned>0)g+='<line x1="'+X(0)+'" y1="'+Y(0)+'" x2="'+X(dim)+'" y2="'+Y(planned)+'" class="trk"/>';
-  if(dayNow){let pts=[[X(0),Y(0)]];for(let d=1;d<=dayNow;d++)pts.push([X(d),Y(cum[d])]);
-    const ln=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join("");
-    g+='<path class="area" d="'+ln+"L"+X(dayNow).toFixed(1)+" "+Y(0)+"L"+X(0)+" "+Y(0)+'z"/><path class="act" pathLength="1" d="'+ln+'"/>';
-    if(proj){let pp=[];for(let d=dayNow;d<=dim;d++)pp.push((d===dayNow?"M":"L")+X(d).toFixed(1)+" "+Y(proj[d]).toFixed(1));g+='<path class="proj" d="'+pp.join("")+'"/><circle class="pdot" cx="'+X(dim)+'" cy="'+Y(proj[dim])+'" r="4"/>'}
-    if(cur)g+='<line class="now" x1="'+X(dayNow)+'" x2="'+X(dayNow)+'" y1="'+T+'" y2="'+(T+ph)+'"/>';
-    g+='<circle class="dot" cx="'+X(dayNow)+'" cy="'+Y(spentNow)+'" r="5"/>'}
+  let g='<defs><clipPath id="pclip"><rect x="'+(L-1)+'" y="'+(T-7)+'" width="'+(pw+8)+'" height="'+(ph+8)+'"/></clipPath></defs>';
   const label=IS.item||IS.group||"All spending";
   let h='<section class="card pace"><div class="chead"><h2>Spending pace</h2><span class="lbl">'+MONTHS[m-1].slice(0,3)+' '+y+'</span></div>'+fh;
-  const pd={ym,dim,dayNow,planned,max,W,H,L,R,T,B,cum:cum.slice(0,dim+1),proj};
+  const pd={ym,dim,dayNow,planned,max,W,H,L,R,T,B,cum:cum.slice(0,dim+1),proj,cur};
   h+='<div class="pread num" id="paceRead">'+paceReadHTML(pd,dayNow||1)+'</div>';
   const pkey=[ym,IS.group,IS.item,Math.round(full),Math.round(planned)].join("~"),panim=IS.paceKey!==pkey;IS.paceKey=pkey;
-  h+='<svg class="chart pscrub'+(panim?' anim':'')+'" id="paceSvg" data-p="'+esc(JSON.stringify(pd))+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cumulative spending versus on-track pace for '+esc(label)+'. Drag across to see each day.">'+g+'<g id="paceHover"></g></svg>';
+  h+='<div class="pzwrap"><svg class="chart pscrub'+(panim?' anim':'')+'" id="paceSvg" data-p="'+esc(JSON.stringify(pd))+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cumulative spending versus on-track pace for '+esc(label)+'. Drag across to see each day.">'+g+'<g id="paceZ">'+paceInner(pd,0,dim)+'</g><g id="paceHover"></g></svg>'+'</div>';
   h+='<div class="legend"><span><i style="background:var(--link)"></i>Spent so far</span>'+(planned>0?'<span><i style="background:var(--muted)"></i>Pace</span>':'')+(proj?'<span><i style="background:var(--link);opacity:.5"></i>Projected</span>':'')+'</div>';
   if(!dayNow){h+='<p class="note" style="margin:12px 0 0">This month hasn\'t started yet. Planned: '+money(planned)+'.</p>';return h+'</section>'}
   const ref=cur?paceNow:planned,ou=round2(spentNow-ref),isOver=ou>0;
@@ -1799,6 +2010,7 @@ function render(){if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.c
   if(keep){const i=$("#txq");if(i){i.focus();try{i.setSelectionRange(keep[0],keep[1])}catch(e){}}}
 }
 
+
 /* ---------- sheets ---------- */
 function openSheet(html,bind){
   const root=$("#sheetRoot");
@@ -1977,8 +2189,11 @@ function txSheet(existing){
         '<label class="trow"><span>Merchant</span><input class="tin" id="f-mer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-msug" aria-expanded="false" placeholder="Name" value="'+esc(merch0)+'"></label>'+
         '<div class="msug" id="f-msug" role="listbox" aria-label="Past merchants" hidden></div>'+
         '<label class="trow"><span>Venmo</span><input type="checkbox" class="tchk" id="f-venmo"'+(venmo0?" checked":"")+'></label>'+
+        (existing?(existing.loc&&existing.loc.lat!=null?'<a class="trow tlocrow" href="'+esc(locMapUrl(existing.loc,existing.merchant))+'" target="_blank" rel="noopener"><span>Location</span><span class="tv">'+esc(locLabel(existing.loc,existing.merchant))+CHEV+'</span></a>':'')
+          :(LOC.ok()?'<div class="trow tlocrow"><span>Location</span><span class="tlv" id="f-locv"></span><label class="tgl tglsm"><input type="checkbox" id="f-loc" role="switch" aria-label="Save location"'+(LOC.on()?" checked":"")+'><span class="sw"></span></label></div><div class="near" id="f-near" hidden></div>':''))+
       '</div>'+
-      '<div class="tcard"><div class="trow"><span>Budget Item</span><span class="tv" id="f-ctxt"></span><select class="ovl" id="f-cat" aria-label="Budget item"><option value="">Select</option>'+categoryOptions(groups,sel)+'</select></div><div class="trow" id="f-subrow" hidden><span>Subcategory</span><span class="tv" id="f-stxt"></span><select class="ovl" id="f-sub" aria-label="Misc subcategory"><option value="">Select</option>'+SUB.list.map(x=>'<option'+(existing&&existing.sub===x?" selected":"")+'>'+esc(x)+'</option>').join("")+'<option value="__new">+ New subcategory…</option></select></div><div class="trow" id="f-newsub" hidden><input class="tin" id="f-newsubin" autocomplete="off" maxlength="40" enterkeyhint="done" placeholder="New subcategory name" aria-label="New subcategory name" style="text-align:left"><button class="addlink" id="f-newsubok" style="padding:0 0 0 8px">Add</button></div></div>'+
+      '<div class="tcard"><div class="trow crow"><span>Budget Item</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel)+'</select></span></div>'+
+        '<div class="msug csug" id="f-csug" role="listbox" aria-label="Budget item suggestions" hidden></div><div class="cplace" id="f-cplace" hidden></div><div class="trow" id="f-subrow" hidden><span>Subcategory</span><span class="tv" id="f-stxt"></span><select class="ovl" id="f-sub" aria-label="Misc subcategory"><option value="">Select</option>'+SUB.list.map(x=>'<option'+(existing&&existing.sub===x?" selected":"")+'>'+esc(x)+'</option>').join("")+'<option value="__new">+ New subcategory…</option></select></div><div class="trow" id="f-newsub" hidden><input class="tin" id="f-newsubin" autocomplete="off" maxlength="40" enterkeyhint="done" placeholder="New subcategory name" aria-label="New subcategory name" style="text-align:left"><button class="addlink" id="f-newsubok" style="padding:0 0 0 8px">Add</button></div></div>'+
       '<div class="tcard"><input class="tnote" id="f-note" autocomplete="off" placeholder="Add a Note" value="'+esc(existing?existing.note:"")+'"></div>'+
       (existing?'<div class="textra">'+(existing.sheet!=="synced"?'<div class="btnrow" style="margin-bottom:10px"><button class="btn sec" id="f-sync">Send to sheet</button></div>':'')+
         '<p class="note" style="margin:0 4px 10px">'+(existing.sheet==="synced"?"This is already in your Finance Tracker. Changes or a delete here won't update that row, so fix it in the sheet too.":esc(existing.sheetMsg||"Not in your Finance Tracker yet."))+'</p>'+
@@ -1998,17 +2213,20 @@ function txSheet(existing){
       const subSel=s.querySelector("#f-sub"),subRow=s.querySelector("#f-subrow"),stxt=s.querySelector("#f-stxt"),merIn=s.querySelector("#f-mer");let subTouched=!!(existing&&existing.sub);
       const drawSub=()=>{subRow.hidden=cat.value!==MISC_ID;if(subRow.hidden)nsRow.hidden=true;stxt.innerHTML=(subSel.value?esc(subSel.value):"Select")+CHEV};
       const autoSub=()=>{if(subTouched||cat.value!==MISC_ID)return;const g=suggestSub((s.querySelector("#f-venmo").checked?"Venmo: ":"")+merIn.value);if(g&&SUB.list.includes(g))subSel.value=g;drawSub()};
-      const drawCat=()=>{const o=cat.options[cat.selectedIndex];ctxt.innerHTML=(cat.value?esc(o.textContent):"Select")+CHEV;drawSub();autoSub()};
+      const cq=s.querySelector("#f-cq");
+      const catLabel=()=>{if(!cat.value)return"";const o=cat.options[cat.selectedIndex];const nm=o?o.textContent:"";return cat.value===MISC_ID&&subSel.value&&subSel.value!=="__new"?subSel.value:nm};
+      const drawCat=()=>{drawSub();autoSub();if(document.activeElement!==cq)cq.value=catLabel()};
       const nsRow=s.querySelector("#f-newsub"),nsIn=s.querySelector("#f-newsubin");let subPrev=subSel.value;
       subSel.addEventListener("change",()=>{
         if(subSel.value==="__new"){subSel.value=subPrev;drawSub();nsRow.hidden=false;nsIn.value="";nsIn.focus();return}
-        subPrev=subSel.value;subTouched=true;nsRow.hidden=true;drawSub()});
-      const addSub=()=>{const n=nsIn.value.replace(/\s+/g," ").trim();if(!n){toast("Type a name for the subcategory");nsIn.focus();return}
-        let name=SUB.list.find(x=>x.toLowerCase()===n.toLowerCase());
+        subPrev=subSel.value;subTouched=true;catTouched=true;s.querySelector(".crow").classList.remove("auto");nsRow.hidden=true;drawSub();if(document.activeElement!==cq)cq.value=catLabel()});
+      const ensureSub=n=>{let name=SUB.list.find(x=>x.toLowerCase()===n.toLowerCase());
         if(!name){name=n;const oi=SUB.list.indexOf("Other");if(oi>=0)SUB.list.splice(oi,0,name);else SUB.list.push(name);
           const o=document.createElement("option");o.textContent=name;subSel.insertBefore(o,subSel.querySelector('option[value="__new"]'));
           if(S.db&&!S.readOnly)S.db.doc("meta/subs").set({list:SUB.list,merchants:SUB.merchants||{}}).then(()=>toast("Added "+name)).catch(()=>toast("Added for now, but couldn't save it for next time"));}
-        subSel.value=name;subPrev=name;subTouched=true;nsRow.hidden=true;nsIn.blur();drawSub();showPad(true)};
+        return name};
+      const addSub=()=>{const n=nsIn.value.replace(/\s+/g," ").trim();if(!n){toast("Type a name for the subcategory");nsIn.focus();return}
+        const name=ensureSub(n);subSel.value=name;subPrev=name;subTouched=true;nsRow.hidden=true;nsIn.blur();drawSub();cq.value=catLabel();showPad(true)};
       s.querySelector("#f-newsubok").onclick=addSub;
       nsIn.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();e.stopImmediatePropagation();addSub()}});merIn.addEventListener("input",autoSub);merIn.addEventListener("change",autoSub);
       // merchant suggestions: tap one to fill the name, Venmo flag and the budget item you last used for it
@@ -2041,7 +2259,94 @@ function txSheet(existing){
         if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();const n=sugList.length;sugHi=e.key==="ArrowDown"?(sugHi+1)%n:(sugHi<=0?n-1:sugHi-1);drawSug()}
         else if(e.key==="Enter"&&sugHi>=0){e.preventDefault();e.stopImmediatePropagation();pickSug(sugList[sugHi])}
         else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();hideSug()}});
-      MV.cb=()=>{if(!s.isConnected){MV.cb=null;return}drawSug()};
+      MV.cb=()=>{if(!s.isConnected){MV.cb=null;return}drawSug();autoSoon()};
+      // budget item search: existing items, Misc subcategories, and ideas for new ones
+      const csug=s.querySelector("#f-csug"),cplace=s.querySelector("#f-cplace");let cList=[],cHi=-1;
+      const hideC=()=>{cList=[];cHi=-1;csug.hidden=true;csug.innerHTML="";cq.setAttribute("aria-expanded","false")};
+      const chl=t=>{const q=cq.value.replace(/\s+/g," ").trim();const i=q?t.toLowerCase().indexOf(q.toLowerCase()):-1;return i<0?esc(t):esc(t.slice(0,i))+"<b>"+esc(t.slice(i,i+q.length))+"</b>"+esc(t.slice(i+q.length))};
+      const drawC=()=>{
+        if(document.activeElement!==cq){hideC();return}
+        const q=cq.value.trim(),ym=ymOf(dIn.value||today());
+        cList=catSuggest(q,groupsFor(ym),ym,(s.querySelector("#f-venmo").checked?"Venmo: ":"")+merIn.value,kind);if(cHi>=cList.length)cHi=-1;
+        if(!cList.length){hideC();return}
+        let lastHead=null;
+        csug.innerHTML=cList.map((e,i)=>{const head=e.head&&e.head!==lastHead?'<div class="chead2">'+esc(e.head)+'</div>':'';lastHead=e.head||lastHead;
+          return head+'<button type="button" role="option" data-ci="'+i+'" aria-selected="'+(i===cHi)+'"'+(i===cHi?' class="hl"':'')+'><span class="mn">'+(e.kind==="create"?'<span class="cplus">+</span>Create “'+esc(e.name)+'”':chl(e.name))+'</span>'+
+            (e.kind==="idea"||e.kind==="create"?'<span class="cnew">New</span>':'<span class="mc">'+esc(e.group||"")+'</span>')+'</button>'}).join("");
+        csug.classList.toggle("noq",!q);csug.hidden=false;cplace.hidden=true;cq.setAttribute("aria-expanded","true")};
+      const selectItem=(id,sub)=>{if(![...cat.options].some(o=>o.value===id))return false;cat.value=id;catTouched=true;s.querySelector(".crow").classList.remove("auto");
+        if(id===MISC_ID&&sub){subSel.value=sub;subPrev=sub;subTouched=true}drawCat();cq.value=catLabel();return true};
+      const finishPick=()=>{hideC();cq.blur();try{haptic()}catch(_){}showPad(true)};
+      const crow=s.querySelector(".crow");let autoT=0;
+      // location: grab a fix while you fill in the form; nearby places become one-tap merchants
+      let locP=null,locV=null;const locEl=s.querySelector("#f-locv"),locSw=s.querySelector("#f-loc"),nearEl=s.querySelector("#f-near");
+      const drawLoc=(txt,cls)=>{if(locEl){locEl.textContent=txt;locEl.className="tlv"+(cls?" "+cls:"")}};
+      const drawNear=()=>{if(!nearEl)return;const names=locV?LOC.nearby(locV):[];if(!names.length||merIn.value.trim()){nearEl.hidden=true;return}
+        nearEl.innerHTML='<span>Nearby</span>'+names.map(n=>'<button type="button" data-near="'+esc(n.name)+'">'+(n.poi?'📍 ':'')+esc(n.name)+'</button>').join("");nearEl.hidden=false};
+      const startLoc=()=>{if(existing||!locSw||!locSw.checked)return;drawLoc("Finding…","busy");
+        locP=LOC.get().then(v=>{locV=v;if(!s.isConnected)return v;drawLoc(locLabel(v)||"Saved");drawNear();
+          LOC.place(v).then(pl=>{if(pl){Object.assign(v,pl);if(s.isConnected){drawLoc(v.place||locLabel(v));drawNear()}}});return v})
+          .catch(err=>{locV=null;if(!s.isConnected)return null;
+            // when embedded (no permission to ask for location), hide the row
+            if(err&&err.code===1&&window.top!==window){const r=locSw.closest(".trow");if(r)r.remove();if(nearEl)nearEl.remove();return null}
+            drawLoc(err&&err.code===1?"Not allowed":"Unavailable","off");return null})};
+      if(locSw){locSw.addEventListener("change",()=>{LOC.setOn(locSw.checked);if(locSw.checked)startLoc();else{locP=null;locV=null;drawLoc("Off","off");if(nearEl)nearEl.hidden=true}});
+        if(locSw.checked)startLoc();else drawLoc("Off","off")}
+      if(nearEl)nearEl.addEventListener("click",e=>{const b=e.target.closest("[data-near]");if(!b)return;merIn.value=b.dataset.near;nearEl.hidden=true;
+        const past=merchIndex().find(x=>x.name.toLowerCase()===b.dataset.near.toLowerCase());if(past)s.querySelector("#f-venmo").checked=!!past.venmo;
+        autoCat();try{haptic()}catch(_){}});
+      merIn.addEventListener("input",drawNear);
+      const autoCat=()=>{
+        if(existing||catTouched)return;
+        const ym=ymOf(dIn.value||today()),ex=catExisting(groupsFor(ym),kind),m=(s.querySelector("#f-venmo").checked?"Venmo: ":"")+merIn.value;
+        if(!merchKey(m))return;
+        let pick=null;const past=merchIndex().find(e=>e.name.toLowerCase()===merchKey(m));
+        if(past&&past.itemId)pick=past.itemId===MISC_ID&&past.sub?ex.find(e=>e.kind==="sub"&&e.name===past.sub):ex.find(e=>e.kind==="item"&&e.id===past.itemId);
+        if(!pick){const g=catGuess(m,ex)[0];if(g)pick=g.e}
+        if(!pick)return;
+        const id=pick.kind==="sub"?MISC_ID:pick.id;if(![...cat.options].some(o=>o.value===id))return;
+        const same=cat.value===id&&(pick.kind!=="sub"||subSel.value===pick.name);
+        cat.value=id;if(pick.kind==="sub"){subSel.value=pick.name;subPrev=pick.name}
+        drawCat();if(document.activeElement!==cq)cq.value=catLabel();
+        if(!same){crow.classList.remove("auto");void crow.offsetWidth}crow.classList.add("auto")};
+      const autoSoon=()=>{clearTimeout(autoT);autoT=setTimeout(autoCat,220)};
+      merIn.addEventListener("input",autoSoon);merIn.addEventListener("change",autoCat);s.querySelector("#f-venmo").addEventListener("change",autoCat);
+      const askPlace=name=>{ // where should a brand-new category live?
+        const ym=ymOf(dIn.value||today()),gs=groupsFor(ym),hint=catHintGroup(name,gs);
+        const chips=gs.map(g=>{const misc=g.items.some(it=>it.id===MISC_ID);return{gid:g.id,label:misc?g.name+" subcategory":g.name,misc}});
+        chips.sort((a,b)=>(b.gid===hint)-(a.gid===hint));
+        cplace.innerHTML='<p>Add “<b>'+esc(name)+'</b>” to</p><div class="cchips2">'+chips.map(c=>'<button type="button" data-cpg="'+esc(c.gid)+'" class="'+(c.gid===hint?"sug":"")+'">'+esc(c.label)+'</button>').join("")+'</div><button type="button" class="ccancel" data-cpx>Cancel</button>';
+        cplace.dataset.name=name;cplace.hidden=false;hideC();cq.blur();cq.value=name;showPad(false);
+        requestAnimationFrame(()=>cplace.scrollIntoView({block:"nearest",behavior:"smooth"}))};
+      cplace.addEventListener("click",async e=>{
+        if(e.target.closest("[data-cpx]")){cplace.hidden=true;cq.value=catLabel();showPad(true);return}
+        const b=e.target.closest("[data-cpg]");if(!b)return;const name=cplace.dataset.name,ym=ymOf(dIn.value||today());
+        const groupsNow=JSON.parse(JSON.stringify(groupsFor(ym))),g=groupsNow.find(x=>x.id===b.dataset.cpg);if(!g)return;
+        if(g.items.some(it=>it.id===MISC_ID)){const nm=ensureSub(name);selectItem(MISC_ID,nm);cplace.hidden=true;try{haptic()}catch(_){}showPad(true);return}
+        if(!S.db||S.readOnly){toast("Saving isn't available here");return}
+        const dup=g.items.find(it=>it.name.toLowerCase()===name.toLowerCase());
+        let id=dup&&dup.id;
+        if(!id){id=uid();g.items.push({id,name,planned:0});b.disabled=true;
+          try{await S.db.doc("budgets/"+ym).set({groups:groupsNow,income:incomeFor(ym),updatedAt:new Date().toISOString()});S.budgets[ym]=Object.assign({},S.budgets[ym]||{},{groups:groupsNow});toast("Added "+name+" to "+g.name)}
+          catch(err){b.disabled=false;toast("Couldn't add it. Check your connection.");return}
+          let og=[...cat.querySelectorAll("optgroup")].find(x=>x.label===g.name);if(!og){og=document.createElement("optgroup");og.label=g.name;cat.appendChild(og)}
+          const o=document.createElement("option");o.value=id;o.textContent=name;og.appendChild(o)}
+        selectItem(id);cplace.hidden=true;try{haptic()}catch(_){}showPad(true)});
+      const pickC=e=>{
+        if(e.kind==="item"){selectItem(e.id);finishPick();return}
+        if(e.kind==="sub"){selectItem(MISC_ID,e.name);finishPick();return}
+        askPlace(e.name)};
+      csug.addEventListener("pointerdown",e=>{if(e.target.closest("[data-ci]"))e.preventDefault()});
+      csug.addEventListener("mousedown",e=>e.preventDefault());
+      csug.addEventListener("click",e=>{const b=e.target.closest("[data-ci]");if(!b)return;e.preventDefault();e.stopPropagation();const x=cList[+b.dataset.ci];if(x)pickC(x)});
+      cq.addEventListener("input",()=>{cHi=-1;drawC()});
+      cq.addEventListener("focus",()=>{cplace.hidden=true;cq.placeholder=catLabel()||"Type or pick";cq.value="";drawC()});
+      cq.addEventListener("blur",()=>setTimeout(()=>{if(document.activeElement!==cq){hideC();cq.placeholder="Type or pick";if(cplace.hidden)cq.value=catLabel()}},120));
+      cq.addEventListener("keydown",e=>{
+        if(e.key==="Enter"){e.preventDefault();e.stopImmediatePropagation();const x=cHi>=0?cList[cHi]:cList.find(c=>c.kind!=="create"&&c.name.toLowerCase()===cq.value.trim().toLowerCase())||(cq.value.trim()?cList[0]:null);if(x)pickC(x);else{hideC();cq.blur();showPad(true)}return}
+        if(csug.hidden||!cList.length)return;
+        if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();const n=cList.length;cHi=e.key==="ArrowDown"?(cHi+1)%n:(cHi<=0?n-1:cHi-1);drawC()}
+        else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();hideC()}});
       drawAmt();drawKeys();drawCat();
       const press=k=>{tKey(T,k);drawAmt();if(T.calc)drawKeys()};
       padEl.addEventListener("click",e=>{const k=e.target.closest("[data-k]");if(k){press(k.dataset.k);return}if(e.target.closest("#f-save"))save()});
@@ -2053,7 +2358,7 @@ function txSheet(existing){
       s.querySelector("#f-save2").onclick=()=>save();
       s.querySelector("#f-kind").onclick=e=>{const b=e.target.closest("button");if(!b)return;kind=b.dataset.k;s.querySelectorAll("#f-kind button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.k===kind)));drawAmt()};
       const dIn=s.querySelector("#f-date");dIn.addEventListener("change",()=>{if(dIn.value)s.querySelector("#f-dtxt").textContent=fmtLong(dIn.value)});
-      cat.addEventListener("change",drawCat);
+      cat.addEventListener("change",()=>{drawCat();cq.value=catLabel();cplace.hidden=true;s.querySelector(".crow").classList.remove("auto")});
       s.addEventListener("keydown",e=>{if(e.target.closest("input,select,textarea")||s.classList.contains("kboff"))return;
         const m={"Backspace":"⌫","Delete":"⌫","+":"+","-":"−","*":"×","/":"÷","=":"="};
         if(/^\d$/.test(e.key)){press(e.key);e.preventDefault()}else if(e.key==="Enter"){save();e.preventDefault()}else if(m[e.key]&&(T.calc||m[e.key]==="⌫")){press(m[e.key]);e.preventDefault()}});
@@ -2068,7 +2373,9 @@ function txSheet(existing){
         const date=dIn.value||today();
         const g2=groupsFor(ymOf(date)); const f=findItem(g2,itemId)||findItem(groups,itemId);
         const incSrc=incomeFor(ymOf(date)).find(x=>x.id===itemId)||incomeFor(S.ym).find(x=>x.id===itemId);
+        const locNow=!existing&&locSw&&locSw.checked&&locV?LOC.pack(locV):null;
         const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim();return s.querySelector("#f-venmo").checked?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
+        if(locNow)body.loc=locNow;else if(existing&&existing.loc)body.loc=existing.loc;
         if(!S.db||S.readOnly){toast("Saving isn't available here");return}
         busy=true;
         try{
@@ -2078,6 +2385,8 @@ function txSheet(existing){
           ls.set("pb.lastItem",itemId);closeSheet();
           if(!existing)setTimeout(()=>celebrate(a,body.merchant,body.type),180);else if(ymOf(date)!==S.ym)toast("Saved to "+MONTHS[+date.slice(5,7)-1]);else toast("Saved");
           if(ref){pushToSheet(ref.id,body).then(ok=>{if(ok)toast("Added "+money(a)+" to your sheet")})}
+          if(ref&&!locNow&&locP&&locSw&&locSw.checked){const id=ref.id;locP.then(v=>{if(v)S.db.doc("tx/"+id).update({loc:LOC.pack(v)}).catch(()=>{})})}
+          if(ref&&locNow&&!locNow.place){const id=ref.id;LOC.place(locV).then(pl=>{if(pl)S.db.doc("tx/"+id).update({loc:LOC.pack(Object.assign({},locV,pl))}).catch(()=>{})})}
         }catch(e){busy=false;toast(e&&e.code==="quota_exceeded"?"Storage is full":"Couldn't save. Check your connection.")}
       }
       if(existing)s.querySelector("#f-del").onclick=()=>{
@@ -2246,12 +2555,14 @@ let histUnsub=null;
 function subscribeTx(){
   if(!S.db)return;txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;S.txLoaded=false;S.tx=[];
   const ym=S.ym;let live=[],past=[],gotLive=false,gotPast=ym>=HIST_BEFORE;
-  const merge=()=>{if(ym!==S.ym)return;S.tx=live.concat(past);S.txLoaded=gotLive&&gotPast;render()};
+  const merge=()=>{if(ym!==S.ym)return;S.tx=live.concat(past);S.txLoaded=gotLive&&gotPast;render();if(S.txLoaded)setTimeout(reconcileSheet,800)};
   txUnsub=S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).onSnapshot(snap=>{
     live=snap.docs.map(d=>Object.assign({id:d.id},d.data()));gotLive=true;merge();
   },()=>{gotLive=true;merge()});
   if(ym<HIST_BEFORE)histUnsub=S.db.doc("hist/"+ym).onSnapshot(snap=>{past=snap.exists?histToTx(ym,snap.data()):[];gotPast=true;merge()},()=>{gotPast=true;merge()});
 }
+/* no pinch / double-tap zoom: the layout is built for the phone screen */
+["gesturestart","gesturechange"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 async function init(){
   render();
   const db=await (window.claude?.use?.("db")||Promise.resolve(null)).catch(()=>null);

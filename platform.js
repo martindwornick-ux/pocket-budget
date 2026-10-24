@@ -104,12 +104,25 @@ async function callScript(body,cfg){
   try{r=await fetch(cfg.url,{method:"POST",body:JSON.stringify(Object.assign({key:cfg.key},body)),redirect:"follow"})}
   catch(x){const e=new Error("Network");e.code="network";throw e}
   let j=null;try{j=await r.json()}catch(x){}
-  if(!j){const e=new Error("Your script didn't answer. Check the URL ends in /exec and access is Anyone.");e.code="tool_error";throw e}
+  if(!j){const e=new Error("Your script didn't answer. Check the URL ends in /exec and access is Anyone.");e.code="tool_error";e.noAnswer=true;throw e}
   if(!j.ok){const e=new Error(j.error||"Refused");e.code=j.error==="wrong_key"?"wrong_key":"tool_error";
     if(j.error==="no_sheet")e.message="No tab named Transactions in that spreadsheet";throw e}
   return j;
 }
-const MCP={async callTool(server,tool,args){
+const MCP={
+  // append with the transaction id so a retry never adds the same row twice;
+  // if the answer gets lost, ask the sheet whether the row made it before calling it a failure
+  async pbAppend(id,row){
+    try{return await callScript({action:"append",id,row})}
+    catch(e){
+      if(e.code!=="network"&&!e.noAnswer)throw e;
+      await new Promise(r=>setTimeout(r,2500));
+      try{const j=await callScript({action:"check",items:[{id,row}]});if((j.found||[]).includes(id))return{ok:true}}catch(_){}
+      throw e;
+    }
+  },
+  async pbCheck(items){try{const j=await callScript({action:"check",items});return j.found||[]}catch(e){return[]}},
+  async callTool(server,tool,args){
   if(tool==="insert_dimension")return{ok:true};            // the script inserts and fills in one step
   if(tool==="update_values")return callScript({action:"append",row:(args.values||[])[0]||[]});
   if(tool==="get_values"){const j=await callScript({action:"get",range:args.range});return{structuredContent:{values:j.values||[]}}}
