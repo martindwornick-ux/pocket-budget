@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 24, 10:25 AM"</script>
+<script>window.PB_BUILD="Oct 24, 11:50 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -474,6 +474,44 @@ nav.tabs button[aria-current="page"]{color:var(--g-blue)}
 @keyframes ptrspin{to{transform:rotate(360deg)}}
 main.peek{position:fixed;left:0;right:0;bottom:0;margin:0 auto;overflow:hidden;pointer-events:none;z-index:3;will-change:transform}
 main.peek>*{flex-shrink:0}
+/* map picker */
+.mpk{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:var(--card,#fff);transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.9,.25,1);padding-top:env(safe-area-inset-top,0px)}
+.mpk.on{transform:none}
+.mpk-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 16px 6px;font-size:17px}
+.mpk-top b{font-weight:700}.mpk-x{justify-self:start;color:var(--link);font-size:17px}
+.mpk-sw{position:relative;padding:4px 16px 10px;z-index:5}
+.mpk-q{width:100%;box-sizing:border-box;border:0;border-radius:12px;background:rgba(60,64,67,.08);padding:11px 14px;font:inherit;font-size:16px;color:var(--fg);outline:none}
+.mpk-res{position:absolute;left:16px;right:16px;top:100%;margin-top:-6px;background:var(--card,#fff);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);overflow:hidden;max-height:50vh;overflow-y:auto}
+.mpk-res button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:12px 14px;font-size:15px;color:var(--fg)}
+.mpk-res button+button{border-top:1px solid var(--line)}.mpk-res small{color:var(--muted);flex:none}.mpk-res p{margin:0;padding:12px 14px;color:var(--muted)}
+.mpk-map{position:relative;flex:1;min-height:0;z-index:1;isolation:isolate}
+.mpk-canvas{position:absolute;inset:0;background:#e8eaed}
+.mpk-pin{position:absolute;left:50%;top:50%;z-index:500;pointer-events:none;transform:translate(-50%,-100%);transition:transform .18s ease}
+.mpk-pin svg{width:40px;height:40px;color:#ea4335;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3));display:block}
+.mpk-pin i{position:absolute;left:50%;bottom:-3px;width:8px;height:4px;margin-left:-4px;border-radius:50%;background:rgba(0,0,0,.3);transition:transform .18s}
+.mpk-pin.up{transform:translate(-50%,-118%)}.mpk-pin.up i{transform:translateY(7px) scale(1.4);opacity:.6}
+.mpk-me{position:absolute;right:14px;bottom:30px;z-index:500;width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);display:grid;place-items:center;color:var(--link)}
+.mpk-me svg{width:20px;height:20px}.mpk-me.busy svg{animation:lpulse 1s infinite}
+.mpk-msg{position:absolute;left:20px;right:20px;top:40%;z-index:500;text-align:center;color:var(--muted);font-size:15px}
+.mpk-card{padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.08);z-index:2;background:var(--card,#fff)}
+.mpk-l{display:flex;flex-direction:column;gap:2px;margin-bottom:12px;min-height:44px}.mpk-name{font-size:18px}.mpk-sub{font-size:14px;color:var(--muted)}
+.mpk-btns{display:flex;gap:10px}.mpk-btns .btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;min-width:0}
+.mpk-btns small{font-size:12px;font-weight:500;opacity:.85;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.mpk-open{overflow:hidden}
+.txs .lmap svg{width:19px;height:19px}
+/* minimal Leaflet styles */
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-zoom-box,.leaflet-layer{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden;touch-action:none;-webkit-tap-highlight-color:transparent;outline:0;font:12px/1.4 -apple-system,sans-serif}
+.leaflet-container img.leaflet-tile{max-width:none!important;max-height:none!important;width:256px;height:256px;padding:0;margin:0;border:0}
+.leaflet-tile{user-select:none;-webkit-user-drag:none;visibility:hidden}.leaflet-tile-loaded{visibility:inherit}
+.leaflet-zoom-animated{transform-origin:0 0}
+.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-zoom-anim .leaflet-tile,.leaflet-pan-anim .leaflet-tile{transition:none}
+.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-marker-pane{z-index:600}
+.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-right{right:0}
+.leaflet-control{position:relative;z-index:800;pointer-events:auto;float:left;clear:both}.leaflet-right .leaflet-control{float:right}
+.leaflet-control-attribution{background:rgba(255,255,255,.85);padding:1px 6px;font-size:10.5px;color:#333}.leaflet-control-attribution a{color:#1a73e8;text-decoration:none}
+
 /* shared small segmented control inside cards */
 .seg2{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;border-radius:12px;background:rgba(60,64,67,.07);margin:2px 0 12px}
 .seg2 button{padding:7px 4px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted);transition:background .2s,color .2s,box-shadow .2s}
@@ -697,6 +735,16 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 .txs .cbrowse svg{width:18px;height:18px;transform:rotate(90deg)}
 .txs .csug.noq .mn{color:var(--fg)}
 .txs .crow>span:first-child{white-space:nowrap}
+.txs .lrow input.tin{min-width:0}
+.txs .lgps{flex:none;width:34px;height:40px;margin-right:-8px;display:grid;place-items:center;color:var(--link)}
+.txs .lgps svg{width:18px;height:18px}
+.txs .lgps.busy svg{animation:lpulse 1s ease-in-out infinite}
+.txs .lrow.auto input.tin{animation:cfill .45s ease both}
+.txs .lsug .mc svg{width:14px;height:14px;color:var(--link);vertical-align:-2px}
+.txs .lsug.noq .mn{color:var(--fg)}
+.hsloc .tcard{padding:0 18px}
+.txrow .tloc{white-space:nowrap}
+.txrow .tloc .pin{width:12px;height:12px;vertical-align:-1px;margin-right:2px;opacity:.75}
 .txs .tlocrow{text-decoration:none;color:inherit}
 .txs .tlocrow .tlv{flex:1;min-width:0;text-align:right;color:var(--muted);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s}
 .txs .tlocrow .tlv.busy{animation:lpulse 1.1s ease-in-out infinite}
@@ -714,10 +762,10 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 .txs .crow.auto:focus-within .cauto{display:none}
 .txs .crow.auto input.tin{animation:cfill .45s ease both}
 @keyframes cfill{from{opacity:.2;transform:translateX(6px)}}
-.txs .csug .chead2{padding:8px 18px 4px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-top:1px solid var(--line)}
-.txs .csug .chead2:first-child{border-top:0}
-.txs .csug .chead2+button{border-top:0}
-.txs .csug button{animation:dup .22s ease both}
+.txs .csug .chead2,.txs .lsug .chead2{padding:8px 18px 4px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-top:1px solid var(--line)}
+.txs .csug .chead2:first-child,.txs .lsug .chead2:first-child{border-top:0}
+.txs .csug .chead2+button,.txs .lsug .chead2+button{border-top:0}
+.txs .csug button,.txs .lsug button{animation:dup .22s ease both}
 .txs .cnew{flex:none;font-size:11.5px;font-weight:700;color:#188038;background:rgba(52,168,83,.14);padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
 .txs .cplus{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(26,115,232,.12);color:var(--link);font-weight:700;margin-right:8px}
 .txs .cplace{margin:0 -18px;padding:12px 18px 14px;border-top:1px solid var(--line);background:rgba(26,115,232,.05);animation:dpop .28s cubic-bezier(.2,.9,.3,1.2) both}
@@ -874,9 +922,12 @@ function valuesOf(res){
   if(p&&typeof p==="object"&&"range" in p)return [];
   throw {code:"tool_error",message:"Unexpected reply from Google Sheets"};
 }
+const HL={}; // saved locations for history rows: HL[ym][rowIndex] = loc
+function hlLoad(ym){if(!S.db||ym>=HIST_BEFORE||HL[ym])return Promise.resolve();return S.db.doc("hloc/"+ym).get().then(d=>{HL[ym]=d&&d.exists?(d.data().locs||{}):{}}).catch(()=>{HL[ym]=HL[ym]||{}})}
 function histToTx(ym,data){
   const rows=data&&Array.isArray(data.rows)?data.rows:[];
-  return rows.map((r,i)=>({id:"h:"+ym+":"+i,source:"history",date:r.d,merchant:r.m,itemId:r.i,itemName:r.n,groupName:r.g,sub:r.s||"",amount:+r.a||0,type:r.t==="refund"?"refund":"expense",note:r.o||"",sheet:"synced",createdAt:""}));
+  const L=HL[ym]||{};
+  return rows.map((r,i)=>{const t={id:"h:"+ym+":"+i,source:"history",date:r.d,merchant:r.m,itemId:r.i,itemName:r.n,groupName:r.g,sub:r.s||"",amount:+r.a||0,type:r.t==="refund"?"refund":"expense",note:r.o||"",sheet:"synced",createdAt:""};if(L[i])t.loc=L[i];return t});
 }
 const isHist=t=>t&&t.source==="history";
 async function retryOnce(fn){try{return await fn()}catch(e){if(e&&e.code==="unavailable"){await new Promise(r=>setTimeout(r,600+Math.random()*800));return fn()}throw e}}
@@ -946,9 +997,16 @@ function historyCardHTML(){
 function histSheet(t){
   openSheet('<h3>'+esc(t.merchant||"Purchase")+'</h3><div class="amt num" style="justify-content:flex-start;font-size:36px">'+(t.type==="refund"?"+":"")+money(+t.amount||0)+'</div>'+
     '<p class="note" style="margin:0 0 6px">'+esc(fmtDay(t.date))+' · '+esc((t.itemName||"Uncategorized")+(t.sub?" · "+t.sub:""))+(t.note?" · "+esc(t.note):"")+'</p>'+
-    '<p class="note" style="margin:0 0 14px">From your Finance Tracker. To change or delete it, edit the row in your Transactions tab.</p>'+
+    '<div class="txs hsloc"><div class="tcard"><div class="trow lrow"><span>Location</span><input class="tin" id="h-loc" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="h-lsug" aria-expanded="false" placeholder="Business, city" value="'+esc(locText(t.loc))+'">'+(LOC.ok()?'<button type="button" class="lgps" id="h-gps" aria-label="Use my current location">'+GPS_SVG+'</button>':'')+'</div><div class="msug lsug" id="h-lsug" role="listbox" hidden></div></div></div>'+
+    '<p class="note" style="margin:10px 0 14px">From your Finance Tracker. To change the amount or category, edit the row in your Transactions tab. The location is kept here in the app.</p>'+
     '<div class="btnrow"><a class="btn sec" style="text-align:center;text-decoration:none" href="'+SHEET_URL+'" target="_blank" rel="noopener">Open Finance Tracker</a><button class="btn" id="hs-ok">Done</button></div>',
-    s=>s.querySelector("#hs-ok").onclick=closeSheet);
+    s=>{const LF=locField(s,{input:s.querySelector("#h-loc"),sug:s.querySelector("#h-lsug"),gps:s.querySelector("#h-gps"),merchant:()=>t.merchant||"",date:()=>t.date,selfId:t.id,initial:t.loc,auto:false});
+      s.querySelector("#hs-ok").onclick=async()=>{
+        const l=LF.value(),before=JSON.stringify(t.loc?locText(t.loc):null),after=JSON.stringify(l?l.label:null);
+        if(before!==after&&S.db&&!S.readOnly){const [,ym,ix]=t.id.split(":");
+          try{const cur=Object.assign({},HL[ym]||{});if(l)cur[ix]=l;else delete cur[ix];await S.db.doc("hloc/"+ym).set({locs:cur,updatedAt:new Date().toISOString()});HL[ym]=cur;toast(l?"Location saved":"Location removed");if(IS.hist[ym])IS.hist[ym].forEach(x=>{if(x.id===t.id){if(l)x.loc=l;else delete x.loc}});S.tx.forEach(x=>{if(x.id===t.id){if(l)x.loc=l;else delete x.loc}});render()}
+          catch(e){toast("Couldn't save the location");return}}
+        closeSheet()}});
 }
 
 /* ---------- rendering ---------- */
@@ -1178,7 +1236,7 @@ function renderTx(groups){
     const ref=t.type==="refund"||t.type==="income";
     const sw=!isHist(t);
     if(sw)h+='<div class="swr"><button class="swdel" data-del="'+esc(t.id)+'" tabindex="-1" aria-label="Delete '+esc(t.merchant||"Purchase")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>Delete</button>';
-    h+='<button class="txrow" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.note?" · "+esc(t.note):"")+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
+    h+='<button class="txrow" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
   });
   if(open)h+="</section>";
   return h;
@@ -1193,7 +1251,7 @@ function loadHist(){
   monthsBack(IS.range).forEach(ym=>{
     if(ym===S.ym||IS.hist[ym]||IS.loading[ym])return;
     IS.loading[ym]=true;
-    Promise.all([S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).get(),ym<HIST_BEFORE?S.db.doc("hist/"+ym).get().catch(()=>null):Promise.resolve(null)])
+    Promise.all([S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).get(),ym<HIST_BEFORE?S.db.doc("hist/"+ym).get().catch(()=>null):Promise.resolve(null),hlLoad(ym)])
       .then(([snap,hs])=>{IS.hist[ym]=snap.docs.map(d=>Object.assign({id:d.id},d.data())).concat(hs&&hs.exists?histToTx(ym,hs.data()):[])})
       .catch(()=>{IS.hist[ym]=[]})
       .finally(()=>{IS.loading[ym]=false;if(S.tab==="insights")render()});
@@ -1216,7 +1274,7 @@ function merchLoad(){
   const [y,m]=today().split("-").map(Number);
   for(let i=0;i<12;i++){const d=new Date(y,m-1-i,1),ym=d.getFullYear()+"-"+pad(d.getMonth()+1);
     if(IS.hist[ym]||IS.loading[ym])continue;IS.loading[ym]=true;
-    Promise.all([S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).get(),ym<HIST_BEFORE?S.db.doc("hist/"+ym).get().catch(()=>null):Promise.resolve(null)])
+    Promise.all([S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).get(),ym<HIST_BEFORE?S.db.doc("hist/"+ym).get().catch(()=>null):Promise.resolve(null),hlLoad(ym)])
       .then(([snap,hs])=>{IS.hist[ym]=snap.docs.map(d=>Object.assign({id:d.id},d.data())).concat(hs&&hs.exists?histToTx(ym,hs.data()):[])})
       .catch(()=>{IS.hist[ym]=[]})
       .finally(()=>{IS.loading[ym]=false;MV.ver++;if(MV.cb)MV.cb()});
@@ -1250,7 +1308,7 @@ const LOC={
   get(){return new Promise((res,rej)=>{let done=false;const t=setTimeout(()=>{if(!done){done=true;rej({code:3})}},15000);
     try{navigator.geolocation.getCurrentPosition(p=>{if(done)return;done=true;clearTimeout(t);res({lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy||0),at:new Date().toISOString()})},
       e=>{if(done)return;done=true;clearTimeout(t);rej(e)},{enableHighAccuracy:true,timeout:12000,maximumAge:60000})}catch(e){done=true;clearTimeout(t);rej(e)}})},
-  cache:{},
+  cache:{},scache:{},last:null,lastAt:0,
   async place(v){if(!v)return null;const k=v.lat.toFixed(4)+","+v.lng.toFixed(4);if(this.cache[k])return this.cache[k];
     try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),6000);
       const r=await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat="+v.lat+"&lon="+v.lng,{signal:ctl.signal,headers:{"Accept-Language":"en-US"}});clearTimeout(tm);
@@ -1268,6 +1326,170 @@ const LOC={
     if(v.poi&&!out.some(e=>e.name.toLowerCase()===v.poi.toLowerCase()))out.push({name:v.poi,poi:true});
     return out.slice(0,4)}
 };
+/* A location is {label, name?, place?, lat?, lng?, src}. label is what you see ("Dog River Coffee, Hood River, OR"
+   or just "Hood River, OR"); name is the business, place is the town. Older saves without a label still read fine. */
+function locText(l){if(!l)return"";if(l.label)return l.label;return l.place||l.road||(l.lat!=null?l.lat.toFixed(4)+", "+l.lng.toFixed(4):"")}
+function locShort(l){if(!l)return"";if(l.name)return l.name;const t=locText(l);return l.place&&t===l.place?l.place.replace(/,\s*[A-Z]{2}$/,""):t.split(",")[0]}
+const GPS_SVG='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.6 3.4a.9.9 0 0 0-1-.2L3.9 9.9a.9.9 0 0 0 .1 1.7l6.6 1.8 1.8 6.6a.9.9 0 0 0 1.7.1l6.7-15.7a.9.9 0 0 0-.2-1z"/></svg>';
+const PIN_SVG='<svg class="pin" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
+const locDist=(a,b)=>{const R=6371e3,r=Math.PI/180,dl=(b.lat-a.lat)*r,dg=(b.lng-a.lng)*r,x=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(x))};
+const locKey=l=>locText(l).toLowerCase().replace(/\s+/g," ").trim();
+// search OpenStreetMap for businesses and towns, leaning toward a point you're likely near
+async function locSearch(q,near){
+  q=q.trim();if(q.length<3)return[];const k=q.toLowerCase()+"|"+(near?near.lat.toFixed(2)+","+near.lng.toFixed(2):"");if(LOC.scache[k])return LOC.scache[k];
+  try{let u="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=us,ca&q="+encodeURIComponent(q);
+    if(near)u+="&viewbox="+(near.lng-0.5)+","+(near.lat+0.35)+","+(near.lng+0.5)+","+(near.lat-0.35);
+    const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),6000);const r=await fetch(u,{signal:ctl.signal,headers:{"Accept-Language":"en-US"}});clearTimeout(tm);if(!r.ok)return[];
+    const out=(await r.json()).map(j=>{const a=j.address||{},city=a.city||a.town||a.village||a.hamlet||a.suburb||a.county||"",st=(a["ISO3166-2-lvl4"]||"").split("-")[1]||a.state||"";
+      const isTown=["city","town","village","hamlet","administrative","suburb","municipality"].includes(j.addresstype||j.type);
+      const place=isTown?[j.name,st].filter(Boolean).join(", "):[city,st].filter(Boolean).join(", ");
+      const name=isTown?"":(j.name||"");const lat=+(+j.lat).toFixed(6),lng=+(+j.lon).toFixed(6);
+      const l={label:[name,place].filter(Boolean).join(", "),place,lat,lng,src:"search"};if(name)l.name=name;
+      l.far=near?locDist(near,l):null;return l}).filter(l=>l.label);
+    out.sort((a,b)=>(a.far??0)-(b.far??0));return LOC.scache[k]=out}catch(e){return[]}}
+function locCandidates(merchant,date,selfId){
+  const mk=merchKey(merchant),pool=txPool().filter(t=>t.loc&&t.id!==selfId&&locText(t.loc)),dnum=s=>Date.parse((s||"2000-01-01")+"T12:00:00")/864e5;
+  const d0=dnum(date),out=[],seen=new Set(),add=(l,head)=>{const k=locKey(l);if(!k||seen.has(k))return;seen.add(k);out.push(Object.assign({},l,{head}))};
+  const strip=l=>{const o={label:locText(l),src:"past"};["name","place","lat","lng"].forEach(f=>{if(l[f]!=null&&l[f]!=="")o[f]=l[f]});return o};
+  const fix=LOC.last,fixFresh=fix&&Date.now()-LOC.lastAt<10*60e3,recentDay=Math.abs(d0-dnum(today()))<=1;
+  const gps=()=>{if(!fixFresh||!fix.place)return;
+    pool.filter(t=>t.loc.lat!=null&&t.loc.name&&locDist(fix,t.loc)<150).slice(0,2).forEach(t=>add(strip(t.loc),"Where you are"));
+    if(fix.poi)add({label:fix.poi+", "+fix.place,name:fix.poi,place:fix.place,lat:fix.lat,lng:fix.lng,src:"gps"},"Where you are");
+    add({label:fix.place,place:fix.place,lat:fix.lat,lng:fix.lng,src:"gps"},"Where you are")};
+  if(recentDay)gps();
+  if(mk)pool.filter(t=>merchKey(t.merchant)===mk).sort((a,b)=>(b.date||"").localeCompare(a.date||"")).forEach(t=>add(strip(t.loc),"This merchant before"));
+  pool.filter(t=>Math.abs(dnum(t.date)-d0)<=1).sort((a,b)=>Math.abs(dnum(a.date)-d0)-Math.abs(dnum(b.date)-d0)).forEach(t=>{const l=strip(t.loc);
+    add(l,"Same day");if(l.name&&l.place)add({label:l.place,place:l.place,lat:l.lat,lng:l.lng,src:"past"},"Same day")});
+  if(!recentDay)gps();
+  pool.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,60).forEach(t=>add(strip(t.loc),"Recent"));
+  return out;
+}
+/* ---------- pick a location on a map ----------
+   Leaflet + OpenStreetMap tiles, loaded the first time the map opens. Drag the map under the pin;
+   the spot is looked up (business + town) and you choose the business or just the town. */
+const MAPLIB={p:null};
+function loadLeaflet(){if(window.L&&window.L.map)return Promise.resolve();
+  return MAPLIB.p||(MAPLIB.p=new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";s.onload=()=>res();s.onerror=()=>{MAPLIB.p=null;rej(new Error("map"))};document.head.appendChild(s)}))}
+const MAP_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg>';
+function mapPicker(start,onPick){
+  const ov=document.createElement("div");ov.className="mpk";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("aria-label","Pick a location on the map");
+  ov.innerHTML='<div class="mpk-top"><button class="mpk-x" data-mx>Cancel</button><b>Pick a location</b><span></span></div>'+
+    '<div class="mpk-sw"><input class="mpk-q" placeholder="Search a place or town" autocomplete="off" autocorrect="off" enterkeyhint="search" aria-label="Search the map"><div class="mpk-res" hidden></div></div>'+
+    '<div class="mpk-map"><div class="mpk-canvas"></div><div class="mpk-pin" aria-hidden="true">'+PIN_SVG+'<i></i></div>'+(LOC.ok()?'<button class="mpk-me" aria-label="Go to my location">'+GPS_SVG+'</button>':'')+'<div class="mpk-msg" hidden></div></div>'+
+    '<div class="mpk-card"><div class="mpk-l"><b class="mpk-name">Finding this spot…</b><span class="mpk-sub"></span></div><div class="mpk-btns"></div></div>';
+  document.body.appendChild(ov);document.body.classList.add("mpk-open");requestAnimationFrame(()=>ov.classList.add("on"));
+  let map=null,look=0,picked=null,hold=null;
+  const nameEl=ov.querySelector(".mpk-name"),subEl=ov.querySelector(".mpk-sub"),btns=ov.querySelector(".mpk-btns"),pin=ov.querySelector(".mpk-pin");
+  const close=()=>{ov.classList.remove("on");document.body.classList.remove("mpk-open");setTimeout(()=>{try{map&&map.remove()}catch(_){}ov.remove()},260)};
+  const choose=l=>{try{haptic()}catch(_){}close();onPick(l)};
+  const showSpot=(c,info)=>{ // info: {place, poi, road} or a search hit
+    const place=info&&info.place||"",poi=info&&(info.name||info.poi)||"";
+    const base={lat:+c.lat.toFixed(6),lng:+c.lng.toFixed(6),src:"map"};
+    nameEl.textContent=poi||place||"Dropped pin";subEl.textContent=poi?[info.road,place].filter(Boolean).join(" · "):(info&&info.road)||(place?"":c.lat.toFixed(4)+", "+c.lng.toFixed(4));
+    const opts=[];
+    if(poi&&place)opts.push(Object.assign({label:poi+", "+place,name:poi,place},base));
+    if(place)opts.push(Object.assign({label:place,place},base));
+    if(!opts.length)opts.push(Object.assign({label:c.lat.toFixed(4)+", "+c.lng.toFixed(4)},base));
+    btns.innerHTML=opts.map((o,i)=>'<button class="btn'+(i?' sec':'')+'" data-mp="'+i+'">'+(i===0&&opts.length>1?'Use business':opts.length>1?'Town only':'Use this spot')+'<small>'+esc(o.label)+'</small></button>').join("");
+    picked=opts};
+  const lookup=()=>{if(!map)return;const c=map.getCenter(),my=++look;nameEl.textContent="Finding this spot…";subEl.textContent="";btns.innerHTML="";
+    LOC.place({lat:+c.lat.toFixed(6),lng:+c.lng.toFixed(6)}).then(info=>{if(my!==look||!ov.isConnected)return;showSpot(c,info||{})})};
+  let lt=0;const lookupSoon=()=>{clearTimeout(lt);lt=setTimeout(lookup,450)};
+  ov.addEventListener("click",e=>{
+    if(e.target.closest("[data-mx]")){close();return}
+    const b=e.target.closest("[data-mp]");if(b&&picked){choose(picked[+b.dataset.mp]);return}
+    const r=e.target.closest("[data-mr]");if(r&&ov._res){const l=ov._res[+r.dataset.mr];ov.querySelector(".mpk-res").hidden=true;ov.querySelector(".mpk-q").blur();
+      if(map){hold=l;map.setView([l.lat,l.lng],17,{animate:true});look++;showSpot({lat:l.lat,lng:l.lng},{name:l.name,place:l.place,road:""})}return}
+    if(e.target.closest(".mpk-me")){const me=ov.querySelector(".mpk-me");me.classList.add("busy");
+      LOC.get().then(v=>{LOC.last=Object.assign(LOC.last||{},v);LOC.lastAt=Date.now();me.classList.remove("busy");map&&map.setView([v.lat,v.lng],17,{animate:true})}).catch(()=>{me.classList.remove("busy");toast("Couldn't find your location")})}
+  });
+  // search box
+  const q=ov.querySelector(".mpk-q"),res=ov.querySelector(".mpk-res");let qt=0;
+  const runQ=()=>{const v=q.value.trim();if(v.length<3){res.hidden=true;return}
+    locSearch(v,map?map.getCenter():start).then(list=>{if(q.value.trim()!==v)return;ov._res=list;
+      res.innerHTML=list.length?list.map((l,i)=>'<button data-mr="'+i+'"><span>'+esc(l.label)+'</span>'+(l.far!=null&&l.far>1500?'<small>'+(l.far/1609).toFixed(l.far<16000?1:0)+' mi</small>':'')+'</button>').join(""):'<p>No matches nearby</p>';res.hidden=false})};
+  q.addEventListener("input",()=>{clearTimeout(qt);qt=setTimeout(runQ,450)});
+  q.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();clearTimeout(qt);runQ()}});
+  // the map
+  loadLeaflet().then(()=>{if(!ov.isConnected)return;const L=window.L;
+    map=L.map(ov.querySelector(".mpk-canvas"),{zoomControl:false,attributionControl:true,center:[start.lat,start.lng],zoom:start.zoom||16});
+    const tl=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
+    let ok=0,bad=0;tl.on("tileload",()=>{ok++;ov.querySelector(".mpk-msg").hidden=true});
+    tl.on("tileerror",()=>{if(++bad>=4&&!ok){const m=ov.querySelector(".mpk-msg");m.textContent="Map pictures aren't loading. Check your connection, or search above.";m.hidden=false}});
+    map.attributionControl.setPrefix(false);
+    map.on("movestart",()=>{pin.classList.add("up");if(hold)return;look++;nameEl.textContent="…";subEl.textContent="";btns.innerHTML=""});
+    map.on("moveend",()=>{pin.classList.remove("up");const c=map.getCenter();
+      if(hold&&locDist(hold,{lat:c.lat,lng:c.lng})<40){look++;showSpot({lat:hold.lat,lng:hold.lng},{name:hold.name,place:hold.place,road:""});return} // a search pick keeps its own name
+      hold=null;lookupSoon()});
+    map.on("click",e=>map.panTo(e.latlng,{animate:true}));
+    setTimeout(()=>{map.invalidateSize();lookup()},280);
+  }).catch(()=>{const m=ov.querySelector(".mpk-msg");m.textContent="The map couldn't load here. Search above, or type the place in the Location field.";m.hidden=false;nameEl.textContent="Map unavailable"});
+}
+// the location field used on the add/edit form and on history rows
+function locField(s,o){
+  const inp=o.input,sug=o.sug,gpsB=o.gps,row=inp.closest(".lrow");let typed=false,cur=o.initial?Object.assign({},o.initial):null,list=[],hi=-1,auto=!!o.auto,touched=false,pend=null,remote=[],rq="",rT=0;
+  if(cur&&!cur.label)cur.label=locText(cur);
+  const clean=v=>v.replace(/\s+/g," ").trim();
+  const near=()=>{if(LOC.last&&Date.now()-LOC.lastAt<10*60e3)return LOC.last;if(cur&&cur.lat!=null)return cur;const c=locCandidates(o.merchant(),o.date(),o.selfId).find(x=>x.lat!=null);return c||null};
+  const hide=()=>{list=[];hi=-1;sug.hidden=true;sug.innerHTML="";inp.setAttribute("aria-expanded","false")};
+  const hl=t=>{const q=typed?clean(inp.value):"";const i=q?t.toLowerCase().indexOf(q.toLowerCase()):-1;return i<0?esc(t):esc(t.slice(0,i))+"<b>"+esc(t.slice(i,i+q.length))+"</b>"+esc(t.slice(i+q.length))};
+  const draw=()=>{
+    if(document.activeElement!==inp){hide();return}
+    const q=typed?clean(inp.value):"",ql=q.toLowerCase();let c=locCandidates(o.merchant(),o.date(),o.selfId);
+    if(q){c=c.filter(x=>x.label.toLowerCase().split(/[^a-z0-9]+/).some(w=>w&&w.startsWith(ql))||x.label.toLowerCase().includes(ql));
+      const seen=new Set(c.map(locKey));if(rq===q)remote.forEach(r=>{if(!seen.has(locKey(r))){seen.add(locKey(r));c.push(Object.assign({},r,{head:"Search"}))}});
+      if(!c.some(x=>x.label.toLowerCase()===ql))c.push({label:q,src:"manual",head:"",manual:true})}
+    list=c.slice(0,9);if(hi>=list.length)hi=-1;
+    if(!list.length){hide();return}
+    let last=null;
+    sug.innerHTML=list.map((e,i)=>{const head=e.head&&e.head!==last?'<div class="chead2">'+esc(e.head)+'</div>':'';last=e.head;
+      const tag=e.far!=null&&e.far>1500?'<span class="mc">'+(e.far/1609).toFixed(e.far<16000?1:0)+' mi</span>':(e.src==="gps"?'<span class="mc">'+GPS_SVG+'</span>':'');
+      return head+'<button type="button" role="option" data-li="'+i+'"'+(i===hi?' class="hl"':'')+'><span class="mn">'+(e.manual?'<span class="cplus">+</span>Use “'+esc(e.label)+'”':hl(e.label))+'</span>'+tag+'</button>'}).join("");
+    sug.classList.toggle("noq",!q);sug.hidden=false;inp.setAttribute("aria-expanded","true")};
+  const remoteSoon=()=>{clearTimeout(rT);const q=clean(inp.value);if(q.length<3){remote=[];return}
+    rT=setTimeout(()=>{locSearch(q,near()).then(r=>{if(clean(inp.value)!==q)return;rq=q;remote=r;draw()})},450)};
+  const pick=e=>{cur={label:e.label,src:e.src||"manual"};["name","place","lat","lng"].forEach(f=>{if(e[f]!=null&&e[f]!=="")cur[f]=e[f]});
+    inp.value=cur.label;touched=true;auto=false;row.classList.remove("auto");hide();inp.blur();try{haptic()}catch(_){}o.onDone&&o.onDone()};
+  sug.addEventListener("pointerdown",e=>{if(e.target.closest("[data-li]"))e.preventDefault()});
+  sug.addEventListener("mousedown",e=>e.preventDefault());
+  sug.addEventListener("click",e=>{const b=e.target.closest("[data-li]");if(!b)return;e.preventDefault();e.stopPropagation();const x=list[+b.dataset.li];if(x)pick(x)});
+  inp.addEventListener("focus",()=>{typed=false;o.onFocus&&o.onFocus();draw();if(inp.value)setTimeout(()=>{try{inp.setSelectionRange(0,inp.value.length)}catch(_){}},60)});
+  inp.addEventListener("input",()=>{typed=true;hi=-1;touched=true;auto=false;row.classList.remove("auto");draw();remoteSoon()});
+  inp.addEventListener("blur",()=>setTimeout(()=>{if(document.activeElement===inp)return;hide();
+    const v=clean(inp.value);if(!v)cur=null;else if(!cur||v!==cur.label)cur={label:v,src:"manual"};inp.value=cur?cur.label:""},140));
+  inp.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault();e.stopImmediatePropagation();if(hi>=0&&list[hi])pick(list[hi]);else{hide();inp.blur();o.onDone&&o.onDone()}return}
+    if(sug.hidden||!list.length)return;
+    if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();const n=list.length;hi=e.key==="ArrowDown"?(hi+1)%n:(hi<=0?n-1:hi-1);draw()}
+    else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();hide()}});
+  // fill in where you are (new transactions only, until you type or pick something yourself)
+  const applyAuto=()=>{if(!auto||touched)return;const f=LOC.last;if(!f||!f.place)return;
+    const mk=merchKey(o.merchant());let l=null;
+    if(mk){const m=txPool().find(t=>t.loc&&t.loc.lat!=null&&merchKey(t.merchant)===mk&&locDist(f,t.loc)<400);
+      if(m)l={label:locText(m.loc),place:m.loc.place||f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"},m.loc.name&&(l.name=m.loc.name);
+      else if(f.poi&&mk.includes(f.poi.toLowerCase().split(" ")[0]))l={label:f.poi+", "+f.place,name:f.poi,place:f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"}}
+    if(!l)l={label:f.place,place:f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"};
+    if(cur&&cur.label===l.label)return;cur=l;if(document.activeElement!==inp)inp.value=l.label;row.classList.remove("auto");void row.offsetWidth;row.classList.add("auto")};
+  const locate=open=>{if(!LOC.ok())return Promise.resolve(null);gpsB&&gpsB.classList.add("busy");
+    pend=LOC.get().then(v=>LOC.place(v).then(pl=>{if(pl)Object.assign(v,pl);LOC.last=v;LOC.lastAt=Date.now();return v})).then(v=>{gpsB&&gpsB.classList.remove("busy");if(!s.isConnected)return v;
+        applyAuto();o.onFix&&o.onFix(v);if(open)inp.focus();else if(document.activeElement===inp)draw();return v})
+      .catch(err=>{gpsB&&gpsB.classList.remove("busy");if(err&&err.code===1&&window.top!==window){gpsB&&gpsB.remove()}else if(open)toast(err&&err.code===1?"Location is turned off for this app":"Couldn't find your location");return null});
+    return pend};
+  if(gpsB)gpsB.addEventListener("click",e=>{e.preventDefault();if(LOC.last&&Date.now()-LOC.lastAt<2*60e3){inp.focus();return}locate(true)});
+  const mapB=document.createElement("button");mapB.type="button";mapB.className="lgps lmap";mapB.setAttribute("aria-label","Pick on a map");mapB.innerHTML=MAP_SVG;
+  if(window.top===window){if(gpsB)row.insertBefore(mapB,gpsB);else row.appendChild(mapB)}
+  mapB.addEventListener("click",e=>{e.preventDefault();inp.blur();hide();
+    let st=null;if(cur&&cur.lat!=null)st={lat:cur.lat,lng:cur.lng,zoom:17};else if(LOC.last&&Date.now()-LOC.lastAt<30*60e3)st={lat:LOC.last.lat,lng:LOC.last.lng,zoom:17};
+    else{const c=locCandidates(o.merchant(),o.date(),o.selfId).find(x=>x.lat!=null);st=c?{lat:c.lat,lng:c.lng,zoom:15}:{lat:42.9634,lng:-85.6681,zoom:11}}
+    mapPicker(st,l=>{cur=l;inp.value=l.label;touched=true;auto=false;row.classList.remove("auto");o.onDone&&o.onDone()})});
+  if(o.auto&&LOC.ok()&&LOC.on())locate(false);
+  return{
+    value(){const v=clean(inp.value);if(!v)return null;if(!cur||cur.label!==v)return{label:v,src:"manual",at:new Date().toISOString()};
+      const r={label:cur.label,src:cur.src||"manual"};["name","place","lat","lng","acc"].forEach(f=>{if(cur[f]!=null&&cur[f]!=="")r[f]=cur[f]});r.at=cur.at||new Date().toISOString();return r},
+    pending(){return auto&&!touched&&!clean(inp.value)&&pend?pend.then(()=>this.value()):null},
+    merchantChanged(){applyAuto()}
+  };
+}
 function locLabel(l,merchant){if(!l)return"";if(merchant&&l.poi&&!merchKey(merchant).includes(l.poi.toLowerCase().split(" ")[0]))return[l.road,l.place].filter(Boolean).join(" · ")||l.place||"";return l.poi?(l.poi+(l.place?" · "+l.place:"")):(l.place||(l.road)||(l.lat!=null?l.lat.toFixed(4)+", "+l.lng.toFixed(4):""))}
 function locMapUrl(l,name){return"https://maps.apple.com/?ll="+l.lat+","+l.lng+"&q="+encodeURIComponent(String(name||"Purchase").replace(/^\s*venmo\s*:\s*/i,""))}
 /* ---------- budget item suggestions ----------
@@ -2189,8 +2411,10 @@ function txSheet(existing){
         '<label class="trow"><span>Merchant</span><input class="tin" id="f-mer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-msug" aria-expanded="false" placeholder="Name" value="'+esc(merch0)+'"></label>'+
         '<div class="msug" id="f-msug" role="listbox" aria-label="Past merchants" hidden></div>'+
         '<label class="trow"><span>Venmo</span><input type="checkbox" class="tchk" id="f-venmo"'+(venmo0?" checked":"")+'></label>'+
-        (existing?(existing.loc&&existing.loc.lat!=null?'<a class="trow tlocrow" href="'+esc(locMapUrl(existing.loc,existing.merchant))+'" target="_blank" rel="noopener"><span>Location</span><span class="tv">'+esc(locLabel(existing.loc,existing.merchant))+CHEV+'</span></a>':'')
-          :(LOC.ok()?'<div class="trow tlocrow"><span>Location</span><span class="tlv" id="f-locv"></span><label class="tgl tglsm"><input type="checkbox" id="f-loc" role="switch" aria-label="Save location"'+(LOC.on()?" checked":"")+'><span class="sw"></span></label></div><div class="near" id="f-near" hidden></div>':''))+
+        '<div class="trow lrow"><span>Location</span><input class="tin" id="f-loc" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-lsug" aria-expanded="false" placeholder="Business, city" value="'+esc(locText(existing&&existing.loc))+'">'+
+          (LOC.ok()?'<button type="button" class="lgps" id="f-gps" aria-label="Use my current location">'+GPS_SVG+'</button>':'')+'</div>'+
+        '<div class="msug lsug" id="f-lsug" role="listbox" aria-label="Location suggestions" hidden></div>'+
+        (existing?'':'<div class="near" id="f-near" hidden></div>')+
       '</div>'+
       '<div class="tcard"><div class="trow crow"><span>Budget Item</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel)+'</select></span></div>'+
         '<div class="msug csug" id="f-csug" role="listbox" aria-label="Budget item suggestions" hidden></div><div class="cplace" id="f-cplace" hidden></div><div class="trow" id="f-subrow" hidden><span>Subcategory</span><span class="tv" id="f-stxt"></span><select class="ovl" id="f-sub" aria-label="Misc subcategory"><option value="">Select</option>'+SUB.list.map(x=>'<option'+(existing&&existing.sub===x?" selected":"")+'>'+esc(x)+'</option>').join("")+'<option value="__new">+ New subcategory…</option></select></div><div class="trow" id="f-newsub" hidden><input class="tin" id="f-newsubin" autocomplete="off" maxlength="40" enterkeyhint="done" placeholder="New subcategory name" aria-label="New subcategory name" style="text-align:left"><button class="addlink" id="f-newsubok" style="padding:0 0 0 8px">Add</button></div></div>'+
@@ -2247,7 +2471,7 @@ function txSheet(existing){
         drawCat();
         if(cat.value===MISC_ID&&!subTouched&&e.sub&&SUB.list.includes(e.sub)){subSel.value=e.sub;subPrev=e.sub;drawSub()}
         hideSug();merIn.blur();try{haptic()}catch(_){}
-        showPad(true)};
+        LF.merchantChanged();showPad(true)};
       sugEl.addEventListener("pointerdown",e=>{if(e.target.closest("[data-mi]"))e.preventDefault()});
       sugEl.addEventListener("mousedown",e=>e.preventDefault());
       sugEl.addEventListener("click",e=>{const b=e.target.closest("[data-mi]");if(!b)return;e.preventDefault();e.stopPropagation();const x=sugList[+b.dataset.mi];if(x)pickSug(x)});
@@ -2278,24 +2502,17 @@ function txSheet(existing){
         if(id===MISC_ID&&sub){subSel.value=sub;subPrev=sub;subTouched=true}drawCat();cq.value=catLabel();return true};
       const finishPick=()=>{hideC();cq.blur();try{haptic()}catch(_){}showPad(true)};
       const crow=s.querySelector(".crow");let autoT=0;
-      // location: grab a fix while you fill in the form; nearby places become one-tap merchants
-      let locP=null,locV=null;const locEl=s.querySelector("#f-locv"),locSw=s.querySelector("#f-loc"),nearEl=s.querySelector("#f-near");
-      const drawLoc=(txt,cls)=>{if(locEl){locEl.textContent=txt;locEl.className="tlv"+(cls?" "+cls:"")}};
-      const drawNear=()=>{if(!nearEl)return;const names=locV?LOC.nearby(locV):[];if(!names.length||merIn.value.trim()){nearEl.hidden=true;return}
+      // location: an editable field with suggestions; new transactions fill in where you are
+      const nearEl=s.querySelector("#f-near");
+      const LF=locField(s,{input:s.querySelector("#f-loc"),sug:s.querySelector("#f-lsug"),gps:s.querySelector("#f-gps"),
+        merchant:()=>(s.querySelector("#f-venmo").checked?"Venmo: ":"")+merIn.value,date:()=>s.querySelector("#f-date").value||today(),selfId:existing&&existing.id,
+        initial:existing?existing.loc:null,auto:!existing,onFix:()=>drawNear(),onFocus:()=>showPad(false),onDone:()=>showPad(true)});
+      const drawNear=()=>{if(!nearEl)return;const v=LOC.last;const names=v?LOC.nearby(v):[];if(!names.length||merIn.value.trim()){nearEl.hidden=true;return}
         nearEl.innerHTML='<span>Nearby</span>'+names.map(n=>'<button type="button" data-near="'+esc(n.name)+'">'+(n.poi?'📍 ':'')+esc(n.name)+'</button>').join("");nearEl.hidden=false};
-      const startLoc=()=>{if(existing||!locSw||!locSw.checked)return;drawLoc("Finding…","busy");
-        locP=LOC.get().then(v=>{locV=v;if(!s.isConnected)return v;drawLoc(locLabel(v)||"Saved");drawNear();
-          LOC.place(v).then(pl=>{if(pl){Object.assign(v,pl);if(s.isConnected){drawLoc(v.place||locLabel(v));drawNear()}}});return v})
-          .catch(err=>{locV=null;if(!s.isConnected)return null;
-            // when embedded (no permission to ask for location), hide the row
-            if(err&&err.code===1&&window.top!==window){const r=locSw.closest(".trow");if(r)r.remove();if(nearEl)nearEl.remove();return null}
-            drawLoc(err&&err.code===1?"Not allowed":"Unavailable","off");return null})};
-      if(locSw){locSw.addEventListener("change",()=>{LOC.setOn(locSw.checked);if(locSw.checked)startLoc();else{locP=null;locV=null;drawLoc("Off","off");if(nearEl)nearEl.hidden=true}});
-        if(locSw.checked)startLoc();else drawLoc("Off","off")}
       if(nearEl)nearEl.addEventListener("click",e=>{const b=e.target.closest("[data-near]");if(!b)return;merIn.value=b.dataset.near;nearEl.hidden=true;
         const past=merchIndex().find(x=>x.name.toLowerCase()===b.dataset.near.toLowerCase());if(past)s.querySelector("#f-venmo").checked=!!past.venmo;
-        autoCat();try{haptic()}catch(_){}});
-      merIn.addEventListener("input",drawNear);
+        autoCat();LF.merchantChanged();try{haptic()}catch(_){}});
+      merIn.addEventListener("input",()=>{drawNear();LF.merchantChanged()});
       const autoCat=()=>{
         if(existing||catTouched)return;
         const ym=ymOf(dIn.value||today()),ex=catExisting(groupsFor(ym),kind),m=(s.querySelector("#f-venmo").checked?"Venmo: ":"")+merIn.value;
@@ -2373,9 +2590,9 @@ function txSheet(existing){
         const date=dIn.value||today();
         const g2=groupsFor(ymOf(date)); const f=findItem(g2,itemId)||findItem(groups,itemId);
         const incSrc=incomeFor(ymOf(date)).find(x=>x.id===itemId)||incomeFor(S.ym).find(x=>x.id===itemId);
-        const locNow=!existing&&locSw&&locSw.checked&&locV?LOC.pack(locV):null;
+        const locNow=LF.value();
         const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim();return s.querySelector("#f-venmo").checked?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
-        if(locNow)body.loc=locNow;else if(existing&&existing.loc)body.loc=existing.loc;
+        if(locNow)body.loc=locNow;
         if(!S.db||S.readOnly){toast("Saving isn't available here");return}
         busy=true;
         try{
@@ -2385,8 +2602,8 @@ function txSheet(existing){
           ls.set("pb.lastItem",itemId);closeSheet();
           if(!existing)setTimeout(()=>celebrate(a,body.merchant,body.type),180);else if(ymOf(date)!==S.ym)toast("Saved to "+MONTHS[+date.slice(5,7)-1]);else toast("Saved");
           if(ref){pushToSheet(ref.id,body).then(ok=>{if(ok)toast("Added "+money(a)+" to your sheet")})}
-          if(ref&&!locNow&&locP&&locSw&&locSw.checked){const id=ref.id;locP.then(v=>{if(v)S.db.doc("tx/"+id).update({loc:LOC.pack(v)}).catch(()=>{})})}
-          if(ref&&locNow&&!locNow.place){const id=ref.id;LOC.place(locV).then(pl=>{if(pl)S.db.doc("tx/"+id).update({loc:LOC.pack(Object.assign({},locV,pl))}).catch(()=>{})})}
+          // a fix that was still on its way when you tapped Done lands a moment later
+          if(ref&&!locNow&&LF.pending()){const id=ref.id;LF.pending().then(l=>{if(l)S.db.doc("tx/"+id).update({loc:l}).catch(()=>{})})}
         }catch(e){busy=false;toast(e&&e.code==="quota_exceeded"?"Storage is full":"Couldn't save. Check your connection.")}
       }
       if(existing)s.querySelector("#f-del").onclick=()=>{
@@ -2559,7 +2776,9 @@ function subscribeTx(){
   txUnsub=S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).onSnapshot(snap=>{
     live=snap.docs.map(d=>Object.assign({id:d.id},d.data()));gotLive=true;merge();
   },()=>{gotLive=true;merge()});
-  if(ym<HIST_BEFORE)histUnsub=S.db.doc("hist/"+ym).onSnapshot(snap=>{past=snap.exists?histToTx(ym,snap.data()):[];gotPast=true;merge()},()=>{gotPast=true;merge()});
+  if(ym<HIST_BEFORE){let hd=null;
+    hlLoad(ym).then(()=>{if(hd){past=histToTx(ym,hd);merge()}});
+    histUnsub=S.db.doc("hist/"+ym).onSnapshot(snap=>{hd=snap.exists?snap.data():null;past=hd?histToTx(ym,hd):[];gotPast=true;merge()},()=>{gotPast=true;merge()})}
 }
 /* no pinch / double-tap zoom: the layout is built for the phone screen */
 ["gesturestart","gesturechange"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
