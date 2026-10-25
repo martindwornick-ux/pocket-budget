@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 24, 11:50 PM"</script>
+<script>window.PB_BUILD="Oct 25, 12:15 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -474,6 +474,25 @@ nav.tabs button[aria-current="page"]{color:var(--g-blue)}
 @keyframes ptrspin{to{transform:rotate(360deg)}}
 main.peek{position:fixed;left:0;right:0;bottom:0;margin:0 auto;overflow:hidden;pointer-events:none;z-index:3;will-change:transform}
 main.peek>*{flex-shrink:0}
+/* insights map */
+.imap{position:relative;height:min(58vh,420px);border-radius:18px;overflow:hidden;background:#1b2530;margin:2px 0 12px;isolation:isolate;z-index:0}
+.imap.on{animation:dpop .4s ease both}
+.imap .leaflet-heatmap-layer{animation:hmfade 1s ease both}
+@keyframes hmfade{from{opacity:0}}
+.hmload{position:absolute;inset:0;display:grid;place-items:center;color:#9aa7b4;font-size:14px;text-align:center;padding:20px;z-index:900}
+.imap .leaflet-control-attribution{background:rgba(20,28,36,.7);color:#9aa7b4}.imap .leaflet-control-attribution a{color:#c3d1de}
+.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}
+.hmstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.hmstats>div{background:rgba(60,64,67,.05);border-radius:12px;padding:8px 10px}
+.hmstats small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700}
+.hmstats b{display:block;font-size:17px;margin-top:2px}.hmstats span{font-size:11.5px;color:var(--muted)}
+.hmtop h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.hmtop h4 span{text-transform:none;letter-spacing:0;font-weight:400}
+.hmp{display:block;width:100%;text-align:left;padding:9px 0;border-radius:10px;animation:dup .4s ease both;animation-delay:var(--d)}
+.hmp+.hmp{border-top:1px solid var(--line)}.hmp:active{background:var(--sel)}
+.hmempty{text-align:center;padding:26px 10px 14px;color:var(--muted)}
+.hmempty svg{width:34px;height:34px;color:#a14ee0;display:block;margin:0 auto 8px}
+.hmempty b{display:block;color:var(--fg);font-size:17px;margin-bottom:4px}.hmempty p{margin:0;font-size:14px;line-height:1.45}
+
 /* map picker */
 .mpk{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:var(--card,#fff);transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.9,.25,1);padding-top:env(safe-area-inset-top,0px)}
 .mpk.on{transform:none}
@@ -710,7 +729,7 @@ body.mpk-open{overflow:hidden}
 /* one header layout on every tab: month row, a 36px control row, the status banner */
 #seg,#hisub{height:36px;margin-top:6px;align-items:stretch}
 #seg button,#hisub button{display:flex;align-items:center;justify-content:center;padding:0 2px;line-height:1;font-size:15px}
-#hisub{grid-template-columns:repeat(4,1fr)}
+#hisub{grid-template-columns:repeat(var(--nsub,4),1fr)}
 #hisub button{font-size:14px}
 #hsearch{padding-top:6px}
 #hsearch .search{height:36px}
@@ -1071,7 +1090,7 @@ function confirmDelete(id){
         if(!S.db||S.readOnly){toast("Saving isn't available here");b.disabled=false;return}
         try{await S.db.doc("tx/"+id).delete();SW.openRow=null;closeSheet();toast("Deleted")}catch(e){b.disabled=false;toast("Couldn't delete. Try again.")}}});
 }
-const ISUBS=[["totals","Totals"],["cal","Calendar"],["pace","Pace"],["wd","Weekday"]];
+const ISUBS=[["totals","Totals"],["cal","Calendar"],["pace","Pace"],["wd","Weekday"]].concat(window.top===window?[["map","Map"]]:[]);
 function renderHeader(){
   renderDoodle();
   const [y,m]=S.ym.split("-");$("#mName").textContent=MONTHS[+m-1];$("#mYear").textContent=y;
@@ -1079,7 +1098,7 @@ function renderHeader(){
   $("#seg").hidden=S.tab!=="budget";
   const onTx=S.tab==="tx";
   $("header .hrow").hidden=false;$("#banner").hidden=false;$("#hsearch").hidden=!onTx;
-  const hs=$("#hisub");hs.hidden=S.tab!=="insights";
+  const hs=$("#hisub");hs.hidden=S.tab!=="insights";hs.style.setProperty("--nsub",ISUBS.length);
   if(!hs.hidden){const want=ISUBS.map(([k,l])=>'<button data-isub="'+k+'" aria-pressed="'+(IS.sub===k)+'">'+l+'</button>').join("");if(hs.innerHTML!==want)hs.innerHTML=want}
   if(onTx){const i=$("#txq");i.placeholder="Search "+MONTHS[+S.ym.slice(5)-1]+" transactions";if(document.activeElement!==i&&i.value!==(S.q||""))i.value=S.q||"";$("#txqClear").hidden=!(S.q||"").trim()}
   document.querySelectorAll("nav.tabs button").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
@@ -2141,6 +2160,69 @@ function wdPanelHTML(w){
   return h+'</div>';
 }
 
+/* ---------- Insights · Map: a heat map of where you spend ----------
+   Uses transactions that have a map spot (GPS, a map pick, or a searched place). Brighter = more. */
+const HEAT={p:null};
+function loadHeat(){return loadLeaflet().then(()=>window.L.heatLayer?null:(HEAT.p||(HEAT.p=new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js";s.onload=()=>res();s.onerror=()=>{HEAT.p=null;rej(new Error("heat"))};document.head.appendChild(s)}))))}
+IS.hmMode=ls.get("pb.hm")||"amt";
+function heatData(months){
+  const all=[],pts=[];
+  months.forEach(ym=>txOf(ym).forEach(t=>{if(t.type==="income")return;const g=groupNameOf(t,ym),it=itemNameOf(t,ym);if(IS.group&&g!==IS.group)return;if(IS.item&&it!==IS.item)return;
+    all.push(t);if(t.loc&&t.loc.lat!=null&&t.loc.lng!=null&&sAmt(t)>0)pts.push(t)}));
+  const places={};pts.forEach(t=>{const k=(locShort(t.loc)||locText(t.loc)).toLowerCase();const p=places[k]||(places[k]={name:locShort(t.loc)||locText(t.loc),full:locText(t.loc),amt:0,n:0,lat:0,lng:0});
+    p.amt+=sAmt(t);p.n++;p.lat+=t.loc.lat;p.lng+=t.loc.lng});
+  const list=Object.values(places).map(p=>Object.assign(p,{lat:p.lat/p.n,lng:p.lng/p.n,amt:round2(p.amt)}));
+  return{all,pts,places:list};
+}
+function mapCard(fh,months,pending){
+  const D=heatData(months),m=IS.hmMode;IS.heat=D;
+  let h='<section class="card hmcard"><div class="chead"><h2>Where you spend</h2></div>'+fh;
+  if(pending)h+='<p class="note" style="margin:0 0 6px">Loading earlier months…</p>';
+  if(!D.pts.length)return h+'<div class="hmempty">'+PIN_SVG+'<b>No map spots yet</b><p>Transactions show up here once they have a location from your GPS, the map, or a searched place. Add one when you log a purchase, or open an older one and tap 🗺 next to Location.</p></div></section>';
+  h+='<div class="seg2 hmm" role="group" aria-label="Heat by"><button data-hm="amt" aria-pressed="'+(m==="amt")+'">Spending</button><button data-hm="n" aria-pressed="'+(m==="n")+'">Purchases</button></div>';
+  h+='<div class="imap" id="imap"><div class="hmload">Loading map…</div></div>';
+  const spent=round2(D.pts.reduce((a,t)=>a+sAmt(t),0));
+  h+='<div class="hmstats"><div><small>Mapped</small><b class="num">'+D.pts.length+'</b><span>of '+D.all.length+' purchases</span></div><div><small>Spending mapped</small><b class="num">'+money(spent).replace(/\.\d\d$/,"")+'</b></div><div><small>Places</small><b class="num">'+D.places.length+'</b></div></div>';
+  const top=D.places.slice().sort((a,b)=>m==="n"?b.n-a.n||b.amt-a.amt:b.amt-a.amt).slice(0,8),mx=top.length?(m==="n"?top[0].n:top[0].amt):1;
+  h+='<div class="hmtop"><h4>Top places <span>· tap to zoom</span></h4>'+top.map((p,i)=>'<button class="hmp" data-hp="'+i+'" style="--d:'+(i*0.04).toFixed(2)+'s"><div class="pgt"><span class="pn">'+esc(p.name)+'</span><span class="num">'+(m==="n"?'<b>'+p.n+'</b> purchase'+(p.n===1?'':'s'):'<b>'+money(p.amt)+'</b>')+'</span></div><div class="pgb"><i style="width:'+Math.max(4,(m==="n"?p.n:p.amt)/mx*100).toFixed(1)+'%;background:linear-gradient(90deg,#6c2bd9,#f5a524)"></i></div></button>').join("")+'</div>';
+  IS.heatTop=top;
+  setTimeout(initHeatMap,0);
+  return h+'</section>';
+}
+function initHeatMap(){
+  const el=document.querySelector("#main #imap");if(!el||!IS.heat)return;
+  loadHeat().then(()=>{if(!el.isConnected)return;const L=window.L,D=IS.heat,m=IS.hmMode;
+    if(IS.lmap){try{IS.lmap.remove()}catch(_){}IS.lmap=null}
+    el.innerHTML="";
+    const map=L.map(el,{zoomControl:false,attributionControl:true,worldCopyJump:true});IS.lmap=map;
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'}).addTo(map);
+    map.attributionControl.setPrefix(false);
+    const vals=D.pts.map(t=>m==="n"?1:sAmt(t)),top=Math.max(...vals);
+    const heat=D.pts.map((t,i)=>[t.loc.lat,t.loc.lng,m==="n"?1:Math.max(0.15,Math.sqrt(vals[i]/top))]);
+    // scale so only the busiest place glows yellow; everything else sits in the purples
+    const sums={};D.pts.forEach((t,i)=>{const k=(locShort(t.loc)||"").toLowerCase();sums[k]=(sums[k]||0)+heat[i][2]});
+    const peak=Math.max(1,...Object.values(sums));
+    const layer=L.heatLayer(heat,{radius:24,blur:20,maxZoom:3,max:peak,minOpacity:0.12,gradient:{0.15:"#2c1a6b",0.35:"#5a2bd1",0.55:"#a14ee0",0.75:"#ff8a3d",0.92:"#ffd166"}}).addTo(map);
+    const key=[IS.range,IS.group,IS.item,D.pts.length].join("~");
+    if(IS.mapView&&IS.mapViewKey===key)map.setView(IS.mapView.c,IS.mapView.z,{animate:false});
+    else{ // open on the area where most of the money went (zoom out to see other trips)
+      const hub=D.places.slice().sort((a,b)=>m==="n"?b.n-a.n:b.amt-a.amt)[0];
+      const near=hub?D.pts.filter(t=>locDist(hub,t.loc)<80e3):D.pts;
+      const b=L.latLngBounds(near.map(t=>[t.loc.lat,t.loc.lng]));if(b.isValid())map.fitBounds(b.pad(0.3),{maxZoom:14,animate:false});else map.setView([42.96,-85.67],10)}
+    IS.mapViewKey=key;
+    map.on("moveend",()=>{IS.mapView={c:map.getCenter(),z:map.getZoom()}});
+    el.classList.add("on");
+    const tl=Object.values(map._layers).find(x=>x instanceof L.TileLayer);let ok=0,bad=0;
+    if(tl){tl.on("tileload",()=>ok++);tl.on("tileerror",()=>{if(++bad>=4&&!ok&&!el.querySelector(".hmload")){const d=document.createElement("div");d.className="hmload";d.textContent="Map pictures aren't loading. Check your connection.";el.appendChild(d)}})}
+  }).catch(()=>{el.innerHTML='<div class="hmload">The map couldn\'t load here. Open Pocket Budget from your Home Screen.</div>'});
+}
+$("#main").addEventListener("click",e=>{
+  const b=e.target.closest("[data-hm]");if(b){if(IS.hmMode===b.dataset.hm)return;IS.hmMode=b.dataset.hm;ls.set("pb.hm",IS.hmMode);try{haptic()}catch(_){}render();return}
+  const p=e.target.closest("[data-hp]");if(p&&IS.lmap&&IS.heatTop){const x=IS.heatTop[+p.dataset.hp];if(!x)return;try{haptic()}catch(_){}
+    const el=$("#imap");if(el)window.scrollTo({top:Math.max(0,scrollY+el.getBoundingClientRect().top-(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120)-14),behavior:"smooth"});
+    IS.lmap.flyTo([x.lat,x.lng],Math.max(IS.lmap.getZoom(),14),{duration:0.9})}
+});
+
 function renderInsights(groups,sm){
   IS.ranges=IS.ranges||{};
   if(!IS.ranges[IS.sub])IS.ranges[IS.sub]=+(ls.get("pb.irange."+IS.sub)||ls.get("pb.irange")||6);
@@ -2149,7 +2231,7 @@ function renderInsights(groups,sm){
   const months=monthsBack(IS.range);
   const pending=months.some(ym=>ym!==S.ym&&!IS.hist[ym]);
   if(IS.sub==="details"){IS.sub="totals";IS.tview="months"}
-  if(!["totals","cal","pace","wd"].includes(IS.sub))IS.sub="totals";
+  if(!ISUBS.some(x=>x[0]===IS.sub))IS.sub="totals";
   const BYM=IS.sub==="totals"&&IS.tview==="months";
   let h='';
   const rangeSel=selHTML("i-range",[["1","This Month"],["3","Past 3 Months"],["6","Past 6 Months"],["12","Past 12 Months"]],String(IS.range));
@@ -2161,7 +2243,7 @@ function renderInsights(groups,sm){
   if(IS.sub!=="cal"&&IS.sub!=="pace")fh+=rangeSel;
   fh+='</div>';
   if(!IS.group)IS.item="";
-  if((BYM||IS.sub==="cal"||IS.sub==="pace"||IS.sub==="wd")&&IS.group){
+  if((BYM||IS.sub==="cal"||IS.sub==="pace"||IS.sub==="wd"||IS.sub==="map")&&IS.group){
     const items=[];months.forEach(ym=>spendRows(ym).forEach(r=>{if(r.g===IS.group&&!items.includes(r.i))items.push(r.i)}));
     groupsFor(S.ym).filter(g=>g.name===IS.group).forEach(g=>g.items.forEach(it=>{if(!items.includes(it.name))items.push(it.name)}));
     if(IS.item&&!items.includes(IS.item))IS.item="";
@@ -2170,6 +2252,7 @@ function renderInsights(groups,sm){
   if(IS.sub==="cal")return h+calendarCard(fh);
   if(IS.sub==="pace")return h+paceCard(fh);
   if(IS.sub==="wd")return h+weekdayCard(fh,months,pending);
+  if(IS.sub==="map")return h+mapCard(fh,months,pending);
   h+='<section class="card">'+fh;
   if(pending)h+='<p class="note" style="margin:4px 0 0">Loading earlier months…</p>';
   // aggregate
@@ -2818,7 +2901,7 @@ async function refreshNow(){
   const rubber=d=>{const dim=Math.max(320,innerHeight*.75);return(1-1/(d*.55/dim+1))*dim};
   const atTop=()=>window.scrollY<=0;
   const atBottom=()=>window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
-  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest("input,textarea,select,.pscrub,svg.di"));
+  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest("input,textarea,select,.pscrub,svg.di,.imap"));
   let y0=null,x0=0,startY=0,mode=0,busy=false,armed=false,pull=0,raf=0,want=0,settleT=0;
   function paint(p){
     main.style.transform=p?"translate3d(0,"+p.toFixed(2)+"px,0)":"";
@@ -2862,7 +2945,7 @@ async function refreshNow(){
 /* ---------- swipe left / right between tabs (pages sit side by side like cards) ---------- */
 (()=>{
   const TABS=["budget","tx","insights"],main=$("#main"),EASE="cubic-bezier(.25,.9,.3,1)";
-  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest(".pscrub,svg.di,input,textarea,select,.isel,nav.tabs,.pad"));
+  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest(".pscrub,svg.di,.imap,input,textarea,select,.isel,nav.tabs,.pad"));
   let x0=null,y0=0,on=false,dx=0,onRow=false,raf=0,busy=false,lastX=0,lastT=0,vel=0,peek=null,side=0;
   const W=()=>innerWidth;
   const pageHTML=tab=>{const g=groupsFor(S.ym);return tab==="budget"?renderBudget(g,spentMap()):tab==="tx"?renderTx(g):renderInsights(g,spentMap())};
