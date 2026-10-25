@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 25, 12:15 AM"</script>
+<script>window.PB_BUILD="Oct 25, 7:25 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -478,6 +478,7 @@ main.peek>*{flex-shrink:0}
 .imap{position:relative;height:min(58vh,420px);border-radius:18px;overflow:hidden;background:#1b2530;margin:2px 0 12px;isolation:isolate;z-index:0}
 .imap.on{animation:dpop .4s ease both}
 .imap .leaflet-heatmap-layer{animation:hmfade 1s ease both}
+.imap .leaflet-tile-pane{filter:invert(1) hue-rotate(185deg) brightness(.9) contrast(.88) saturate(.55)}
 @keyframes hmfade{from{opacity:0}}
 .hmload{position:absolute;inset:0;display:grid;place-items:center;color:#9aa7b4;font-size:14px;text-align:center;padding:20px;z-index:900}
 .imap .leaflet-control-attribution{background:rgba(20,28,36,.7);color:#9aa7b4}.imap .leaflet-control-attribution a{color:#c3d1de}
@@ -2195,7 +2196,8 @@ function initHeatMap(){
     if(IS.lmap){try{IS.lmap.remove()}catch(_){}IS.lmap=null}
     el.innerHTML="";
     const map=L.map(el,{zoomControl:false,attributionControl:true,worldCopyJump:true});IS.lmap=map;
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'}).addTo(map);
+    // OpenStreetMap tiles (no key needed), darkened with a CSS filter so the heat glows
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
     map.attributionControl.setPrefix(false);
     const vals=D.pts.map(t=>m==="n"?1:sAmt(t)),top=Math.max(...vals);
     const heat=D.pts.map((t,i)=>[t.loc.lat,t.loc.lng,m==="n"?1:Math.max(0.15,Math.sqrt(vals[i]/top))]);
