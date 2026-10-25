@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 25, 8:10 AM"</script>
+<script>window.PB_BUILD="Oct 25, 8:25 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2208,15 +2208,14 @@ function locSub(t){const l=t.loc;if(!l)return"";const nm=(l.name||"").toLowerCas
 function mapCard(fh,months,pending){
   const D=heatData(months);
   const pts=D.pts.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.createdAt||"").localeCompare(a.createdAt||""));
-  IS.mapPts=pts;if(!(IS.mapActive>=0&&IS.mapActive<pts.length))IS.mapActive=0;
+  IS.mapPts=pts;if(!(IS.mapActive>=-1&&IS.mapActive<pts.length))IS.mapActive=-1;
   let h='<section class="card mlcard"><div class="chead"><h2>Where you spend</h2></div>'+fh;
   if(pending)h+='<p class="note" style="margin:0 0 6px">Loading earlier months…</p>';
   if(!pts.length)return h+'<div class="hmempty">'+PIN_SVG+'<b>No map spots yet</b><p>Transactions show up here once they have a location from your GPS, the map, or a searched place. New ones get your current location automatically; for older ones, open them and tap 🗺 next to Location.</p></div></section>';
   h+='<div class="mlmap"><div class="imap" id="imap"><div class="hmload">Loading map…</div></div>'+
-    '<div class="mlzoom"><button data-mz="1" aria-label="Zoom in">+</button><button data-mz="-1" aria-label="Zoom out">−</button></div>'+
     '<div class="mlcap" id="mlcap"></div></div>';
   const miss=D.all.length-pts.length;
-  h+='<p class="mlnote">'+pts.length+' purchase'+(pts.length===1?'':'s')+' on the map'+(miss>0?' · '+miss+' without a spot':'')+'. Scroll the list to move the map.</p>';
+  h+='<p class="mlnote">'+pts.length+' purchase'+(pts.length===1?'':'s')+' on the map'+(miss>0?' · '+miss+' without a spot':'')+'. Scroll the list to visit each one; pinch the map to zoom.</p>';
   let lastDay="";
   h+='<div class="mllist">'+pts.map((t,i)=>{const day=t.date!==lastDay?'<div class="mlday">'+esc(fmtDay(t.date))+'</div>':'';lastDay=t.date;
     return day+'<button class="mlrow'+(i===IS.mapActive?' on':'')+'" data-mi="'+i+'"><i class="mldot"></i><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+PIN_SVG+esc(locSub(t))+'</div></div><div class="a num">'+(t.type==="refund"?"+":"")+money(+t.amount||0)+'</div></button>'}).join("")+'<div class="mlpad"></div></div>';
@@ -2225,22 +2224,37 @@ function mapCard(fh,months,pending){
 }
 const ML={map:null,pin:null,dots:[],raf:0};
 function mlLine(){const m=document.querySelector("#main .mlmap");return m?m.getBoundingClientRect().bottom+28:0}
+function mlOverview(force){
+  const pts=IS.mapPts||[],changed=IS.mapActive!==-1;IS.mapActive=-1;
+  document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.remove("on"));
+  const spent=round2(pts.reduce((a,t)=>a+sAmt(t),0)),places=new Set(pts.map(t=>(locShort(t.loc)||"").toLowerCase())).size;
+  const cap=$("#mlcap");if(cap){cap.innerHTML='<b>All '+pts.length+' purchase'+(pts.length===1?'':'s')+' · '+money(spent)+'</b><span>'+places+' place'+(places===1?'':'s')+' · scroll down to visit each one</span>';if(changed){cap.classList.remove("pop");void cap.offsetWidth;cap.classList.add("pop")}}
+  const map=ML.map;if(!map||!window.L)return;
+  ML.dots.forEach(d=>d.setStyle({radius:5,opacity:.9,fillOpacity:.55}));
+  if(ML.pin)ML.pin.setOpacity(0);
+  if(!changed&&!force)return;
+  const b=window.L.latLngBounds(pts.map(t=>[t.loc.lat,t.loc.lng]));
+  if(b.isValid())map.flyToBounds(b.pad(0.2),{maxZoom:14,duration:force?0:.8,animate:!force});
+}
 function mlSetActive(i,force){
-  const pts=IS.mapPts||[],t=pts[i];if(!t)return;const changed=i!==IS.mapActive;IS.mapActive=i;
+  if(i<0){mlOverview(force);return}
+  const pts=IS.mapPts||[],t=pts[i];if(!t)return;const changed=i!==IS.mapActive,fromOverview=IS.mapActive===-1;IS.mapActive=i;
   document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.toggle("on",+r.dataset.mi===i));
   const cap=$("#mlcap");if(cap){cap.innerHTML='<b>'+esc(t.merchant||"Purchase")+' · '+money(+t.amount||0)+'</b><span>'+esc(locSub(t))+' · '+esc(fmtDay(t.date))+'</span>';cap.classList.remove("pop");void cap.offsetWidth;cap.classList.add("pop")}
   const map=ML.map;if(!map)return;const ll=[t.loc.lat,t.loc.lng];
   ML.dots.forEach((d,k)=>d.setStyle(k===i?{radius:0,opacity:0,fillOpacity:0}:{radius:5,opacity:.9,fillOpacity:.55}));
-  if(ML.pin){ML.pin.setLatLng(ll);const el=ML.pin.getElement();if(el&&changed){el.classList.remove("drop");void el.offsetWidth;el.classList.add("drop")}}
+  if(ML.pin){ML.pin.setOpacity(1);ML.pin.setLatLng(ll);const el=ML.pin.getElement();if(el&&changed){el.classList.remove("drop");void el.offsetWidth;el.classList.add("drop")}}
   if(!changed&&!force)return;
   const c=map.getCenter(),far=locDist({lat:c.lat,lng:c.lng},{lat:ll[0],lng:ll[1]});
-  if(far>40e3)map.flyTo(ll,Math.max(map.getZoom(),13),{duration:.9});else map.panTo(ll,{animate:true,duration:.45,easeLinearity:.3});
+  // leaving the overview zooms in to street level (or the zoom you last pinched to)
+  if(fromOverview||force)map.flyTo(ll,IS.mapZoom||15,{duration:force?0:.9,animate:!force});
+  else if(far>40e3)map.flyTo(ll,map.getZoom(),{duration:.9});else map.panTo(ll,{animate:true,duration:.45,easeLinearity:.3});
 }
 function mlScan(){ML.raf=0;if(S.tab!=="insights"||IS.sub!=="map")return;const line=mlLine();if(!line)return;
-  const rows=document.querySelectorAll("#main .mlrow");let pick=-1;
-  for(const r of rows){const b=r.getBoundingClientRect();if(b.bottom>line){pick=+r.dataset.mi;break}}
-  if(pick<0&&rows.length)pick=+rows[rows.length-1].dataset.mi;
-  if(pick>=0&&pick!==IS.mapActive){mlSetActive(pick);try{navigator.vibrate&&navigator.vibrate(3)}catch(_){}}}
+  const rows=document.querySelectorAll("#main .mlrow");if(!rows.length)return;let pick=-2;
+  if(rows[0].getBoundingClientRect().top>line)pick=-1; // list hasn't reached the map yet: overview
+  else{for(const r of rows){const b=r.getBoundingClientRect();if(b.bottom>line){pick=+r.dataset.mi;break}}if(pick===-2)pick=+rows[rows.length-1].dataset.mi}
+  if(pick!==IS.mapActive){mlSetActive(pick);try{navigator.vibrate&&navigator.vibrate(3)}catch(_){}}}
 window.addEventListener("scroll",()=>{if(!ML.raf&&S.tab==="insights"&&IS.sub==="map")ML.raf=requestAnimationFrame(mlScan)},{passive:true});
 function initMapList(){
   const el=document.querySelector("#main #imap");if(!el||!IS.mapPts||!IS.mapPts.length)return;
@@ -2248,22 +2262,21 @@ function initMapList(){
     if(ML.map){try{ML.map.remove()}catch(_){}ML.map=null}
     el.innerHTML="";
     // look-only map: no dragging or pinching; the list and the +/− buttons move it
-    const map=L.map(el,{zoomControl:false,attributionControl:true,dragging:false,touchZoom:false,doubleClickZoom:false,scrollWheelZoom:false,boxZoom:false,keyboard:false,tap:false,inertia:false});ML.map=map;
+    const map=L.map(el,{zoomControl:false,attributionControl:true,dragging:false,touchZoom:"center",doubleClickZoom:false,scrollWheelZoom:"center",boxZoom:false,keyboard:false,tap:false,inertia:false,bounceAtZoomLimits:false});ML.map=map;
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
     map.attributionControl.setPrefix(false);
     ML.dots=pts.map(t=>L.circleMarker([t.loc.lat,t.loc.lng],{radius:5,color:"#c39bff",weight:1.5,fillColor:"#a14ee0",fillOpacity:.55,interactive:false}).addTo(map));
-    const t0=pts[IS.mapActive]||pts[0];
-    ML.pin=L.marker([t0.loc.lat,t0.loc.lng],{interactive:false,keyboard:false,icon:L.divIcon({className:"mlpin",html:PIN_SVG+'<i></i>',iconSize:[36,36],iconAnchor:[18,34]})}).addTo(map);
-    map.setView([t0.loc.lat,t0.loc.lng],IS.mapZoom||15,{animate:false});
-    map.on("zoomend",()=>{IS.mapZoom=map.getZoom()});
-    el.classList.add("on");mlSetActive(IS.mapActive,true);
+    const t0=pts[Math.max(0,IS.mapActive)]||pts[0];
+    ML.pin=L.marker([t0.loc.lat,t0.loc.lng],{interactive:false,keyboard:false,opacity:0,icon:L.divIcon({className:"mlpin",html:PIN_SVG+'<i></i>',iconSize:[36,36],iconAnchor:[18,34]})}).addTo(map);
+    map.setView([t0.loc.lat,t0.loc.lng],15,{animate:false});
+    ML.user=false;map.on("zoomstart",e=>{});el.addEventListener("touchstart",e=>{if(e.touches.length>1)ML.user=true},{passive:true});
+    map.on("zoomend",()=>{if(ML.user&&IS.mapActive>=0)IS.mapZoom=map.getZoom();ML.user=false});
+    el.classList.add("on");const cur=IS.mapActive;IS.mapActive=-2;mlSetActive(cur,true);setTimeout(mlScan,60);
     const tl=Object.values(map._layers).find(x=>x instanceof L.TileLayer);let ok=0,bad=0;
     if(tl){tl.on("tileload",()=>ok++);tl.on("tileerror",()=>{if(++bad>=4&&!ok&&!el.querySelector(".hmload")){const d=document.createElement("div");d.className="hmload";d.textContent="Map pictures aren't loading. Check your connection.";el.appendChild(d)}})}
   }).catch(()=>{el.innerHTML='<div class="hmload">The map couldn\'t load here. Open Pocket Budget from your Home Screen.</div>'});
 }
 $("#main").addEventListener("click",e=>{
-  const z=e.target.closest("[data-mz]");if(z&&ML.map){const t=(IS.mapPts||[])[IS.mapActive];const nz=Math.max(3,Math.min(18,ML.map.getZoom()+(+z.dataset.mz)));
-    try{haptic()}catch(_){}if(t)ML.map.setView([t.loc.lat,t.loc.lng],nz,{animate:true});else ML.map.setZoom(nz);return}
   const r=e.target.closest(".mlrow");if(r){const i=+r.dataset.mi;const line=mlLine(),b=r.getBoundingClientRect();
     window.scrollTo({top:Math.max(0,scrollY+b.top-line+2),behavior:"smooth"});mlSetActive(i);try{haptic()}catch(_){}}
 });
