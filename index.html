@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 25, 7:25 AM"</script>
+<script>window.PB_BUILD="Oct 25, 7:45 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1323,7 +1323,7 @@ function merchMatches(q){
    It stays in the app's own storage; the sheet row is unchanged. */
 const LOC={
   ok(){return !!(navigator.geolocation&&window.isSecureContext)},
-  on(){return ls.get("pb.loc")!=="0"},
+  on(){return true},
   setOn(v){ls.set("pb.loc",v?"1":"0")},
   get(){return new Promise((res,rej)=>{let done=false;const t=setTimeout(()=>{if(!done){done=true;rej({code:3})}},15000);
     try{navigator.geolocation.getCurrentPosition(p=>{if(done)return;done=true;clearTimeout(t);res({lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy||0),at:new Date().toISOString()})},
@@ -1483,7 +1483,7 @@ function locField(s,o){
     if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();const n=list.length;hi=e.key==="ArrowDown"?(hi+1)%n:(hi<=0?n-1:hi-1);draw()}
     else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();hide()}});
   // fill in where you are (new transactions only, until you type or pick something yourself)
-  const applyAuto=()=>{if(!auto||touched)return;const f=LOC.last;if(!f||!f.place)return;
+  const applyAuto=()=>{if(!auto||touched)return;const f=LOC.last;if(!f)return;if(!f.place){if(!clean(inp.value)){cur={label:"Current location",lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"};inp.value=cur.label}return}
     const mk=merchKey(o.merchant());let l=null;
     if(mk){const m=txPool().find(t=>t.loc&&t.loc.lat!=null&&merchKey(t.merchant)===mk&&locDist(f,t.loc)<400);
       if(m)l={label:locText(m.loc),place:m.loc.place||f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"},m.loc.name&&(l.name=m.loc.name);
@@ -1502,11 +1502,15 @@ function locField(s,o){
     let st=null;if(cur&&cur.lat!=null)st={lat:cur.lat,lng:cur.lng,zoom:17};else if(LOC.last&&Date.now()-LOC.lastAt<30*60e3)st={lat:LOC.last.lat,lng:LOC.last.lng,zoom:17};
     else{const c=locCandidates(o.merchant(),o.date(),o.selfId).find(x=>x.lat!=null);st=c?{lat:c.lat,lng:c.lng,zoom:15}:{lat:42.9634,lng:-85.6681,zoom:11}}
     mapPicker(st,l=>{cur=l;inp.value=l.label;touched=true;auto=false;row.classList.remove("auto");o.onDone&&o.onDone()})});
-  if(o.auto&&LOC.ok()&&LOC.on())locate(false);
+  // new transactions assume you're where you are now: use a fresh fix right away, then refine
+  if(o.auto&&LOC.ok()){
+    if(LOC.last&&Date.now()-LOC.lastAt<5*60e3){applyAuto();o.onFix&&setTimeout(()=>o.onFix(LOC.last),0)}
+    if(!clean(inp.value))inp.placeholder="Finding where you are…";
+    locate(false).then(v=>{inp.placeholder=v?"Business, city":"Business, city"})}
   return{
     value(){const v=clean(inp.value);if(!v)return null;if(!cur||cur.label!==v)return{label:v,src:"manual",at:new Date().toISOString()};
       const r={label:cur.label,src:cur.src||"manual"};["name","place","lat","lng","acc"].forEach(f=>{if(cur[f]!=null&&cur[f]!=="")r[f]=cur[f]});r.at=cur.at||new Date().toISOString();return r},
-    pending(){return auto&&!touched&&!clean(inp.value)&&pend?pend.then(()=>this.value()):null},
+    pending(){return auto&&!touched&&!clean(inp.value)&&pend?pend.then(v=>v?{label:v.place||"Current location",place:v.place||undefined,lat:v.lat,lng:v.lng,acc:v.acc,src:"gps",at:new Date().toISOString()}:null).then(l=>{if(l&&!l.place)delete l.place;return l}):null},
     merchantChanged(){applyAuto()}
   };
 }
