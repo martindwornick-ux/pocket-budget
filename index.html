@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 25, 7:45 AM"</script>
+<script>window.PB_BUILD="Oct 25, 8:10 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -475,6 +475,30 @@ nav.tabs button[aria-current="page"]{color:var(--g-blue)}
 main.peek{position:fixed;left:0;right:0;bottom:0;margin:0 auto;overflow:hidden;pointer-events:none;z-index:3;will-change:transform}
 main.peek>*{flex-shrink:0}
 /* insights map */
+/* map tab: list drives the map */
+.mlcard{padding-bottom:6px}
+.mlmap{position:sticky;top:calc(var(--hh,120px) + 4px);z-index:4;margin:0 -22px;padding:4px 22px 10px;background:linear-gradient(var(--card) 88%,transparent)}
+main .mlmap{background:linear-gradient(rgba(255,255,255,.97) 88%,rgba(255,255,255,0))}
+.mlmap .imap{height:min(38vh,320px);margin:0}
+.mlzoom{position:absolute;right:32px;top:14px;z-index:900;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.mlzoom button{width:40px;height:40px;background:rgba(32,40,50,.88);color:#fff;font-size:22px;line-height:1;font-weight:500}
+.mlzoom button+button{border-top:1px solid rgba(255,255,255,.15)}.mlzoom button:active{background:rgba(60,72,88,.95)}
+.mlcap{position:absolute;left:32px;right:84px;bottom:20px;z-index:900;background:rgba(20,28,36,.82);color:#fff;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;pointer-events:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.mlcap b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mlcap span{font-size:12.5px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlcap.pop{animation:dpop .3s ease both}
+.mlpin{background:none;border:0}.mlpin svg{width:36px;height:36px;color:#ffb347;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));display:block}
+.mlpin.drop svg{animation:pindrop .4s cubic-bezier(.2,.9,.3,1.5)}
+@keyframes pindrop{from{transform:translateY(-14px) scale(.8);opacity:.4}}
+.mlnote{margin:2px 0 6px;font-size:13px;color:var(--muted)}
+.mlday{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:12px 0 4px}
+.mlrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 10px;margin:0 -10px;border-radius:14px;transition:background .25s,transform .25s;width:calc(100% + 20px)}
+.mlrow .l{flex:1;min-width:0}.mlrow .m{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlrow .c{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mlrow .c .pin{width:11px;height:11px;vertical-align:-1px;margin-right:3px;opacity:.7}
+.mlrow .a{font-size:16px;font-weight:600;flex:none}
+.mldot{flex:none;width:10px;height:10px;border-radius:50%;background:#a14ee0;opacity:.45;transition:transform .25s,opacity .25s,background .25s}
+.mlrow.on{background:rgba(161,78,224,.1)}.mlrow.on .mldot{opacity:1;background:#ffb347;transform:scale(1.35)}
+.mlpad{height:45vh}
+
 .imap{position:relative;height:min(58vh,420px);border-radius:18px;overflow:hidden;background:#1b2530;margin:2px 0 12px;isolation:isolate;z-index:0}
 .imap.on{animation:dpop .4s ease both}
 .imap .leaflet-heatmap-layer{animation:hmfade 1s ease both}
@@ -2179,54 +2203,69 @@ function heatData(months){
   const list=Object.values(places).map(p=>Object.assign(p,{lat:p.lat/p.n,lng:p.lng/p.n,amt:round2(p.amt)}));
   return{all,pts,places:list};
 }
+// the place line without repeating the merchant ("Dog River Coffee" + "Hood River, OR")
+function locSub(t){const l=t.loc;if(!l)return"";const nm=(l.name||"").toLowerCase(),mk=merchKey(t.merchant);return nm&&mk&&(mk.includes(nm)||nm.includes(mk))&&l.place?l.place:locText(l)}
 function mapCard(fh,months,pending){
-  const D=heatData(months),m=IS.hmMode;IS.heat=D;
-  let h='<section class="card hmcard"><div class="chead"><h2>Where you spend</h2></div>'+fh;
+  const D=heatData(months);
+  const pts=D.pts.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.createdAt||"").localeCompare(a.createdAt||""));
+  IS.mapPts=pts;if(!(IS.mapActive>=0&&IS.mapActive<pts.length))IS.mapActive=0;
+  let h='<section class="card mlcard"><div class="chead"><h2>Where you spend</h2></div>'+fh;
   if(pending)h+='<p class="note" style="margin:0 0 6px">Loading earlier months…</p>';
-  if(!D.pts.length)return h+'<div class="hmempty">'+PIN_SVG+'<b>No map spots yet</b><p>Transactions show up here once they have a location from your GPS, the map, or a searched place. Add one when you log a purchase, or open an older one and tap 🗺 next to Location.</p></div></section>';
-  h+='<div class="seg2 hmm" role="group" aria-label="Heat by"><button data-hm="amt" aria-pressed="'+(m==="amt")+'">Spending</button><button data-hm="n" aria-pressed="'+(m==="n")+'">Purchases</button></div>';
-  h+='<div class="imap" id="imap"><div class="hmload">Loading map…</div></div>';
-  const spent=round2(D.pts.reduce((a,t)=>a+sAmt(t),0));
-  h+='<div class="hmstats"><div><small>Mapped</small><b class="num">'+D.pts.length+'</b><span>of '+D.all.length+' purchases</span></div><div><small>Spending mapped</small><b class="num">'+money(spent).replace(/\.\d\d$/,"")+'</b></div><div><small>Places</small><b class="num">'+D.places.length+'</b></div></div>';
-  const top=D.places.slice().sort((a,b)=>m==="n"?b.n-a.n||b.amt-a.amt:b.amt-a.amt).slice(0,8),mx=top.length?(m==="n"?top[0].n:top[0].amt):1;
-  h+='<div class="hmtop"><h4>Top places <span>· tap to zoom</span></h4>'+top.map((p,i)=>'<button class="hmp" data-hp="'+i+'" style="--d:'+(i*0.04).toFixed(2)+'s"><div class="pgt"><span class="pn">'+esc(p.name)+'</span><span class="num">'+(m==="n"?'<b>'+p.n+'</b> purchase'+(p.n===1?'':'s'):'<b>'+money(p.amt)+'</b>')+'</span></div><div class="pgb"><i style="width:'+Math.max(4,(m==="n"?p.n:p.amt)/mx*100).toFixed(1)+'%;background:linear-gradient(90deg,#6c2bd9,#f5a524)"></i></div></button>').join("")+'</div>';
-  IS.heatTop=top;
-  setTimeout(initHeatMap,0);
+  if(!pts.length)return h+'<div class="hmempty">'+PIN_SVG+'<b>No map spots yet</b><p>Transactions show up here once they have a location from your GPS, the map, or a searched place. New ones get your current location automatically; for older ones, open them and tap 🗺 next to Location.</p></div></section>';
+  h+='<div class="mlmap"><div class="imap" id="imap"><div class="hmload">Loading map…</div></div>'+
+    '<div class="mlzoom"><button data-mz="1" aria-label="Zoom in">+</button><button data-mz="-1" aria-label="Zoom out">−</button></div>'+
+    '<div class="mlcap" id="mlcap"></div></div>';
+  const miss=D.all.length-pts.length;
+  h+='<p class="mlnote">'+pts.length+' purchase'+(pts.length===1?'':'s')+' on the map'+(miss>0?' · '+miss+' without a spot':'')+'. Scroll the list to move the map.</p>';
+  let lastDay="";
+  h+='<div class="mllist">'+pts.map((t,i)=>{const day=t.date!==lastDay?'<div class="mlday">'+esc(fmtDay(t.date))+'</div>':'';lastDay=t.date;
+    return day+'<button class="mlrow'+(i===IS.mapActive?' on':'')+'" data-mi="'+i+'"><i class="mldot"></i><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+PIN_SVG+esc(locSub(t))+'</div></div><div class="a num">'+(t.type==="refund"?"+":"")+money(+t.amount||0)+'</div></button>'}).join("")+'<div class="mlpad"></div></div>';
+  setTimeout(initMapList,0);
   return h+'</section>';
 }
-function initHeatMap(){
-  const el=document.querySelector("#main #imap");if(!el||!IS.heat)return;
-  loadHeat().then(()=>{if(!el.isConnected)return;const L=window.L,D=IS.heat,m=IS.hmMode;
-    if(IS.lmap){try{IS.lmap.remove()}catch(_){}IS.lmap=null}
+const ML={map:null,pin:null,dots:[],raf:0};
+function mlLine(){const m=document.querySelector("#main .mlmap");return m?m.getBoundingClientRect().bottom+28:0}
+function mlSetActive(i,force){
+  const pts=IS.mapPts||[],t=pts[i];if(!t)return;const changed=i!==IS.mapActive;IS.mapActive=i;
+  document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.toggle("on",+r.dataset.mi===i));
+  const cap=$("#mlcap");if(cap){cap.innerHTML='<b>'+esc(t.merchant||"Purchase")+' · '+money(+t.amount||0)+'</b><span>'+esc(locSub(t))+' · '+esc(fmtDay(t.date))+'</span>';cap.classList.remove("pop");void cap.offsetWidth;cap.classList.add("pop")}
+  const map=ML.map;if(!map)return;const ll=[t.loc.lat,t.loc.lng];
+  ML.dots.forEach((d,k)=>d.setStyle(k===i?{radius:0,opacity:0,fillOpacity:0}:{radius:5,opacity:.9,fillOpacity:.55}));
+  if(ML.pin){ML.pin.setLatLng(ll);const el=ML.pin.getElement();if(el&&changed){el.classList.remove("drop");void el.offsetWidth;el.classList.add("drop")}}
+  if(!changed&&!force)return;
+  const c=map.getCenter(),far=locDist({lat:c.lat,lng:c.lng},{lat:ll[0],lng:ll[1]});
+  if(far>40e3)map.flyTo(ll,Math.max(map.getZoom(),13),{duration:.9});else map.panTo(ll,{animate:true,duration:.45,easeLinearity:.3});
+}
+function mlScan(){ML.raf=0;if(S.tab!=="insights"||IS.sub!=="map")return;const line=mlLine();if(!line)return;
+  const rows=document.querySelectorAll("#main .mlrow");let pick=-1;
+  for(const r of rows){const b=r.getBoundingClientRect();if(b.bottom>line){pick=+r.dataset.mi;break}}
+  if(pick<0&&rows.length)pick=+rows[rows.length-1].dataset.mi;
+  if(pick>=0&&pick!==IS.mapActive){mlSetActive(pick);try{navigator.vibrate&&navigator.vibrate(3)}catch(_){}}}
+window.addEventListener("scroll",()=>{if(!ML.raf&&S.tab==="insights"&&IS.sub==="map")ML.raf=requestAnimationFrame(mlScan)},{passive:true});
+function initMapList(){
+  const el=document.querySelector("#main #imap");if(!el||!IS.mapPts||!IS.mapPts.length)return;
+  loadLeaflet().then(()=>{if(!el.isConnected)return;const L=window.L,pts=IS.mapPts;
+    if(ML.map){try{ML.map.remove()}catch(_){}ML.map=null}
     el.innerHTML="";
-    const map=L.map(el,{zoomControl:false,attributionControl:true,worldCopyJump:true});IS.lmap=map;
-    // OpenStreetMap tiles (no key needed), darkened with a CSS filter so the heat glows
+    // look-only map: no dragging or pinching; the list and the +/− buttons move it
+    const map=L.map(el,{zoomControl:false,attributionControl:true,dragging:false,touchZoom:false,doubleClickZoom:false,scrollWheelZoom:false,boxZoom:false,keyboard:false,tap:false,inertia:false});ML.map=map;
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
     map.attributionControl.setPrefix(false);
-    const vals=D.pts.map(t=>m==="n"?1:sAmt(t)),top=Math.max(...vals);
-    const heat=D.pts.map((t,i)=>[t.loc.lat,t.loc.lng,m==="n"?1:Math.max(0.15,Math.sqrt(vals[i]/top))]);
-    // scale so only the busiest place glows yellow; everything else sits in the purples
-    const sums={};D.pts.forEach((t,i)=>{const k=(locShort(t.loc)||"").toLowerCase();sums[k]=(sums[k]||0)+heat[i][2]});
-    const peak=Math.max(1,...Object.values(sums));
-    const layer=L.heatLayer(heat,{radius:24,blur:20,maxZoom:3,max:peak,minOpacity:0.12,gradient:{0.15:"#2c1a6b",0.35:"#5a2bd1",0.55:"#a14ee0",0.75:"#ff8a3d",0.92:"#ffd166"}}).addTo(map);
-    const key=[IS.range,IS.group,IS.item,D.pts.length].join("~");
-    if(IS.mapView&&IS.mapViewKey===key)map.setView(IS.mapView.c,IS.mapView.z,{animate:false});
-    else{ // open on the area where most of the money went (zoom out to see other trips)
-      const hub=D.places.slice().sort((a,b)=>m==="n"?b.n-a.n:b.amt-a.amt)[0];
-      const near=hub?D.pts.filter(t=>locDist(hub,t.loc)<80e3):D.pts;
-      const b=L.latLngBounds(near.map(t=>[t.loc.lat,t.loc.lng]));if(b.isValid())map.fitBounds(b.pad(0.3),{maxZoom:14,animate:false});else map.setView([42.96,-85.67],10)}
-    IS.mapViewKey=key;
-    map.on("moveend",()=>{IS.mapView={c:map.getCenter(),z:map.getZoom()}});
-    el.classList.add("on");
+    ML.dots=pts.map(t=>L.circleMarker([t.loc.lat,t.loc.lng],{radius:5,color:"#c39bff",weight:1.5,fillColor:"#a14ee0",fillOpacity:.55,interactive:false}).addTo(map));
+    const t0=pts[IS.mapActive]||pts[0];
+    ML.pin=L.marker([t0.loc.lat,t0.loc.lng],{interactive:false,keyboard:false,icon:L.divIcon({className:"mlpin",html:PIN_SVG+'<i></i>',iconSize:[36,36],iconAnchor:[18,34]})}).addTo(map);
+    map.setView([t0.loc.lat,t0.loc.lng],IS.mapZoom||15,{animate:false});
+    map.on("zoomend",()=>{IS.mapZoom=map.getZoom()});
+    el.classList.add("on");mlSetActive(IS.mapActive,true);
     const tl=Object.values(map._layers).find(x=>x instanceof L.TileLayer);let ok=0,bad=0;
     if(tl){tl.on("tileload",()=>ok++);tl.on("tileerror",()=>{if(++bad>=4&&!ok&&!el.querySelector(".hmload")){const d=document.createElement("div");d.className="hmload";d.textContent="Map pictures aren't loading. Check your connection.";el.appendChild(d)}})}
   }).catch(()=>{el.innerHTML='<div class="hmload">The map couldn\'t load here. Open Pocket Budget from your Home Screen.</div>'});
 }
 $("#main").addEventListener("click",e=>{
-  const b=e.target.closest("[data-hm]");if(b){if(IS.hmMode===b.dataset.hm)return;IS.hmMode=b.dataset.hm;ls.set("pb.hm",IS.hmMode);try{haptic()}catch(_){}render();return}
-  const p=e.target.closest("[data-hp]");if(p&&IS.lmap&&IS.heatTop){const x=IS.heatTop[+p.dataset.hp];if(!x)return;try{haptic()}catch(_){}
-    const el=$("#imap");if(el)window.scrollTo({top:Math.max(0,scrollY+el.getBoundingClientRect().top-(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120)-14),behavior:"smooth"});
-    IS.lmap.flyTo([x.lat,x.lng],Math.max(IS.lmap.getZoom(),14),{duration:0.9})}
+  const z=e.target.closest("[data-mz]");if(z&&ML.map){const t=(IS.mapPts||[])[IS.mapActive];const nz=Math.max(3,Math.min(18,ML.map.getZoom()+(+z.dataset.mz)));
+    try{haptic()}catch(_){}if(t)ML.map.setView([t.loc.lat,t.loc.lng],nz,{animate:true});else ML.map.setZoom(nz);return}
+  const r=e.target.closest(".mlrow");if(r){const i=+r.dataset.mi;const line=mlLine(),b=r.getBoundingClientRect();
+    window.scrollTo({top:Math.max(0,scrollY+b.top-line+2),behavior:"smooth"});mlSetActive(i);try{haptic()}catch(_){}}
 });
 
 function renderInsights(groups,sm){
