@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 27, 12:45 AM"</script>
+<script>window.PB_BUILD="Oct 27, 1:10 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -796,6 +796,15 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 .txs .cbrowse svg{width:18px;height:18px;transform:rotate(90deg)}
 .txs .csug.noq .mn{color:var(--fg)}
 .txs .crow>span:first-child{white-space:nowrap}
+.txs .rcard .rbody{animation:dpop .25s ease both}
+.txs .rcard .rbody .trow{border-top:1px solid var(--line)}
+.txs .rchips{display:flex;gap:6px;margin-left:auto}
+.txs .rchips button{padding:5px 10px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(26,115,232,.1);color:var(--link)}
+.txs .rchips button:active{transform:scale(.95)}
+.txs #f-ramt{flex:0 0 100px}
+.txs .rsum{margin:0;padding:10px 0 12px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.txs .rsum b{color:var(--fg)}.txs .rsum b.ok{color:var(--ok)}.txs .rsum b.bad{color:var(--over)}
+.txs .rlink{margin:0 4px 10px;font-size:14px}
 .txs .lrow input.tin{min-width:0}
 .txs .lgps{flex:none;width:34px;height:40px;margin-right:-8px;display:grid;place-items:center;color:var(--link)}
 .txs .lgps svg{width:18px;height:18px}
@@ -2680,6 +2689,7 @@ function celebrate(amount,merchant,kind){
   let gone=false;const close=()=>{if(gone)return;gone=true;el.classList.remove("in");el.classList.add("out");setTimeout(()=>el.remove(),350)};
   el.addEventListener("click",close);setTimeout(close,reduce?1400:2100);
 }
+function reimbFroms(){const seen={};txPool().forEach(t=>{if(t.reimbFrom)seen[t.reimbFrom]=(seen[t.reimbFrom]||0)+1});return Object.keys(seen).sort((a,b)=>seen[b]-seen[a]).slice(0,12)}
 function txSheet(existing){
   const d=existing?existing.date:(S.ym===ymOf(today())?today():S.ym+"-01");
   const groups=groupsFor(ymOf(d));
@@ -2707,6 +2717,14 @@ function txSheet(existing){
       '</div>'+
       '<div class="tcard"><div class="trow crow"><span>Budget Item</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel)+'</select></span></div>'+
         '<div class="msug csug" id="f-csug" role="listbox" aria-label="Budget item suggestions" hidden></div><div class="cplace" id="f-cplace" hidden></div><div class="trow" id="f-subrow" hidden><span>Subcategory</span><span class="tv" id="f-stxt"></span><select class="ovl" id="f-sub" aria-label="Misc subcategory"><option value="">Select</option>'+SUB.list.map(x=>'<option'+(existing&&existing.sub===x?" selected":"")+'>'+esc(x)+'</option>').join("")+'<option value="__new">+ New subcategory…</option></select></div><div class="trow" id="f-newsub" hidden><input class="tin" id="f-newsubin" autocomplete="off" maxlength="40" enterkeyhint="done" placeholder="New subcategory name" aria-label="New subcategory name" style="text-align:left"><button class="addlink" id="f-newsubok" style="padding:0 0 0 8px">Add</button></div></div>'+
+      (existing?(existing.pair?'<p class="note rlink">'+(existing.type==="refund"?"↩︎ Reimbursement for a purchase logged together with it.":"↩︎ Has a linked reimbursement in your transactions.")+'</p>':'')
+        :'<div class="tcard rcard" id="f-rcard"><label class="trow"><span>Reimbursed</span><label class="tgl tglsm"><input type="checkbox" id="f-rb" role="switch" aria-label="Getting money back"><span class="sw"></span></label></label>'+
+          '<div class="rbody" id="f-rbody" hidden>'+
+            '<div class="trow"><span>Amount back</span><div class="rchips"><button type="button" data-rq="1">Full</button><button type="button" data-rq=".5">Half</button></div><input class="tin num" id="f-ramt" inputmode="decimal" autocomplete="off" placeholder="$0.00" aria-label="Amount reimbursed"></div>'+
+            '<label class="trow"><span>From</span><input class="tin" id="f-rfrom" autocomplete="off" autocapitalize="words" list="f-rfl" placeholder="Who pays you back" aria-label="Who reimburses you"><datalist id="f-rfl">'+reimbFroms().map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist></label>'+
+            '<div class="trow"><span>Date back</span><span class="tv" id="f-rdtxt">Same day</span><input class="ovl" id="f-rdate" type="date" aria-label="Date reimbursed"></div>'+
+            '<p class="rsum" id="f-rsum"></p>'+
+          '</div></div>')+
       '<div class="tcard"><input class="tnote" id="f-note" autocomplete="off" placeholder="Add a Note" value="'+esc(existing?existing.note:"")+'"></div>'+
       (existing?'<div class="textra">'+(existing.sheet!=="synced"?'<div class="btnrow" style="margin-bottom:10px"><button class="btn sec" id="f-sync">Send to sheet</button></div>':'')+
         '<p class="note" style="margin:0 4px 10px">'+(existing.sheet==="synced"?"This is already in your Finance Tracker. Changes or a delete here won't update that row, so fix it in the sheet too.":esc(existing.sheetMsg||"Not in your Finance Tracker yet."))+'</p>'+
@@ -2854,7 +2872,7 @@ function txSheet(existing){
         if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();const n=cList.length;cHi=e.key==="ArrowDown"?(cHi+1)%n:(cHi<=0?n-1:cHi-1);drawC()}
         else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();hideC()}});
       drawAmt();drawKeys();drawCat();
-      const press=k=>{tKey(T,k);drawAmt();if(T.calc)drawKeys()};
+      let press=k=>{tKey(T,k);drawAmt();if(T.calc)drawKeys()};
       padEl.addEventListener("click",e=>{const k=e.target.closest("[data-k]");if(k){press(k.dataset.k);return}if(e.target.closest("#f-save"))save()});
       padEl.addEventListener("change",e=>{if(e.target.id==="f-calc"){T.calc=e.target.checked;ls.set("pb.calc",T.calc?"1":"0");if(!T.calc&&T.ops.length){const v=tVal(T);T.ops=[];T.cur=v?String(v):""}drawKeys();drawAmt()}});
       const showPad=on=>{s.classList.toggle("kboff",!on);drawAmt()};
@@ -2870,6 +2888,21 @@ function txSheet(existing){
         if(/^\d$/.test(e.key)){press(e.key);e.preventDefault()}else if(e.key==="Enter"){save();e.preventDefault()}else if(m[e.key]&&(T.calc||m[e.key]==="⌫")){press(m[e.key]);e.preventDefault()}});
       const syncBtn=s.querySelector("#f-sync");
       if(syncBtn)syncBtn.onclick=async()=>{syncBtn.disabled=true;syncBtn.textContent="Sending…";const ok=await pushToSheet(existing.id,existing);if(ok){closeSheet();toast("Added to your sheet")}else{syncBtn.disabled=false;syncBtn.textContent="Send to sheet"}};
+      // reimbursement: one entry here becomes the purchase plus a separate "money back" transaction
+      const rb=s.querySelector("#f-rb"),rbody=s.querySelector("#f-rbody"),ramt=s.querySelector("#f-ramt"),rsum=s.querySelector("#f-rsum"),rdate=s.querySelector("#f-rdate");let rTouched=false;
+      const rVal=()=>{const v=parseFloat(String(ramt&&ramt.value||"").replace(/[^0-9.]/g,""));return isNaN(v)?0:round2(v)};
+      const drawR=()=>{if(!rb)return;const on=rb.checked&&kind==="expense";rbody.hidden=!on;if(!on)return;const a=round2(tVal(T)/100);
+        if(!rTouched)ramt.value=a?money(a):"";const r=rVal();
+        rsum.innerHTML=a?(r>a+.004?'<b class="bad">That’s more than the purchase.</b>':'Logs <b>'+money(a)+'</b> spent and <b class="ok">+'+money(r)+'</b> back · you’re out <b>'+money(round2(a-r))+'</b>'):'Enter the purchase amount first.'};
+      if(rb){rb.addEventListener("change",()=>{drawR();if(rb.checked)setTimeout(()=>rbody.scrollIntoView({block:"nearest",behavior:"smooth"}),60)});
+        ramt.addEventListener("input",()=>{rTouched=true;drawR()});
+        ramt.addEventListener("focus",()=>{showPad(false);ramt.select&&ramt.select()});ramt.addEventListener("blur",()=>{const r=rVal();if(r)ramt.value=money(r);drawR()});
+        ramt.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();ramt.blur();showPad(true)}});
+        s.querySelectorAll("[data-rq]").forEach(b=>b.addEventListener("click",()=>{const a=round2(tVal(T)/100);ramt.value=money(round2(a*(+b.dataset.rq)));rTouched=true;drawR();try{haptic()}catch(_){}}));
+        s.querySelector("#f-rfrom").addEventListener("focus",()=>showPad(false));
+        rdate.addEventListener("change",()=>{s.querySelector("#f-rdtxt").textContent=rdate.value?fmtLong(rdate.value):"Same day"});
+        const pa=press;press=k=>{pa(k);drawR()}; // keep "Full" in step with the amount pad
+        s.querySelector("#f-kind").addEventListener("click",()=>setTimeout(drawR,0))}
       let busy=false;
       async function save(){
         if(busy)return;
@@ -2882,6 +2915,9 @@ function txSheet(existing){
         const locNow=LF.value();
         const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim();return s.querySelector("#f-venmo").checked?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
         if(locNow)body.loc=locNow;
+        const rOn=!existing&&rb&&rb.checked&&body.type==="expense",rAmt=rOn?rVal():0;
+        if(rOn&&!(rAmt>0)){toast("Enter how much you're getting back");ramt.focus();return}
+        if(rOn&&rAmt>a+.004){toast("The amount back is more than the purchase");ramt.focus();return}
         if(!S.db||S.readOnly){toast("Saving isn't available here");return}
         busy=true;
         try{
@@ -2889,8 +2925,13 @@ function txSheet(existing){
           if(existing)await S.db.doc("tx/"+existing.id).set(body);
           else ref=await S.db.collection("tx").add(body);
           ls.set("pb.lastItem",itemId);closeSheet();
-          if(!existing)setTimeout(()=>celebrate(a,body.merchant,body.type),180);else if(ymOf(date)!==S.ym)toast("Saved to "+MONTHS[+date.slice(5,7)-1]);else toast("Saved");
-          if(ref){pushToSheet(ref.id,body).then(ok=>{if(ok)toast("Added "+money(a)+" to your sheet")})}
+          if(!existing)setTimeout(()=>celebrate(rOn?round2(a-rAmt):a,body.merchant,body.type),180);else if(ymOf(date)!==S.ym)toast("Saved to "+MONTHS[+date.slice(5,7)-1]);else toast("Saved");
+          let rref=null,rbodyDoc=null;
+          if(ref&&rOn){const from=s.querySelector("#f-rfrom").value.trim(),nm=body.merchant.replace(VP,"");
+            rbodyDoc=Object.assign({},body,{amount:rAmt,type:"refund",merchant:"Reimbursement: "+(from||nm),date:rdate.value||date,note:"For "+nm+(rAmt<a-.004?" ("+money(rAmt)+" of "+money(a)+")":"")+(body.note?" · "+body.note:""),
+              pair:ref.id,reimbFrom:from,createdAt:new Date(Date.now()+1).toISOString(),sheet:"sending",sheetMsg:""});delete rbodyDoc.loc;
+            try{rref=await S.db.collection("tx").add(rbodyDoc);await S.db.doc("tx/"+ref.id).update({pair:rref.id})}catch(_){toast("Saved the purchase, but not the reimbursement. Add it as income.")}}
+          if(ref){pushToSheet(ref.id,body).then(ok=>{if(rref)return pushToSheet(rref.id,rbodyDoc).then(ok2=>{if(ok&&ok2)toast("Added both to your sheet")});if(ok)toast("Added "+money(a)+" to your sheet")})}
           // a fix that was still on its way when you tapped Done lands a moment later
           if(ref&&!locNow&&LF.pending()){const id=ref.id;LF.pending().then(l=>{if(l)S.db.doc("tx/"+id).update({loc:l}).catch(()=>{})})}
         }catch(e){busy=false;toast(e&&e.code==="quota_exceeded"?"Storage is full":"Couldn't save. Check your connection.")}
