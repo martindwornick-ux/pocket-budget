@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 27, 2:05 AM"</script>
+<script>window.PB_BUILD="Oct 27, 6:35 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -966,7 +966,9 @@ async function pushToSheet(id,t){
     await markSheet(id,"failed",msg);toast("Saved here, not in your sheet yet");return false;
   }
 }
-function sheetRow(t){const amt=round2((t.type==="refund"||t.type==="income"?1:-1)*(+t.amount||0));return[serial(t.date),t.merchant||"Purchase",t.itemName||"Misc",amt,t.note||""]}
+function sheetRow(t){const inc=t.type==="refund"||t.type==="income",amt=round2((inc?1:-1)*(+t.amount||0));
+  const who=t.person?(inc?"from ":"to ")+t.person:"";return[serial(t.date),t.merchant||"Purchase",t.itemName||"Misc",amt,[who,t.note||""].filter(Boolean).join(" · ")]}
+function venmoPeople(){const seen={};txPool().forEach(t=>{[t.person,t.reimbFrom].forEach(p=>{if(p)seen[p]=(seen[p]||0)+1})});return Object.keys(seen).sort((a,b)=>seen[b]-seen[a]).slice(0,15)}
 /* A row can land in the sheet even when the phone never hears back (signal drops,
    app goes to the background). Ask the sheet which "not in sheet" rows it already has. */
 const RC=new Set();let rcBusy=false;
@@ -1322,7 +1324,7 @@ function renderTx(groups){
     const ref=t.type==="refund"||t.type==="income";
     const sw=!isHist(t);
     if(sw)h+='<div class="swr"><button class="swdel" data-del="'+esc(t.id)+'" tabindex="-1" aria-label="Delete '+esc(t.merchant||"Purchase")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>Delete</button>';
-    h+='<button class="txrow" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
+    h+='<button class="txrow" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
   });
   if(open)h+="</section>";
   return h;
@@ -2744,6 +2746,7 @@ function txSheet(existing){
         '<label class="trow"><span>Merchant</span><input class="tin" id="f-mer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-msug" aria-expanded="false" placeholder="Name" value="'+esc(merch0)+'"></label>'+
         '<div class="msug" id="f-msug" role="listbox" aria-label="Past merchants" hidden></div>'+
         '<label class="trow" id="f-vrow"><span>Venmo</span><input type="checkbox" class="tchk" id="f-venmo"'+(venmo0?" checked":"")+'></label>'+
+        '<label class="trow" id="f-prow"'+(venmo0?'':' hidden')+'><span id="f-plbl">'+(kind==="expense"?"Paid to":"From")+'</span><input class="tin" id="f-person" autocomplete="off" autocapitalize="words" enterkeyhint="done" list="f-pl" placeholder="Name" value="'+esc(existing&&existing.person||"")+'" aria-label="Person"><datalist id="f-pl">'+venmoPeople().map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist></label>'+
         '<div class="trow lrow"><span>Location</span><input class="tin" id="f-loc" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-lsug" aria-expanded="false" placeholder="Business, city" value="'+esc(locText(existing&&existing.loc))+'">'+
           (LOC.ok()?'<button type="button" class="lgps" id="f-gps" aria-label="Use my current location">'+GPS_SVG+'</button>':'')+'</div>'+
         '<div class="msug lsug" id="f-lsug" role="listbox" aria-label="Location suggestions" hidden></div>'+
@@ -2950,6 +2953,12 @@ function txSheet(existing){
       const syncKind=()=>{const exp=kind==="expense";if(rcard){rcard.hidden=!exp;if(!exp&&rb.checked){rb.checked=false;drawR()}}
         if(vrow)vrow.hidden=false;}; // Venmo box on both tabs (paying someone or getting paid)
       syncKind();s.querySelector("#f-kind").addEventListener("click",()=>setTimeout(syncKind,0));
+      // Venmo transactions get a person: who you paid, or who paid you
+      const prow=s.querySelector("#f-prow"),venB=s.querySelector("#f-venmo"),plbl=s.querySelector("#f-plbl");
+      const syncPerson=()=>{prow.hidden=!venB.checked;plbl.textContent=kind==="expense"?"Paid to":"From"};
+      venB.addEventListener("change",()=>{syncPerson();if(venB.checked&&!s.querySelector("#f-person").value)setTimeout(()=>s.querySelector("#f-person").focus(),50)});
+      s.querySelector("#f-kind").addEventListener("click",()=>setTimeout(syncPerson,0));
+      s.querySelector("#f-person").addEventListener("focus",()=>showPad(false));
       let busy=false;
       async function save(){
         if(busy)return;
@@ -2962,6 +2971,7 @@ function txSheet(existing){
         const locNow=LF.value();
         const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim();return s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
         if(locNow)body.loc=locNow;
+        {const who=s.querySelector("#f-person").value.trim();if(s.querySelector("#f-venmo").checked&&who)body.person=who}
         const rOn=!existing&&rb&&rb.checked&&body.type==="expense",rAmt=rOn?rVal():0;
         if(rOn&&!(rAmt>0)){toast("Enter how much you're getting back");ramt.focus();return}
         if(rOn&&rAmt>a+.004){toast("The amount back is more than the purchase");ramt.focus();return}
@@ -2975,9 +2985,9 @@ function txSheet(existing){
           if(!existing)setTimeout(()=>celebrate(rOn?round2(a-rAmt):a,body.merchant,body.type),180);else if(ymOf(date)!==S.ym)toast("Saved to "+MONTHS[+date.slice(5,7)-1]);else toast("Saved");
           let rref=null,rbodyDoc=null;
           if(ref&&rOn){const from=s.querySelector("#f-rfrom").value.trim(),nm=body.merchant.replace(VP,"");
-            rbodyDoc=Object.assign({},body,{amount:rAmt,type:"refund",merchant:rMeth+": "+(from?from+" reimbursement":"Reimbursement for "+nm),reimbMethod:rMeth,date:rdate.value||date,note:"For "+nm+(rAmt<a-.004?" ("+money(rAmt)+" of "+money(a)+")":"")+(body.note?" · "+body.note:""),
-              pair:ref.id,reimbFrom:from,createdAt:new Date(Date.now()+1).toISOString(),sheet:"sending",sheetMsg:""});delete rbodyDoc.loc;
-            try{rref=await S.db.collection("tx").add(rbodyDoc);await S.db.doc("tx/"+ref.id).update({pair:rref.id})}catch(_){toast("Saved the purchase, but not the reimbursement. Add it as income.")}}
+            rbodyDoc=Object.assign({},body,{person:undefined,amount:rAmt,type:"refund",merchant:rMeth+": "+(from?from+" reimbursement":"Reimbursement for "+nm),reimbMethod:rMeth,date:rdate.value||date,note:"For "+nm+(rAmt<a-.004?" ("+money(rAmt)+" of "+money(a)+")":"")+(body.note?" · "+body.note:""),
+              pair:ref.id,reimbFrom:from,person:from||undefined,createdAt:new Date(Date.now()+1).toISOString(),sheet:"sending",sheetMsg:""});delete rbodyDoc.loc;
+            if(!rbodyDoc.person)delete rbodyDoc.person;try{rref=await S.db.collection("tx").add(rbodyDoc);await S.db.doc("tx/"+ref.id).update({pair:rref.id})}catch(_){toast("Saved the purchase, but not the reimbursement. Add it as income.")}}
           if(ref){pushToSheet(ref.id,body).then(ok=>{if(rref)return pushToSheet(rref.id,rbodyDoc).then(ok2=>{if(ok&&ok2)toast("Added both to your sheet")});if(ok)toast("Added "+money(a)+" to your sheet")})}
           // a fix that was still on its way when you tapped Done lands a moment later
           if(ref&&!locNow&&LF.pending()){const id=ref.id;LF.pending().then(l=>{if(l)S.db.doc("tx/"+id).update({loc:l}).catch(()=>{})})}
