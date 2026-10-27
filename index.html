@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 27, 1:10 AM"</script>
+<script>window.PB_BUILD="Oct 27, 1:30 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -805,6 +805,11 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 .txs .rsum{margin:0;padding:10px 0 12px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
 .txs .rsum b{color:var(--fg)}.txs .rsum b.ok{color:var(--ok)}.txs .rsum b.bad{color:var(--over)}
 .txs .rlink{margin:0 4px 10px;font-size:14px}
+.txs .rmrow{flex-direction:column;align-items:stretch;gap:8px;padding:12px 0}
+.txs .rmeth{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;margin:0 -18px;padding:0 18px 2px;scrollbar-width:none}.txs .rmeth::-webkit-scrollbar{display:none}
+.txs .rmeth button{flex:none}
+.txs .rmeth button{padding:6px 11px;border-radius:999px;font-size:14px;font-weight:600;color:var(--fg);background:rgba(60,64,67,.07);transition:background .15s,color .15s}
+.txs .rmeth button[aria-checked="true"]{background:var(--g-blue,#1a73e8);color:#fff}
 .txs .lrow input.tin{min-width:0}
 .txs .lgps{flex:none;width:34px;height:40px;margin-right:-8px;display:grid;place-items:center;color:var(--link)}
 .txs .lgps svg{width:18px;height:18px}
@@ -2709,7 +2714,7 @@ function txSheet(existing){
         '<div class="trow"><span>Date</span><span class="tv" id="f-dtxt">'+esc(fmtLong(d))+'</span><input class="ovl" id="f-date" type="date" value="'+esc(d)+'" aria-label="Date"></div>'+
         '<label class="trow"><span>Merchant</span><input class="tin" id="f-mer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-msug" aria-expanded="false" placeholder="Name" value="'+esc(merch0)+'"></label>'+
         '<div class="msug" id="f-msug" role="listbox" aria-label="Past merchants" hidden></div>'+
-        '<label class="trow"><span>Venmo</span><input type="checkbox" class="tchk" id="f-venmo"'+(venmo0?" checked":"")+'></label>'+
+        '<label class="trow" id="f-vrow"><span>Venmo</span><input type="checkbox" class="tchk" id="f-venmo"'+(venmo0?" checked":"")+'></label>'+
         '<div class="trow lrow"><span>Location</span><input class="tin" id="f-loc" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-lsug" aria-expanded="false" placeholder="Business, city" value="'+esc(locText(existing&&existing.loc))+'">'+
           (LOC.ok()?'<button type="button" class="lgps" id="f-gps" aria-label="Use my current location">'+GPS_SVG+'</button>':'')+'</div>'+
         '<div class="msug lsug" id="f-lsug" role="listbox" aria-label="Location suggestions" hidden></div>'+
@@ -2721,6 +2726,7 @@ function txSheet(existing){
         :'<div class="tcard rcard" id="f-rcard"><label class="trow"><span>Reimbursed</span><label class="tgl tglsm"><input type="checkbox" id="f-rb" role="switch" aria-label="Getting money back"><span class="sw"></span></label></label>'+
           '<div class="rbody" id="f-rbody" hidden>'+
             '<div class="trow"><span>Amount back</span><div class="rchips"><button type="button" data-rq="1">Full</button><button type="button" data-rq=".5">Half</button></div><input class="tin num" id="f-ramt" inputmode="decimal" autocomplete="off" placeholder="$0.00" aria-label="Amount reimbursed"></div>'+
+            '<div class="trow rmrow"><span>Paid back by</span><div class="rmeth" id="f-rmeth" role="radiogroup" aria-label="How you get paid back">'+["Venmo","Cash","Check","Apple Pay","Zelle","PayPal"].map((m,i)=>'<button type="button" role="radio" data-rm="'+m+'" aria-checked="'+(i===0)+'">'+m+'</button>').join("")+'</div></div>'+
             '<label class="trow"><span>From</span><input class="tin" id="f-rfrom" autocomplete="off" autocapitalize="words" list="f-rfl" placeholder="Who pays you back" aria-label="Who reimburses you"><datalist id="f-rfl">'+reimbFroms().map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist></label>'+
             '<div class="trow"><span>Date back</span><span class="tv" id="f-rdtxt">Same day</span><input class="ovl" id="f-rdate" type="date" aria-label="Date reimbursed"></div>'+
             '<p class="rsum" id="f-rsum"></p>'+
@@ -2903,6 +2909,12 @@ function txSheet(existing){
         rdate.addEventListener("change",()=>{s.querySelector("#f-rdtxt").textContent=rdate.value?fmtLong(rdate.value):"Same day"});
         const pa=press;press=k=>{pa(k);drawR()}; // keep "Full" in step with the amount pad
         s.querySelector("#f-kind").addEventListener("click",()=>setTimeout(drawR,0))}
+      let rMeth="Venmo";
+      s.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",()=>{rMeth=b.dataset.rm;s.querySelectorAll("[data-rm]").forEach(x=>x.setAttribute("aria-checked",String(x===b)));try{haptic()}catch(_){}}));
+      const vrow=s.querySelector("#f-vrow"),rcard=s.querySelector("#f-rcard");
+      const syncKind=()=>{const exp=kind==="expense";if(rcard){rcard.hidden=!exp;if(!exp&&rb.checked){rb.checked=false;drawR()}}
+        if(vrow)vrow.hidden=exp&&!venmo0;};
+      syncKind();s.querySelector("#f-kind").addEventListener("click",()=>setTimeout(syncKind,0));
       let busy=false;
       async function save(){
         if(busy)return;
@@ -2913,7 +2925,7 @@ function txSheet(existing){
         const g2=groupsFor(ymOf(date)); const f=findItem(g2,itemId)||findItem(groups,itemId);
         const incSrc=incomeFor(ymOf(date)).find(x=>x.id===itemId)||incomeFor(S.ym).find(x=>x.id===itemId);
         const locNow=LF.value();
-        const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim();return s.querySelector("#f-venmo").checked?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
+        const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim();return s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
         if(locNow)body.loc=locNow;
         const rOn=!existing&&rb&&rb.checked&&body.type==="expense",rAmt=rOn?rVal():0;
         if(rOn&&!(rAmt>0)){toast("Enter how much you're getting back");ramt.focus();return}
@@ -2928,7 +2940,7 @@ function txSheet(existing){
           if(!existing)setTimeout(()=>celebrate(rOn?round2(a-rAmt):a,body.merchant,body.type),180);else if(ymOf(date)!==S.ym)toast("Saved to "+MONTHS[+date.slice(5,7)-1]);else toast("Saved");
           let rref=null,rbodyDoc=null;
           if(ref&&rOn){const from=s.querySelector("#f-rfrom").value.trim(),nm=body.merchant.replace(VP,"");
-            rbodyDoc=Object.assign({},body,{amount:rAmt,type:"refund",merchant:"Reimbursement: "+(from||nm),date:rdate.value||date,note:"For "+nm+(rAmt<a-.004?" ("+money(rAmt)+" of "+money(a)+")":"")+(body.note?" · "+body.note:""),
+            rbodyDoc=Object.assign({},body,{amount:rAmt,type:"refund",merchant:rMeth+": "+(from?from+" reimbursement":"Reimbursement for "+nm),reimbMethod:rMeth,date:rdate.value||date,note:"For "+nm+(rAmt<a-.004?" ("+money(rAmt)+" of "+money(a)+")":"")+(body.note?" · "+body.note:""),
               pair:ref.id,reimbFrom:from,createdAt:new Date(Date.now()+1).toISOString(),sheet:"sending",sheetMsg:""});delete rbodyDoc.loc;
             try{rref=await S.db.collection("tx").add(rbodyDoc);await S.db.doc("tx/"+ref.id).update({pair:rref.id})}catch(_){toast("Saved the purchase, but not the reimbursement. Add it as income.")}}
           if(ref){pushToSheet(ref.id,body).then(ok=>{if(rref)return pushToSheet(rref.id,rbodyDoc).then(ok2=>{if(ok&&ok2)toast("Added both to your sheet")});if(ok)toast("Added "+money(a)+" to your sheet")})}
