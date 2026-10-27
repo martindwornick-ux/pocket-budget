@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 26, 11:40 PM"</script>
+<script>window.PB_BUILD="Oct 27, 12:10 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -500,7 +500,7 @@ main .mlmap{background:linear-gradient(rgba(255,255,255,.97) 88%,rgba(255,255,25
 .mlcap{position:absolute;left:32px;right:72px;bottom:20px;z-index:900;background:rgba(255,255,255,.9);color:#202124;box-shadow:0 2px 12px rgba(0,0,0,.18);border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;pointer-events:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .mlcap b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mlcap span{font-size:12.5px;color:#5f6368;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mlcap.pop{animation:dpop .3s ease both}
-.mlpin{background:none;border:0}.mlpin svg{width:36px;height:36px;color:#202124;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));display:block}
+.mlpin{background:none;border:0;width:36px;height:36px}.imap.maplibregl-map{font:12px/1.4 -apple-system,sans-serif}.imap .maplibregl-ctrl-attrib{font-size:10.5px}.mlpin svg{width:36px;height:36px;color:#202124;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));display:block}
 .mlpin.drop svg{animation:pindrop .4s cubic-bezier(.2,.9,.3,1.5)}
 @keyframes pindrop{from{transform:translateY(-14px) scale(.8);opacity:.4}}
 .mlnote{margin:2px 0 6px;font-size:13px;color:var(--muted)}
@@ -2242,21 +2242,81 @@ function mapCard(fh,months,pending){
   setTimeout(initMapList,0);
   return h+'</section>';
 }
-const ML={map:null,pin:null,dots:[],raf:0};
+const ML={map:null,pin:null,dots:[],raf:0,gl:false,noGL:false};
+/* ---------- smooth flights between purchases (MapLibre GL, vector tiles) ----------
+   Nearby purchase: a short glide. Far away (another city, across the country): one continuous
+   zoom out → glide → zoom back in. Vector tiles are drawn every frame, so nothing blanks,
+   fades or jump-cuts mid-flight. If WebGL or the map style can't load, the Leaflet map below
+   takes over. Zoom numbers in the app stay in Leaflet units; MapLibre's are one lower. */
+const GLV="4.7.1",GL_STYLE=window.PB_MAP_STYLE||"https://tiles.openfreemap.org/styles/positron";
+const GLLIB={p:null},RMOT=window.matchMedia?matchMedia("(prefers-reduced-motion: reduce)"):{matches:false};
+const glEase=t=>(1-Math.cos(Math.PI*t))/2; // ease-in-out-sine: gentle start/stop, low peak speed
+function glOK(){try{const c=document.createElement("canvas");return !!(window.WebGLRenderingContext&&(c.getContext("webgl2")||c.getContext("webgl")))}catch(_){return false}}
+function loadMapGL(){if(window.maplibregl&&window.maplibregl.Map)return Promise.resolve();if(!glOK())return Promise.reject(new Error("webgl"));
+  return GLLIB.p||(GLLIB.p=new Promise((res,rej)=>{const base="https://unpkg.com/maplibre-gl@"+GLV+"/dist/maplibre-gl.";
+    if(!document.querySelector('link[data-mlgl]')){const l=document.createElement("link");l.rel="stylesheet";l.href=base+"css";l.setAttribute("data-mlgl","");document.head.appendChild(l)}
+    const s=document.createElement("script");s.src=base+"js";const to=setTimeout(()=>fail(),9000);
+    const fail=()=>{clearTimeout(to);GLLIB.p=null;rej(new Error("map"))};
+    s.onload=()=>{clearTimeout(to);window.maplibregl?res():fail()};s.onerror=fail;document.head.appendChild(s)}))}
+function glFC(pts,cnt){return{type:"FeatureCollection",features:pts.map((t,i)=>({type:"Feature",id:i,properties:{n:cnt?cnt[i]:0},geometry:{type:"Point",coordinates:[t.loc.lng,t.loc.lat]}}))}}
+// same heat rule as the Leaflet dots: purchases that overlap on screen glow hotter
+function glHeat(){const m=ML.map,pts=IS.mapPts||[];if(!ML.gl||!m||!m.getSource("mlpts"))return;
+  const P=pts.map(t=>m.project([t.loc.lng,t.loc.lat])),R=13,cnt=P.map(()=>0);
+  for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const dx=P[i].x-P[j].x,dy=P[i].y-P[j].y;if(dx*dx+dy*dy<R*R){cnt[i]++;cnt[j]++}}
+  const k=cnt.join(",");if(k===ML.heatKey)return;ML.heatKey=k;m.getSource("mlpts").setData(glFC(pts,cnt))}
+// move the camera: "jump" (first draw), otherwise glide if it's already on screen, else fly
+function glGo(center,z,how){const m=ML.map;if(!m)return;const zz=z-1;
+  if(how==="jump"||RMOT.matches){m.jumpTo({center,zoom:zz});return}
+  const w=m.getContainer().clientWidth,h=m.getContainer().clientHeight,p=m.project(center);
+  const near=Math.abs(p.x-w/2)<w*.4&&Math.abs(p.y-h/2)<h*.4&&Math.abs(m.getZoom()-zz)<1.5;
+  if(near){m.easeTo({center,zoom:zz,duration:550,easing:glEase});return}
+  const c=m.getCenter(),km=locDist({lat:c.lat,lng:c.lng},{lat:center[1],lng:center[0]})/1000;
+  m.flyTo({center,zoom:zz,curve:1.5,duration:Math.round(Math.min(3000,Math.max(1100,1000+km*.5))),easing:glEase,essential:true})}
+function glFail(el,key){ML.noGL=true;ML.gl=false;if(ML.map){try{ML.map.remove()}catch(_){}ML.map=null}ML.key=null;
+  if(el&&el.isConnected){el.innerHTML="";initMapLeaflet(el,key)}}
+function initMapGL(el,key){const gl=window.maplibregl,pts=IS.mapPts;
+  if(ML.map){try{ML.map.remove()}catch(_){}ML.map=null}
+  el.innerHTML='<div class="hmload">Loading map…</div>';ML.el=el;ML.key=key;ML.gl=true;ML.dots=[];ML.pin=null;ML.heatKey="";
+  const t0=pts[Math.max(0,IS.mapActive)]||pts[0];let map;
+  try{map=new gl.Map({container:el,style:GL_STYLE,center:[t0.loc.lng,t0.loc.lat],zoom:14,interactive:false,attributionControl:{compact:true},
+    fadeDuration:0,maxTileCacheSize:800,refreshExpiredTiles:false})}catch(_){glFail(el,key);return}
+  ML.map=map;let ready=false,styleOk=false,tiles=0,bad=0;map.once("styledata",()=>{styleOk=true});
+  const guard=setTimeout(()=>{if(!styleOk&&ML.map===map)glFail(el,key)},10000); // style never arrived: use Leaflet
+  map.on("error",()=>{if(ML.map!==map)return;if(!styleOk){clearTimeout(guard);glFail(el,key);return}
+    if(++bad>=4&&!tiles&&!el.querySelector(".hmload")){const d=document.createElement("div");d.className="hmload";d.textContent="Map pictures aren't loading. Check your connection.";el.appendChild(d)}});
+  map.on("data",e=>{if(e.tile)tiles++});
+  map.on("load",()=>{if(ML.map!==map)return;ready=true;clearTimeout(guard);const ld=el.querySelector(".hmload");if(ld)ld.remove();
+    map.addSource("mlpts",{type:"geojson",data:glFC(pts)});
+    const off=["boolean",["feature-state","off"],false];
+    map.addLayer({id:"mlpts",type:"circle",source:"mlpts",layout:{"circle-sort-key":["get","n"]},paint:{
+      "circle-radius":["case",[">",["get","n"],0],7,6],
+      "circle-color":["step",["get","n"],ML_HEAT[0][1]].concat(...ML_HEAT.slice(1)),
+      "circle-stroke-color":"#fff","circle-stroke-width":1.5,
+      "circle-opacity":["case",off,0,1],"circle-stroke-opacity":["case",off,0,1]}});
+    // Leaflet-shaped handles so the list code drives either map the same way
+    ML.dots=pts.map((t,i)=>({setStyle:s=>{try{map.setFeatureState({source:"mlpts",id:i},{off:s.opacity===0})}catch(_){}}}));
+    const pe=document.createElement("div");pe.className="mlpin";pe.innerHTML=PIN_SVG+'<i></i>';pe.style.opacity="0";
+    const mk=new gl.Marker({element:pe,anchor:"bottom",offset:[0,2]}).setLngLat([t0.loc.lng,t0.loc.lat]).addTo(map);
+    ML.pin={setOpacity:o=>{pe.style.opacity=String(o)},setLatLng:ll=>mk.setLngLat([ll[1],ll[0]]),getElement:()=>pe};
+    map.on("moveend",glHeat);map.on("zoom",mlZoomUI);mlZoomWire();
+    el.classList.add("on");const cur=IS.mapActive;IS.mapActive=-2;mlSetActive(cur,true);glHeat();setTimeout(mlScan,60)});
+}
 // dots that sit on top of each other at the current zoom turn hotter: blue → purple → orange → red
 const ML_HEAT=[[0,"#1a73e8"],[1,"#8e44e8"],[2,"#ff9800"],[4,"#f4511e"],[7,"#c62828"]];
-function mlHeatDots(){const m=ML.map;if(!m||!ML.dots.length||!m._loaded)return;
+function mlHeatDots(){if(ML.gl)return glHeat();const m=ML.map;if(!m||!ML.dots.length||!m._loaded)return;
   const P=ML.dots.map(d=>m.latLngToLayerPoint(d.getLatLng())),R=13,cnt=P.map(()=>0);
   for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const dx=P[i].x-P[j].x,dy=P[i].y-P[j].y;if(dx*dx+dy*dy<R*R){cnt[i]++;cnt[j]++}}
   const col=n=>{let c=ML_HEAT[0][1];for(const [k,v] of ML_HEAT)if(n>=k)c=v;return c};
   ML.dots.map((d,i)=>[d,cnt[i]]).sort((a,b)=>a[1]-b[1]).forEach(([d,n])=>{if(!d._path)return;d.setStyle({fillColor:col(n),radius:n?7:6});d.bringToFront()})}
 // the zoom bar on the right of the map: drag up to zoom in, down to zoom out (always around the current spot)
 const MLZ={min:3,max:18};
-function mlZoomUI(){const m=ML.map,b=document.querySelector("#main .mlzs");if(!m||!b)return;const f=(m.getZoom()-MLZ.min)/(MLZ.max-MLZ.min),p=Math.max(0,Math.min(1,f))*100;
-  b.querySelector(".mlzb").style.bottom=p+"%";b.querySelector(".mlzf").style.height=p+"%";b.setAttribute("aria-valuenow",m.getZoom().toFixed(1))}
+function mlZoomUI(){const m=ML.map,b=document.querySelector("#main .mlzs");if(!m||!b)return;const zz=m.getZoom()+(ML.gl?1:0),f=(zz-MLZ.min)/(MLZ.max-MLZ.min),p=Math.max(0,Math.min(1,f))*100;
+  b.querySelector(".mlzb").style.bottom=p+"%";b.querySelector(".mlzf").style.height=p+"%";b.setAttribute("aria-valuenow",zz.toFixed(1))}
 function mlZoomWire(){const b=document.querySelector("#main .mlzs");if(!b||b._w)return;b._w=1;const tr=b.querySelector(".mlzt");
   const at=y=>{const r=tr.getBoundingClientRect();return MLZ.min+(1-Math.max(0,Math.min(1,(y-r.top)/r.height)))*(MLZ.max-MLZ.min)};
-  const go=z=>{const m=ML.map;if(!m)return;ML.user=true;const t=(IS.mapPts||[])[IS.mapActive];m.setView(t?[t.loc.lat,t.loc.lng]:m.getCenter(),z,{animate:false});if(IS.mapActive>=0)IS.mapZoom=z;mlZoomUI()};
+  const go=z=>{const m=ML.map;if(!m)return;const t=(IS.mapPts||[])[IS.mapActive];
+    if(ML.gl){m.jumpTo({center:t?[t.loc.lng,t.loc.lat]:m.getCenter(),zoom:z-1});if(IS.mapActive>=0)IS.mapZoom=z;mlZoomUI();return}
+    ML.user=true;m.setView(t?[t.loc.lat,t.loc.lng]:m.getCenter(),z,{animate:false});if(IS.mapActive>=0)IS.mapZoom=z;mlZoomUI()};
   let on=false,last=0;
   b.addEventListener("pointerdown",e=>{on=true;b.classList.add("on");try{b.setPointerCapture(e.pointerId)}catch(_){}go(at(e.clientY));e.preventDefault()});
   b.addEventListener("pointermove",e=>{if(!on)return;const z=at(e.clientY);go(z);if(Math.round(z)!==last){last=Math.round(z);try{navigator.vibrate&&navigator.vibrate(2)}catch(_){}}});
@@ -2269,10 +2329,16 @@ function mlOverview(force){
   document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.remove("on"));
   const spent=round2(pts.reduce((a,t)=>a+sAmt(t),0)),places=new Set(pts.map(t=>(locShort(t.loc)||"").toLowerCase())).size;
   const cap=$("#mlcap");if(cap){cap.innerHTML='<b>All '+pts.length+' purchase'+(pts.length===1?'':'s')+' · '+money(spent)+'</b><span>'+places+' place'+(places===1?'':'s')+' · scroll down to visit each one</span>';if(changed){cap.classList.remove("pop");void cap.offsetWidth;cap.classList.add("pop")}}
-  const map=ML.map;if(!map||!window.L)return;
+  const map=ML.map;if(!map||!(ML.gl||window.L))return;
   ML.dots.forEach(d=>d.setStyle({opacity:1,fillOpacity:1}));
   if(ML.pin)ML.pin.setOpacity(0);
   if(!changed&&!force)return;
+  if(ML.gl){if(!pts.length)return;const B=new window.maplibregl.LngLatBounds();pts.forEach(t=>B.extend([t.loc.lng,t.loc.lat]));
+    const w=map.getContainer().clientWidth,h=map.getContainer().clientHeight,px=Math.min(40,w/6),py=Math.min(40,h/6);
+    const cam=map.cameraForBounds(B,{padding:{top:py,bottom:py,left:px,right:px+30},maxZoom:13})||{center:B.getCenter(),zoom:3};
+    if(force||RMOT.matches)map.jumpTo({center:cam.center,zoom:cam.zoom});
+    else map.flyTo({center:cam.center,zoom:cam.zoom,curve:1.42,duration:1400,easing:glEase,essential:true});
+    return}
   const b=window.L.latLngBounds(pts.map(t=>[t.loc.lat,t.loc.lng]));
   map.stop();if(b.isValid()){const el=map.getContainer();if(force)map.fitBounds(b.pad(0.2),{maxZoom:14,animate:false});
     else{el.classList.add("cut");setTimeout(()=>{if(!ML.map)return;map.fitBounds(b.pad(0.2),{maxZoom:14,animate:false});requestAnimationFrame(()=>el.classList.remove("cut"))},120)}}
@@ -2288,7 +2354,9 @@ function mlSetActive(i,force){
   if(!changed&&!force)return;
   const c=map.getCenter(),far=locDist({lat:c.lat,lng:c.lng},{lat:ll[0],lng:ll[1]});
   // leaving the overview zooms in to street level (or the zoom you last pinched to)
-  const z=IS.mapZoom||15;map.stop();
+  const z=IS.mapZoom||15;
+  if(ML.gl){glGo([ll[1],ll[0]],z,force?"jump":"fly");return}
+  map.stop();
   const el=map.getContainer(),zoomNow=Math.abs(map.getZoom()-z)<.05;
   if(force)map.setView(ll,z,{animate:false});
   else if(zoomNow&&far<25e3)map.panTo(ll,{animate:true,duration:.4,easeLinearity:.3});
@@ -2314,13 +2382,17 @@ function initMapList(){
   const el=document.querySelector("#main #imap");if(!el||!IS.mapPts||!IS.mapPts.length)return;
   const key=IS.mapPts.map(t=>t.id+"@"+t.loc.lat+","+t.loc.lng).join("|");
   if(ML.map&&ML.key===key&&ML.el&&!ML.el.isConnected){
-    el.replaceWith(ML.el);ML.map.invalidateSize({animate:false});mlZoomWire();mlZoomUI();
+    el.replaceWith(ML.el);if(ML.gl)ML.map.resize();else ML.map.invalidateSize({animate:false});mlZoomWire();mlZoomUI();
     const cur=IS.mapActive;document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.toggle("on",+r.dataset.mi===cur));
     if(cur>=0){const t=IS.mapPts[cur],c=$("#mlcap");if(c&&t)c.innerHTML='<b>'+esc(t.merchant||"Purchase")+' · '+money(+t.amount||0)+'</b><span>'+esc(locSub(t))+' · '+esc(fmtDay(t.date))+'</span>'}else mlOverview(false);
     return}
+  if(!ML.noGL){loadMapGL().then(()=>{if(el.isConnected)initMapGL(el,key)}).catch(()=>{ML.noGL=true;if(el.isConnected)initMapLeaflet(el,key)});return}
+  initMapLeaflet(el,key);
+}
+function initMapLeaflet(el,key){
   loadLeaflet().then(()=>{if(!el.isConnected)return;const L=window.L,pts=IS.mapPts;
     if(ML.map){try{ML.map.remove()}catch(_){}ML.map=null}
-    el.innerHTML="";ML.el=el;ML.key=key;
+    el.innerHTML="";ML.el=el;ML.key=key;ML.gl=false;
     // look-only map: no dragging or pinching; the list and the +/− buttons move it
     const map=L.map(el,{zoomControl:false,attributionControl:true,dragging:false,touchZoom:false,doubleClickZoom:false,scrollWheelZoom:false,boxZoom:false,keyboard:false,tap:false,inertia:false,zoomSnap:0,zoomDelta:.5,bounceAtZoomLimits:false});ML.map=map;
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
