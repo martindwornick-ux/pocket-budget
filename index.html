@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 27, 12:10 AM"</script>
+<script>window.PB_BUILD="Oct 27, 12:30 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -512,6 +512,9 @@ main .mlmap{background:linear-gradient(rgba(255,255,255,.97) 88%,rgba(255,255,25
 .mldot{flex:none;width:10px;height:10px;border-radius:50%;background:#1a73e8;opacity:.45;transition:transform .25s,opacity .25s,background .25s}
 .mlrow.on{background:rgba(26,115,232,.08)}.mlrow.on .mldot{opacity:1;background:#202124;transform:scale(1.35)}
 .mlpad{height:45vh}
+.mlrow.flash{animation:mlflash .9s ease}
+@keyframes mlflash{0%{background:rgba(26,115,232,.28)}100%{background:rgba(26,115,232,.08)}}
+.mlmap .imap.leaflet-container{cursor:pointer}
 
 .imap{position:relative;height:min(58vh,420px);border-radius:18px;overflow:hidden;background:#eef0f2;box-shadow:inset 0 0 0 1px rgba(60,64,67,.12);margin:2px 0 12px;isolation:isolate;z-index:0}
 .imap.on{animation:dpop .4s ease both}
@@ -2298,7 +2301,7 @@ function initMapGL(el,key){const gl=window.maplibregl,pts=IS.mapPts;
     const pe=document.createElement("div");pe.className="mlpin";pe.innerHTML=PIN_SVG+'<i></i>';pe.style.opacity="0";
     const mk=new gl.Marker({element:pe,anchor:"bottom",offset:[0,2]}).setLngLat([t0.loc.lng,t0.loc.lat]).addTo(map);
     ML.pin={setOpacity:o=>{pe.style.opacity=String(o)},setLatLng:ll=>mk.setLngLat([ll[1],ll[0]]),getElement:()=>pe};
-    map.on("moveend",glHeat);map.on("zoom",mlZoomUI);mlZoomWire();
+    map.on("moveend",glHeat);map.on("zoom",mlZoomUI);mlZoomWire();mlTapWire(el);
     el.classList.add("on");const cur=IS.mapActive;IS.mapActive=-2;mlSetActive(cur,true);glHeat();setTimeout(mlScan,60)});
 }
 // dots that sit on top of each other at the current zoom turn hotter: blue → purple → orange → red
@@ -2323,6 +2326,16 @@ function mlZoomWire(){const b=document.querySelector("#main .mlzs");if(!b||b._w)
   ["pointerup","pointercancel","lostpointercapture"].forEach(t=>b.addEventListener(t,()=>{on=false;b.classList.remove("on")}));
   b.addEventListener("keydown",e=>{const m=ML.map;if(!m)return;if(e.key==="ArrowUp"||e.key==="ArrowRight"){go(Math.min(MLZ.max,m.getZoom()+1));e.preventDefault()}else if(e.key==="ArrowDown"||e.key==="ArrowLeft"){go(Math.max(MLZ.min,m.getZoom()-1));e.preventDefault()}});
   mlZoomUI()}
+// tap a dot on either map (MapLibre or Leaflet) → go to that purchase; finger-sized target around each dot
+function mlTapWire(el){if(!el||el._tap)return;el._tap=1;
+  el.addEventListener("click",e=>{const m=ML.map,pts=IS.mapPts||[];if(!m||!pts.length)return;const r=el.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    let best=-1,bd=26*26;pts.forEach((t,k)=>{const q=ML.gl?m.project([t.loc.lng,t.loc.lat]):m.latLngToContainerPoint([t.loc.lat,t.loc.lng]);const dx=q.x-x,dy=q.y-y,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;best=k}});
+    if(best>=0)mlGo(best)})}
+// bring purchase i into the slot under the map and select it (from a row tap or a dot tap)
+function mlGo(i){const r=document.querySelector('#main .mlrow[data-mi="'+i+'"]');if(!r)return;try{haptic()}catch(_){}
+  document.querySelectorAll("#main .mlrow").forEach(x=>x.classList.toggle("on",x===r));
+  r.scrollIntoView({block:"start",behavior:"smooth"});clearTimeout(ML.settle);ML.settle=setTimeout(()=>{if(IS.mapActive!==i)mlSetActive(i)},450);
+  r.classList.remove("flash");void r.offsetWidth;r.classList.add("flash")}
 function mlLine(){const m=document.querySelector("#main .mlmap");return m?m.getBoundingClientRect().bottom+28:0}
 function mlOverview(force){
   const pts=IS.mapPts||[],changed=IS.mapActive!==-1;IS.mapActive=-1;if(changed&&IS.mapActive!==-2)IS.mapZoom=null; // back at the top: next dive starts at street level
@@ -2399,7 +2412,8 @@ function initMapLeaflet(el,key){
     map.attributionControl.setPrefix(false);
     // dots that pile up glow hotter: one purchase is a blue dot, overlaps run purple → orange → red
     ML.dots=pts.map(t=>L.circleMarker([t.loc.lat,t.loc.lng],{radius:6,color:"#fff",weight:1.5,fillColor:"#1a73e8",fillOpacity:1,interactive:false}).addTo(map));
-    map.on("zoomend",mlHeatDots);map.on("zoomstart",()=>el.classList.add("zooming"));map.on("zoomend",()=>el.classList.remove("zooming"));
+    map.on("zoomend",mlHeatDots);
+    mlTapWire(el);map.on("zoomstart",()=>el.classList.add("zooming"));map.on("zoomend",()=>el.classList.remove("zooming"));
     const t0=pts[Math.max(0,IS.mapActive)]||pts[0];
     ML.pin=L.marker([t0.loc.lat,t0.loc.lng],{interactive:false,keyboard:false,opacity:0,icon:L.divIcon({className:"mlpin",html:PIN_SVG+'<i></i>',iconSize:[36,36],iconAnchor:[18,34]})}).addTo(map);
     map.setView([t0.loc.lat,t0.loc.lng],15,{animate:false});mlHeatDots();
@@ -2411,8 +2425,7 @@ function initMapLeaflet(el,key){
   }).catch(()=>{el.innerHTML='<div class="hmload">The map couldn\'t load here. Open Pocket Budget from your Home Screen.</div>'});
 }
 $("#main").addEventListener("click",e=>{
-  const r=e.target.closest(".mlrow");if(r){const i=+r.dataset.mi;r.scrollIntoView({block:"start",behavior:"smooth"});try{haptic()}catch(_){}
-    clearTimeout(ML.settle);ML.settle=setTimeout(()=>{if(IS.mapActive!==i)mlSetActive(i)},450)}
+  const r=e.target.closest(".mlrow");if(r)mlGo(+r.dataset.mi);
 });
 
 function renderInsights(groups,sm){
