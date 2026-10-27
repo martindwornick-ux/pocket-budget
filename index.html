@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 26, 9:55 PM"</script>
+<script>window.PB_BUILD="Oct 26, 10:35 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -486,14 +486,15 @@ main.peek>*{flex-shrink:0}
 .mlcard{padding-bottom:6px}
 .mlmap{position:sticky;top:calc(var(--hh,120px) + 4px);z-index:4;margin:0 -22px;padding:4px 22px 10px;background:linear-gradient(var(--card) 88%,transparent)}
 main .mlmap{background:linear-gradient(rgba(255,255,255,.97) 88%,rgba(255,255,255,0))}
-.mlmap .imap{height:min(38vh,320px);margin:0}
+.mlmap .imap{height:min(38vh,320px);margin:0;background:#f2f3f5}
+.mlmap .imap .leaflet-tile-pane{filter:grayscale(1) brightness(1.06) contrast(.88)}
 .mlzoom{position:absolute;right:32px;top:14px;z-index:900;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.3)}
 .mlzoom button{width:40px;height:40px;background:rgba(32,40,50,.88);color:#fff;font-size:22px;line-height:1;font-weight:500}
 .mlzoom button+button{border-top:1px solid rgba(255,255,255,.15)}.mlzoom button:active{background:rgba(60,72,88,.95)}
 .mlcap{position:absolute;left:32px;right:72px;bottom:20px;z-index:900;background:rgba(255,255,255,.9);color:#202124;box-shadow:0 2px 12px rgba(0,0,0,.18);border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;pointer-events:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .mlcap b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mlcap span{font-size:12.5px;color:#5f6368;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mlcap.pop{animation:dpop .3s ease both}
-.mlpin{background:none;border:0}.mlpin svg{width:36px;height:36px;color:#ea4335;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));display:block}
+.mlpin{background:none;border:0}.mlpin svg{width:36px;height:36px;color:#202124;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));display:block}
 .mlpin.drop svg{animation:pindrop .4s cubic-bezier(.2,.9,.3,1.5)}
 @keyframes pindrop{from{transform:translateY(-14px) scale(.8);opacity:.4}}
 .mlnote{margin:2px 0 6px;font-size:13px;color:var(--muted)}
@@ -503,7 +504,7 @@ main .mlmap{background:linear-gradient(rgba(255,255,255,.97) 88%,rgba(255,255,25
 .mlrow .c{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mlrow .c .pin{width:11px;height:11px;vertical-align:-1px;margin-right:3px;opacity:.7}
 .mlrow .a{font-size:16px;font-weight:600;flex:none}
 .mldot{flex:none;width:10px;height:10px;border-radius:50%;background:#1a73e8;opacity:.45;transition:transform .25s,opacity .25s,background .25s}
-.mlrow.on{background:rgba(26,115,232,.08)}.mlrow.on .mldot{opacity:1;background:#ea4335;transform:scale(1.35)}
+.mlrow.on{background:rgba(26,115,232,.08)}.mlrow.on .mldot{opacity:1;background:#202124;transform:scale(1.35)}
 .mlpad{height:45vh}
 
 .imap{position:relative;height:min(58vh,420px);border-radius:18px;overflow:hidden;background:#eef0f2;box-shadow:inset 0 0 0 1px rgba(60,64,67,.12);margin:2px 0 12px;isolation:isolate;z-index:0}
@@ -2236,6 +2237,13 @@ function mapCard(fh,months,pending){
   return h+'</section>';
 }
 const ML={map:null,pin:null,dots:[],raf:0};
+// dots that sit on top of each other at the current zoom turn hotter: blue → purple → orange → red
+const ML_HEAT=[[0,"#1a73e8"],[1,"#8e44e8"],[2,"#ff9800"],[4,"#f4511e"],[7,"#c62828"]];
+function mlHeatDots(){const m=ML.map;if(!m||!ML.dots.length||!m._loaded)return;
+  const P=ML.dots.map(d=>m.latLngToLayerPoint(d.getLatLng())),R=13,cnt=P.map(()=>0);
+  for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const dx=P[i].x-P[j].x,dy=P[i].y-P[j].y;if(dx*dx+dy*dy<R*R){cnt[i]++;cnt[j]++}}
+  const col=n=>{let c=ML_HEAT[0][1];for(const [k,v] of ML_HEAT)if(n>=k)c=v;return c};
+  ML.dots.map((d,i)=>[d,cnt[i]]).sort((a,b)=>a[1]-b[1]).forEach(([d,n])=>{if(!d._path)return;d.setStyle({fillColor:col(n),radius:n?7:6});d.bringToFront()})}
 // the zoom bar on the right of the map: drag up to zoom in, down to zoom out (always around the current spot)
 const MLZ={min:3,max:18};
 function mlZoomUI(){const m=ML.map,b=document.querySelector("#main .mlzs");if(!m||!b)return;const f=(m.getZoom()-MLZ.min)/(MLZ.max-MLZ.min),p=Math.max(0,Math.min(1,f))*100;
@@ -2251,16 +2259,16 @@ function mlZoomWire(){const b=document.querySelector("#main .mlzs");if(!b||b._w)
   mlZoomUI()}
 function mlLine(){const m=document.querySelector("#main .mlmap");return m?m.getBoundingClientRect().bottom+28:0}
 function mlOverview(force){
-  const pts=IS.mapPts||[],changed=IS.mapActive!==-1;IS.mapActive=-1;
+  const pts=IS.mapPts||[],changed=IS.mapActive!==-1;IS.mapActive=-1;if(changed&&IS.mapActive!==-2)IS.mapZoom=null; // back at the top: next dive starts at street level
   document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.remove("on"));
   const spent=round2(pts.reduce((a,t)=>a+sAmt(t),0)),places=new Set(pts.map(t=>(locShort(t.loc)||"").toLowerCase())).size;
   const cap=$("#mlcap");if(cap){cap.innerHTML='<b>All '+pts.length+' purchase'+(pts.length===1?'':'s')+' · '+money(spent)+'</b><span>'+places+' place'+(places===1?'':'s')+' · scroll down to visit each one</span>';if(changed){cap.classList.remove("pop");void cap.offsetWidth;cap.classList.add("pop")}}
   const map=ML.map;if(!map||!window.L)return;
-  ML.dots.forEach(d=>d.setStyle({radius:5,opacity:1,fillOpacity:.85}));
+  ML.dots.forEach(d=>d.setStyle({opacity:1,fillOpacity:1}));
   if(ML.pin)ML.pin.setOpacity(0);
   if(!changed&&!force)return;
   const b=window.L.latLngBounds(pts.map(t=>[t.loc.lat,t.loc.lng]));
-  if(b.isValid())map.flyToBounds(b.pad(0.2),{maxZoom:14,duration:force?0:.8,animate:!force});
+  map.stop();if(b.isValid()){if(force)map.fitBounds(b.pad(0.2),{maxZoom:14,animate:false});else map.flyToBounds(b.pad(0.2),{maxZoom:14,duration:.8})}
 }
 function mlSetActive(i,force){
   if(i<0){mlOverview(force);return}
@@ -2268,13 +2276,14 @@ function mlSetActive(i,force){
   document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.toggle("on",+r.dataset.mi===i));
   const cap=$("#mlcap");if(cap){cap.innerHTML='<b>'+esc(t.merchant||"Purchase")+' · '+money(+t.amount||0)+'</b><span>'+esc(locSub(t))+' · '+esc(fmtDay(t.date))+'</span>';cap.classList.remove("pop");void cap.offsetWidth;cap.classList.add("pop")}
   const map=ML.map;if(!map)return;const ll=[t.loc.lat,t.loc.lng];
-  ML.dots.forEach((d,k)=>d.setStyle(k===i?{radius:0,opacity:0,fillOpacity:0}:{radius:5,opacity:1,fillOpacity:.85}));
+  ML.dots.forEach((d,k)=>d.setStyle(k===i?{opacity:0,fillOpacity:0}:{opacity:1,fillOpacity:1}));
   if(ML.pin){ML.pin.setOpacity(1);ML.pin.setLatLng(ll);const el=ML.pin.getElement();if(el&&changed){el.classList.remove("drop");void el.offsetWidth;el.classList.add("drop")}}
   if(!changed&&!force)return;
   const c=map.getCenter(),far=locDist({lat:c.lat,lng:c.lng},{lat:ll[0],lng:ll[1]});
   // leaving the overview zooms in to street level (or the zoom you last pinched to)
-  if(fromOverview||force)map.flyTo(ll,IS.mapZoom||15,{duration:force?0:.9,animate:!force});
-  else if(far>40e3)map.flyTo(ll,map.getZoom(),{duration:.9});else map.panTo(ll,{animate:true,duration:.45,easeLinearity:.3});
+  const z=IS.mapZoom||15;map.stop();
+  if(force)map.setView(ll,z,{animate:false});
+  else map.flyTo(ll,z,{duration:fromOverview||far>40e3?.85:.45,easeLinearity:.35});
 }
 function mlScan(){ML.raf=0;if(S.tab!=="insights"||IS.sub!=="map")return;const line=mlLine();if(!line)return;
   const rows=document.querySelectorAll("#main .mlrow");if(!rows.length)return;let pick=-2;
@@ -2284,7 +2293,7 @@ function mlScan(){ML.raf=0;if(S.tab!=="insights"||IS.sub!=="map")return;const li
 window.addEventListener("scroll",()=>{if(!ML.raf&&S.tab==="insights"&&IS.sub==="map")ML.raf=requestAnimationFrame(mlScan)},{passive:true});
 function initMapList(){
   const el=document.querySelector("#main #imap");if(!el||!IS.mapPts||!IS.mapPts.length)return;
-  loadHeat().catch(()=>{}).then(()=>{if(!el.isConnected)return;const L=window.L,pts=IS.mapPts;if(!L)throw new Error("map");
+  loadLeaflet().then(()=>{if(!el.isConnected)return;const L=window.L,pts=IS.mapPts;
     if(ML.map){try{ML.map.remove()}catch(_){}ML.map=null}
     el.innerHTML="";
     // look-only map: no dragging or pinching; the list and the +/− buttons move it
@@ -2292,12 +2301,11 @@ function initMapList(){
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
     map.attributionControl.setPrefix(false);
     // dots that pile up glow hotter: one purchase is a blue dot, overlaps run purple → orange → red
-    ML.dots=[];
-    if(L.heatLayer)ML.heat=L.heatLayer(pts.map(t=>[t.loc.lat,t.loc.lng,1]),{radius:9,blur:5,maxZoom:1,max:3.2,minOpacity:.55,gradient:{0:"#1a73e8",.3:"#1a73e8",.45:"#7b3fe4",.62:"#ff8f00",.8:"#f4511e",1:"#c62828"}}).addTo(map);
-    else ML.dots=pts.map(t=>L.circleMarker([t.loc.lat,t.loc.lng],{radius:5,color:"#fff",weight:1.5,fillColor:"#1a73e8",fillOpacity:.85,interactive:false}).addTo(map));
+    ML.dots=pts.map(t=>L.circleMarker([t.loc.lat,t.loc.lng],{radius:6,color:"#fff",weight:1.5,fillColor:"#1a73e8",fillOpacity:1,interactive:false}).addTo(map));
+    map.on("zoomend",mlHeatDots);
     const t0=pts[Math.max(0,IS.mapActive)]||pts[0];
     ML.pin=L.marker([t0.loc.lat,t0.loc.lng],{interactive:false,keyboard:false,opacity:0,icon:L.divIcon({className:"mlpin",html:PIN_SVG+'<i></i>',iconSize:[36,36],iconAnchor:[18,34]})}).addTo(map);
-    map.setView([t0.loc.lat,t0.loc.lng],15,{animate:false});
+    map.setView([t0.loc.lat,t0.loc.lng],15,{animate:false});mlHeatDots();
     ML.user=false;map.on("zoomstart",e=>{});el.addEventListener("touchstart",e=>{if(e.touches.length>1)ML.user=true},{passive:true});
     map.on("zoomend",()=>{if(ML.user&&IS.mapActive>=0)IS.mapZoom=map.getZoom();ML.user=false;mlZoomUI()});map.on("zoom",mlZoomUI);mlZoomWire();
     el.classList.add("on");const cur=IS.mapActive;IS.mapActive=-2;mlSetActive(cur,true);setTimeout(mlScan,60);
