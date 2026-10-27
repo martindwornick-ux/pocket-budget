@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 26, 11:05 PM"</script>
+<script>window.PB_BUILD="Oct 26, 11:40 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -476,6 +476,10 @@ main.peek{position:fixed;left:0;right:0;bottom:0;margin:0 auto;overflow:hidden;p
 main.peek>*{flex-shrink:0}
 /* insights map */
 /* map tab: list drives the map */
+html.mlsnap{scroll-snap-type:y mandatory}
+html.mlsnap .mlrow{scroll-snap-align:start;scroll-margin-top:var(--mlsnap,420px)}
+html.mlsnap .mltop{scroll-snap-align:start;scroll-margin-top:var(--hh,120px)}
+
 .mlzs{position:absolute;right:30px;top:16px;bottom:78px;z-index:950;width:34px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;border-radius:17px;background:rgba(255,255,255,.88);box-shadow:0 2px 10px rgba(0,0,0,.18);touch-action:none;-webkit-user-select:none;user-select:none;cursor:ns-resize}
 .mlzp{font-size:17px;font-weight:600;color:#5f6368;line-height:1}
 .mlzt{position:relative;flex:1;width:6px;border-radius:3px;background:rgba(60,64,67,.18)}
@@ -2224,7 +2228,7 @@ function mapCard(fh,months,pending){
   const D=heatData(months);
   const pts=D.pts.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.createdAt||"").localeCompare(a.createdAt||""));
   IS.mapPts=pts;if(!(IS.mapActive>=-1&&IS.mapActive<pts.length))IS.mapActive=-1;
-  let h='<section class="card mlcard"><div class="chead"><h2>Where you spend</h2></div>'+fh;
+  let h='<section class="card mlcard"><div class="mltop"></div><div class="chead"><h2>Where you spend</h2></div>'+fh;
   if(pending)h+='<p class="note" style="margin:0 0 6px">Loading earlier months…</p>';
   if(!pts.length)return h+'<div class="hmempty">'+PIN_SVG+'<b>No map spots yet</b><p>Transactions show up here once they have a location from your GPS, the map, or a searched place. New ones get your current location automatically; for older ones, open them and tap 🗺 next to Location.</p></div></section>';
   h+='<div class="mlmap"><div class="imap" id="imap"><div class="hmload">Loading map…</div></div>'+
@@ -2290,19 +2294,22 @@ function mlSetActive(i,force){
   else if(zoomNow&&far<25e3)map.panTo(ll,{animate:true,duration:.4,easeLinearity:.3});
   else{el.classList.add("cut");setTimeout(()=>{if(!ML.map)return;map.setView(ll,z,{animate:false});requestAnimationFrame(()=>el.classList.remove("cut"))},120)}
 }
-function mlScan(){ML.raf=0;if(S.tab!=="insights"||IS.sub!=="map")return;const line=mlLine();if(!line)return;
-  const rows=document.querySelectorAll("#main .mlrow");if(!rows.length)return;let pick=-2;
-  const M=16,act=IS.mapActive,r0=rows[0].getBoundingClientRect().top; // a row must clearly cross the line (no flip-flopping)
-  const byLine=()=>{for(const r of rows){if(r.getBoundingClientRect().bottom>line)return +r.dataset.mi}return +rows[rows.length-1].dataset.mi};
-  if(act<0){if(r0>line-M)return;pick=byLine()}
-  else if(r0>line+M)pick=-1;
-  else{const c=byLine();if(c===act)pick=act;else{const ar=document.querySelector('#main .mlrow[data-mi="'+act+'"]'),b=ar?ar.getBoundingClientRect():null;
-    pick=!b?c:(c>act?(b.bottom<line-M?c:act):(b.top>line+M?c:act))}}
-  if(pick===IS.mapActive)return;
-  clearTimeout(ML.settle);ML.settle=setTimeout(()=>{ // wait for the scroll to settle a moment so fast flicks don't strobe the map
-    const now=pick;if(now!==IS.mapActive){mlSetActive(now);try{navigator.vibrate&&navigator.vibrate(3)}catch(_){}}},90);
-  document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.toggle("on",+r.dataset.mi===pick))}
+/* The list snaps one purchase at a time into the slot right under the map (CSS scroll snapping),
+   and the map moves once the scroll comes to rest on it. Top of the list = overview. */
+function mlSnapVar(){const m=document.querySelector("#main .mlmap");if(!m)return;const hh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120;
+  document.documentElement.style.setProperty("--mlsnap",(hh+4+m.offsetHeight)+"px")}
+function mlPick(){const rows=document.querySelectorAll("#main .mlrow");if(!rows.length)return null;const line=mlLine()-28;
+  if(rows[0].getBoundingClientRect().top>line+24)return -1;
+  let best=-1,bd=1e9;for(const r of rows){const d=Math.abs(r.getBoundingClientRect().top-line);if(d<bd){bd=d;best=+r.dataset.mi}else if(d>bd)break}
+  return best}
+function mlScan(){ML.raf=0;if(S.tab!=="insights"||IS.sub!=="map")return;const pick=mlPick();if(pick==null)return;
+  document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.toggle("on",+r.dataset.mi===pick)); // highlight follows your finger
+  clearTimeout(ML.settle);ML.settle=setTimeout(mlSettle,140)}                                          // the map waits for the scroll to rest
+function mlSettle(){if(S.tab!=="insights"||IS.sub!=="map")return;const pick=mlPick();if(pick==null||pick===IS.mapActive)return;
+  mlSetActive(pick);try{navigator.vibrate&&navigator.vibrate(4)}catch(_){}}
 window.addEventListener("scroll",()=>{if(!ML.raf&&S.tab==="insights"&&IS.sub==="map")ML.raf=requestAnimationFrame(mlScan)},{passive:true});
+if("onscrollend" in window)window.addEventListener("scrollend",()=>{if(S.tab==="insights"&&IS.sub==="map"){clearTimeout(ML.settle);mlSettle()}});
+window.addEventListener("resize",()=>{if(S.tab==="insights"&&IS.sub==="map")mlSnapVar()});
 function initMapList(){
   const el=document.querySelector("#main #imap");if(!el||!IS.mapPts||!IS.mapPts.length)return;
   const key=IS.mapPts.map(t=>t.id+"@"+t.loc.lat+","+t.loc.lng).join("|");
@@ -2332,8 +2339,8 @@ function initMapList(){
   }).catch(()=>{el.innerHTML='<div class="hmload">The map couldn\'t load here. Open Pocket Budget from your Home Screen.</div>'});
 }
 $("#main").addEventListener("click",e=>{
-  const r=e.target.closest(".mlrow");if(r){const i=+r.dataset.mi;const line=mlLine(),b=r.getBoundingClientRect();
-    window.scrollTo({top:Math.max(0,scrollY+b.top-line+2),behavior:"smooth"});mlSetActive(i);try{haptic()}catch(_){}}
+  const r=e.target.closest(".mlrow");if(r){const i=+r.dataset.mi;r.scrollIntoView({block:"start",behavior:"smooth"});try{haptic()}catch(_){}
+    clearTimeout(ML.settle);ML.settle=setTimeout(()=>{if(IS.mapActive!==i)mlSetActive(i)},450)}
 });
 
 function renderInsights(groups,sm){
@@ -2425,6 +2432,7 @@ function render(){if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.c
   const m=$("#main");
   const ae=document.activeElement, keep=ae&&ae.id==="txq"?[ae.selectionStart,ae.selectionEnd]:null;
   m.innerHTML=S.tab==="budget"?renderBudget(groups,sm):S.tab==="tx"?renderTx(groups):renderInsights(groups,sm);
+  const snap=S.tab==="insights"&&IS.sub==="map"&&!!m.querySelector(".mlrow");document.documentElement.classList.toggle("mlsnap",snap);if(snap)mlSnapVar();
   if(keep){const i=$("#txq");if(i){i.focus();try{i.setSelectionRange(keep[0],keep[1])}catch(e){}}}
 }
 

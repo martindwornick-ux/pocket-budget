@@ -1,5 +1,5 @@
 /* Pocket Budget service worker: opens offline, picks up updates when online. */
-const VERSION = "pb-2026-10-26c";
+const VERSION = "pb-2026-10-26d";
 const SHELL = ["./", "./index.html", "./platform.js", "./config.js", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
