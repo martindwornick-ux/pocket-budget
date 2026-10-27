@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 25, 8:25 AM"</script>
+<script>window.PB_BUILD="Oct 26, 9:55 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -476,6 +476,13 @@ main.peek{position:fixed;left:0;right:0;bottom:0;margin:0 auto;overflow:hidden;p
 main.peek>*{flex-shrink:0}
 /* insights map */
 /* map tab: list drives the map */
+.mlzs{position:absolute;right:30px;top:16px;bottom:78px;z-index:950;width:34px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;border-radius:17px;background:rgba(255,255,255,.88);box-shadow:0 2px 10px rgba(0,0,0,.18);touch-action:none;-webkit-user-select:none;user-select:none;cursor:ns-resize}
+.mlzp{font-size:17px;font-weight:600;color:#5f6368;line-height:1}
+.mlzt{position:relative;flex:1;width:6px;border-radius:3px;background:rgba(60,64,67,.18)}
+.mlzf{position:absolute;left:0;right:0;bottom:0;border-radius:3px;background:#1a73e8}
+.mlzb{position:absolute;left:50%;width:22px;height:22px;margin:0 0 -11px -11px;border-radius:50%;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.35);transition:transform .15s}
+.mlzs.on .mlzb{transform:scale(1.2)}
+
 .mlcard{padding-bottom:6px}
 .mlmap{position:sticky;top:calc(var(--hh,120px) + 4px);z-index:4;margin:0 -22px;padding:4px 22px 10px;background:linear-gradient(var(--card) 88%,transparent)}
 main .mlmap{background:linear-gradient(rgba(255,255,255,.97) 88%,rgba(255,255,255,0))}
@@ -483,10 +490,10 @@ main .mlmap{background:linear-gradient(rgba(255,255,255,.97) 88%,rgba(255,255,25
 .mlzoom{position:absolute;right:32px;top:14px;z-index:900;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.3)}
 .mlzoom button{width:40px;height:40px;background:rgba(32,40,50,.88);color:#fff;font-size:22px;line-height:1;font-weight:500}
 .mlzoom button+button{border-top:1px solid rgba(255,255,255,.15)}.mlzoom button:active{background:rgba(60,72,88,.95)}
-.mlcap{position:absolute;left:32px;right:84px;bottom:20px;z-index:900;background:rgba(20,28,36,.82);color:#fff;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;pointer-events:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-.mlcap b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mlcap span{font-size:12.5px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlcap{position:absolute;left:32px;right:72px;bottom:20px;z-index:900;background:rgba(255,255,255,.9);color:#202124;box-shadow:0 2px 12px rgba(0,0,0,.18);border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;pointer-events:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.mlcap b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mlcap span{font-size:12.5px;color:#5f6368;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mlcap.pop{animation:dpop .3s ease both}
-.mlpin{background:none;border:0}.mlpin svg{width:36px;height:36px;color:#ffb347;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));display:block}
+.mlpin{background:none;border:0}.mlpin svg{width:36px;height:36px;color:#ea4335;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));display:block}
 .mlpin.drop svg{animation:pindrop .4s cubic-bezier(.2,.9,.3,1.5)}
 @keyframes pindrop{from{transform:translateY(-14px) scale(.8);opacity:.4}}
 .mlnote{margin:2px 0 6px;font-size:13px;color:var(--muted)}
@@ -495,17 +502,17 @@ main .mlmap{background:linear-gradient(rgba(255,255,255,.97) 88%,rgba(255,255,25
 .mlrow .l{flex:1;min-width:0}.mlrow .m{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mlrow .c{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mlrow .c .pin{width:11px;height:11px;vertical-align:-1px;margin-right:3px;opacity:.7}
 .mlrow .a{font-size:16px;font-weight:600;flex:none}
-.mldot{flex:none;width:10px;height:10px;border-radius:50%;background:#a14ee0;opacity:.45;transition:transform .25s,opacity .25s,background .25s}
-.mlrow.on{background:rgba(161,78,224,.1)}.mlrow.on .mldot{opacity:1;background:#ffb347;transform:scale(1.35)}
+.mldot{flex:none;width:10px;height:10px;border-radius:50%;background:#1a73e8;opacity:.45;transition:transform .25s,opacity .25s,background .25s}
+.mlrow.on{background:rgba(26,115,232,.08)}.mlrow.on .mldot{opacity:1;background:#ea4335;transform:scale(1.35)}
 .mlpad{height:45vh}
 
-.imap{position:relative;height:min(58vh,420px);border-radius:18px;overflow:hidden;background:#1b2530;margin:2px 0 12px;isolation:isolate;z-index:0}
+.imap{position:relative;height:min(58vh,420px);border-radius:18px;overflow:hidden;background:#eef0f2;box-shadow:inset 0 0 0 1px rgba(60,64,67,.12);margin:2px 0 12px;isolation:isolate;z-index:0}
 .imap.on{animation:dpop .4s ease both}
 .imap .leaflet-heatmap-layer{animation:hmfade 1s ease both}
-.imap .leaflet-tile-pane{filter:invert(1) hue-rotate(185deg) brightness(.9) contrast(.88) saturate(.55)}
+
 @keyframes hmfade{from{opacity:0}}
-.hmload{position:absolute;inset:0;display:grid;place-items:center;color:#9aa7b4;font-size:14px;text-align:center;padding:20px;z-index:900}
-.imap .leaflet-control-attribution{background:rgba(20,28,36,.7);color:#9aa7b4}.imap .leaflet-control-attribution a{color:#c3d1de}
+.hmload{position:absolute;inset:0;display:grid;place-items:center;color:#5f6368;font-size:14px;text-align:center;padding:20px;z-index:900}
+.imap .leaflet-control-attribution{background:rgba(255,255,255,.8);color:#5f6368}.imap .leaflet-control-attribution a{color:#1a73e8}
 .leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}
 .hmstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:12px}
 .hmstats>div{background:rgba(60,64,67,.05);border-radius:12px;padding:8px 10px}
@@ -590,13 +597,13 @@ body.mpk-open{overflow:hidden}
 .cal2{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .cal2 .dow{font-size:11px;font-weight:700;color:var(--muted);text-align:center;padding-bottom:2px}
 .cd{position:relative;aspect-ratio:1/1.08;border-radius:10px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:4px 4px 3px;min-width:0;font:inherit;color:inherit;
-  background:rgba(26,115,232,calc(.05 + var(--h,0)*.78));transition:transform .25s cubic-bezier(.2,.9,.3,1.4),box-shadow .25s,background .25s}
+  background:var(--bg,rgba(60,64,67,.05));transition:transform .25s cubic-bezier(.2,.9,.3,1.4),box-shadow .25s,background .25s}
 .cd.out{background:none}
 .cd .n{font-size:11px;font-weight:600;color:var(--muted)}
 .cd b{align-self:flex-end;font-size:11px;font-weight:700;white-space:nowrap;letter-spacing:-.01em}
 .cd.dark{color:#fff}.cd.dark .n{color:rgba(255,255,255,.85)}
-.cd.zero{background:rgba(24,128,56,.07)}
-.cd em{align-self:flex-end;font-style:normal;font-size:11px;color:var(--ok);font-weight:700}
+.cd.zero{background:#cfeed6}.cd.zero .n{color:#1e6b34}
+.cd em{align-self:flex-end;font-style:normal;font-size:12px;color:#188038;font-weight:800}
 .cd.fut{background:rgba(60,64,67,.03)}.cd.fut .n{opacity:.45}
 .cd.today{box-shadow:inset 0 0 0 2px var(--g-blue,#1a73e8)}
 .cd.big::after{content:"★";position:absolute;top:2px;right:4px;font-size:10px;color:var(--g-yellow,#fbbc04);text-shadow:0 0 2px rgba(0,0,0,.25)}
@@ -606,7 +613,7 @@ body.mpk-open{overflow:hidden}
 @keyframes cdin{from{opacity:0;transform:scale(.6)}}
 .calleg{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;font-size:13px;color:var(--muted)}
 .calleg .scale{display:inline-flex;align-items:center;gap:3px}
-.calleg i{width:13px;height:13px;border-radius:4px;background:rgba(26,115,232,calc(.05 + var(--h)*.78))}
+.calleg i{width:13px;height:13px;border-radius:4px;background:var(--bg)}
 .calp{margin-top:12px;padding:12px 14px;border-radius:16px;background:rgba(26,115,232,.06);animation:dpop .32s cubic-bezier(.2,.9,.3,1.15) both}
 .calph{display:flex;justify-content:space-between;gap:10px;font-size:16px;padding-bottom:4px}
 .calp .txrow{animation:dup .35s ease both;animation-delay:var(--d)}
@@ -1115,7 +1122,7 @@ function confirmDelete(id){
         if(!S.db||S.readOnly){toast("Saving isn't available here");b.disabled=false;return}
         try{await S.db.doc("tx/"+id).delete();SW.openRow=null;closeSheet();toast("Deleted")}catch(e){b.disabled=false;toast("Couldn't delete. Try again.")}}});
 }
-const ISUBS=[["totals","Totals"],["cal","Calendar"],["pace","Pace"],["wd","Weekday"]].concat(window.top===window?[["map","Map"]]:[]);
+const ISUBS=[["totals","Totals"],["cal","Calendar"],["pace","Pace"]].concat(window.top===window?[["map","Map"]]:[]);
 function renderHeader(){
   renderDoodle();
   const [y,m]=S.ym.split("-");$("#mName").textContent=MONTHS[+m-1];$("#mYear").textContent=y;
@@ -2045,6 +2052,9 @@ function bmReadHTML(){
 
 /* ---------- Calendar: heatmap, streaks, tap a day ---------- */
 const CALHINT='<p class="note dhint">Tap a day to see what you bought.</p>';
+// flame colors for spending days: pale yellow → orange → red → deep red
+const FLAME=[[0,[255,241,196]],[.22,[255,214,102]],[.45,[255,159,67]],[.66,[255,107,53]],[.84,[229,57,53]],[1,[160,20,30]]];
+function flame(x){x=Math.max(0,Math.min(1,x));for(let i=1;i<FLAME.length;i++)if(x<=FLAME[i][0]){const [a,ca]=FLAME[i-1],[b,cb]=FLAME[i],t=(x-a)/(b-a);return"rgb("+ca.map((c,k)=>Math.round(c+(cb[k]-c)*t)).join(",")+")"}return"rgb(160,20,30)"}
 function calendarCard(fh){
   const ym=S.ym,[y,m]=ym.split("-").map(Number),td=today(),cur=ymOf(td);
   const match=t=>t.type!=="income"&&(!IS.group||groupNameOf(t,ym)===IS.group)&&(!IS.item||itemNameOf(t,ym)===IS.item);
@@ -2057,19 +2067,21 @@ function calendarCard(fh){
   const key=[ym,IS.group,IS.item,Math.round(tot)].join("~"),anim=IS.calKey!==key;IS.calKey=key;
   if(IS.calSel&&ymOf(IS.calSel)!==ym)IS.calSel=null;
   const nextYm=(()=>{const d=new Date();d.setMonth(d.getMonth()+1,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)})();
+  const vals=Object.values(day).filter(x=>x>0).sort((a,b)=>a-b),lmax=Math.log(1+max);
+  const heatOf=v=>{if(vals.length<2)return .5;let lo=0,hi=vals.length;while(lo<hi){const m=(lo+hi)>>1;if(vals[m]<v)lo=m+1;else hi=m}const rank=lo/(vals.length-1);return Math.min(1,.65*rank+.35*Math.log(1+v)/lmax)};
   let g='<div class="cal2'+(anim?' anim':'')+'">'+["S","M","T","W","T","F","S"].map(d=>'<div class="dow">'+d+'</div>').join("");
   const cells=Math.ceil((first+dim)/7)*7;
   for(let c=0;c<cells;c++){const n=c-first+1;
     if(n<1||n>dim){g+='<div class="cd out"></div>';continue}
-    const v=day[n]||0,iso=ym+"-"+pad(n),fut=n>lastDay,hh=max>0&&v>0?Math.pow(v/max,.55):0;
-    const cls=["cd"];if(iso===td)cls.push("today");if(fut)cls.push("fut");if(!fut&&!(v>0))cls.push("zero");if(n===big&&v>0)cls.push("big");if(IS.calSel===iso)cls.push("sel");if(hh>.55)cls.push("dark");
-    g+='<button class="'+cls.join(" ")+'" data-cday="'+iso+'" style="--h:'+hh.toFixed(3)+';--i:'+c+'" aria-label="'+esc(fmtLong(iso))+(v>0?", "+money(round2(v)):fut?"":", no spending")+'"><span class="n">'+n+'</span>'+(v>0?'<b class="num">'+kfmt(v)+'</b>':(!fut?'<em aria-hidden="true">✓</em>':''))+'</button>'}
+    const v=day[n]||0,iso=ym+"-"+pad(n),fut=n>lastDay,hh=v>0?heatOf(v):0;
+    const cls=["cd"];if(iso===td)cls.push("today");if(fut)cls.push("fut");if(!fut&&!(v>0))cls.push("zero");if(n===big&&v>0)cls.push("big");if(IS.calSel===iso)cls.push("sel");if(v>0&&!fut&&hh>.6)cls.push("dark");
+    g+='<button class="'+cls.join(" ")+'" data-cday="'+iso+'" style="--h:'+hh.toFixed(3)+';--i:'+c+(v>0&&!fut?';--bg:'+flame(hh):'')+'" aria-label="'+esc(fmtLong(iso))+(v>0?", "+money(round2(v)):fut?"":", no spending")+'"><span class="n">'+n+'</span>'+(v>0?'<b class="num">'+kfmt(v)+'</b>':(!fut?'<em aria-hidden="true">✓</em>':''))+'</button>'}
   g+='</div>';
   let h='<section class="card calcard"><div class="chead"><h2>Daily spending</h2><div class="cnav"><button data-cmon="-1" aria-label="Previous month">‹</button><span class="lbl">'+MONTHS[m-1].slice(0,3)+' '+y+'</span><button data-cmon="1" aria-label="Next month"'+(ym>=nextYm?" disabled":"")+'>›</button></div></div>'+fh;
-  h+='<div class="cchips'+(anim?' anim':'')+'"><div><small>Per day</small><b class="num">'+(lastDay?money(round2(tot/lastDay)):"—")+'</b></div><div><small>No-spend</small><b class="num">'+(lastDay?ns:"—")+'</b></div><div><small>Streak</small><b class="num">'+(lastDay?best+" day"+(best===1?"":"s"):"—")+'</b></div>'+
+  h+='<div class="cchips'+(anim?' anim':'')+'"><div><small>Per day</small><b class="num">'+(lastDay?money(round2(tot/lastDay)):"—")+'</b></div><div><small>$0 days</small><b class="num">'+(lastDay?ns:"—")+'</b></div><div><small>Streak</small><b class="num">'+(lastDay?best+" day"+(best===1?"":"s"):"—")+'</b></div>'+
     (big&&day[big]>0?'<button data-cday="'+ym+'-'+pad(big)+'"><small>Top day</small><b class="num">'+money(round2(day[big])).replace(/\.\d\d$/,"")+'</b><span>'+MONTHS[m-1].slice(0,3)+' '+big+'</span></button>':'')+'</div>';
   h+=g;
-  h+='<div class="calleg"><span>'+money(tot)+' this month</span><span class="scale">Less<i style="--h:.12"></i><i style="--h:.38"></i><i style="--h:.65"></i><i style="--h:.92"></i>More</span></div>';
+  h+='<div class="calleg"><span>'+money(tot)+' this month</span><span class="scale"><i style="--bg:#cfeed6" title="No spending"></i>&nbsp;Less<i style="--bg:'+flame(.08)+'"></i><i style="--bg:'+flame(.35)+'"></i><i style="--bg:'+flame(.62)+'"></i><i style="--bg:'+flame(.85)+'"></i><i style="--bg:'+flame(1)+'"></i>More</span></div>';
   h+='<div id="calpanel">'+(IS.calSel?calPanelHTML(IS.calSel):CALHINT)+'</div>';
   return h+'</section>';
 }
@@ -2213,9 +2225,10 @@ function mapCard(fh,months,pending){
   if(pending)h+='<p class="note" style="margin:0 0 6px">Loading earlier months…</p>';
   if(!pts.length)return h+'<div class="hmempty">'+PIN_SVG+'<b>No map spots yet</b><p>Transactions show up here once they have a location from your GPS, the map, or a searched place. New ones get your current location automatically; for older ones, open them and tap 🗺 next to Location.</p></div></section>';
   h+='<div class="mlmap"><div class="imap" id="imap"><div class="hmload">Loading map…</div></div>'+
+    '<div class="mlzs" role="slider" aria-label="Zoom" aria-valuemin="3" aria-valuemax="18" tabindex="0"><span class="mlzp">+</span><div class="mlzt"><i class="mlzf"></i><b class="mlzb"></b></div><span class="mlzp">−</span></div>'+
     '<div class="mlcap" id="mlcap"></div></div>';
   const miss=D.all.length-pts.length;
-  h+='<p class="mlnote">'+pts.length+' purchase'+(pts.length===1?'':'s')+' on the map'+(miss>0?' · '+miss+' without a spot':'')+'. Scroll the list to visit each one; pinch the map to zoom.</p>';
+  h+='<p class="mlnote">'+pts.length+' purchase'+(pts.length===1?'':'s')+' on the map'+(miss>0?' · '+miss+' without a spot':'')+'. Scroll the list to visit each one; slide the bar on the right to zoom.</p>';
   let lastDay="";
   h+='<div class="mllist">'+pts.map((t,i)=>{const day=t.date!==lastDay?'<div class="mlday">'+esc(fmtDay(t.date))+'</div>':'';lastDay=t.date;
     return day+'<button class="mlrow'+(i===IS.mapActive?' on':'')+'" data-mi="'+i+'"><i class="mldot"></i><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+PIN_SVG+esc(locSub(t))+'</div></div><div class="a num">'+(t.type==="refund"?"+":"")+money(+t.amount||0)+'</div></button>'}).join("")+'<div class="mlpad"></div></div>';
@@ -2223,6 +2236,19 @@ function mapCard(fh,months,pending){
   return h+'</section>';
 }
 const ML={map:null,pin:null,dots:[],raf:0};
+// the zoom bar on the right of the map: drag up to zoom in, down to zoom out (always around the current spot)
+const MLZ={min:3,max:18};
+function mlZoomUI(){const m=ML.map,b=document.querySelector("#main .mlzs");if(!m||!b)return;const f=(m.getZoom()-MLZ.min)/(MLZ.max-MLZ.min),p=Math.max(0,Math.min(1,f))*100;
+  b.querySelector(".mlzb").style.bottom=p+"%";b.querySelector(".mlzf").style.height=p+"%";b.setAttribute("aria-valuenow",m.getZoom().toFixed(1))}
+function mlZoomWire(){const b=document.querySelector("#main .mlzs");if(!b||b._w)return;b._w=1;const tr=b.querySelector(".mlzt");
+  const at=y=>{const r=tr.getBoundingClientRect();return MLZ.min+(1-Math.max(0,Math.min(1,(y-r.top)/r.height)))*(MLZ.max-MLZ.min)};
+  const go=z=>{const m=ML.map;if(!m)return;ML.user=true;const t=(IS.mapPts||[])[IS.mapActive];m.setView(t?[t.loc.lat,t.loc.lng]:m.getCenter(),z,{animate:false});if(IS.mapActive>=0)IS.mapZoom=z;mlZoomUI()};
+  let on=false,last=0;
+  b.addEventListener("pointerdown",e=>{on=true;b.classList.add("on");try{b.setPointerCapture(e.pointerId)}catch(_){}go(at(e.clientY));e.preventDefault()});
+  b.addEventListener("pointermove",e=>{if(!on)return;const z=at(e.clientY);go(z);if(Math.round(z)!==last){last=Math.round(z);try{navigator.vibrate&&navigator.vibrate(2)}catch(_){}}});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(t=>b.addEventListener(t,()=>{on=false;b.classList.remove("on")}));
+  b.addEventListener("keydown",e=>{const m=ML.map;if(!m)return;if(e.key==="ArrowUp"||e.key==="ArrowRight"){go(Math.min(MLZ.max,m.getZoom()+1));e.preventDefault()}else if(e.key==="ArrowDown"||e.key==="ArrowLeft"){go(Math.max(MLZ.min,m.getZoom()-1));e.preventDefault()}});
+  mlZoomUI()}
 function mlLine(){const m=document.querySelector("#main .mlmap");return m?m.getBoundingClientRect().bottom+28:0}
 function mlOverview(force){
   const pts=IS.mapPts||[],changed=IS.mapActive!==-1;IS.mapActive=-1;
@@ -2230,7 +2256,7 @@ function mlOverview(force){
   const spent=round2(pts.reduce((a,t)=>a+sAmt(t),0)),places=new Set(pts.map(t=>(locShort(t.loc)||"").toLowerCase())).size;
   const cap=$("#mlcap");if(cap){cap.innerHTML='<b>All '+pts.length+' purchase'+(pts.length===1?'':'s')+' · '+money(spent)+'</b><span>'+places+' place'+(places===1?'':'s')+' · scroll down to visit each one</span>';if(changed){cap.classList.remove("pop");void cap.offsetWidth;cap.classList.add("pop")}}
   const map=ML.map;if(!map||!window.L)return;
-  ML.dots.forEach(d=>d.setStyle({radius:5,opacity:.9,fillOpacity:.55}));
+  ML.dots.forEach(d=>d.setStyle({radius:5,opacity:1,fillOpacity:.85}));
   if(ML.pin)ML.pin.setOpacity(0);
   if(!changed&&!force)return;
   const b=window.L.latLngBounds(pts.map(t=>[t.loc.lat,t.loc.lng]));
@@ -2242,7 +2268,7 @@ function mlSetActive(i,force){
   document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.toggle("on",+r.dataset.mi===i));
   const cap=$("#mlcap");if(cap){cap.innerHTML='<b>'+esc(t.merchant||"Purchase")+' · '+money(+t.amount||0)+'</b><span>'+esc(locSub(t))+' · '+esc(fmtDay(t.date))+'</span>';cap.classList.remove("pop");void cap.offsetWidth;cap.classList.add("pop")}
   const map=ML.map;if(!map)return;const ll=[t.loc.lat,t.loc.lng];
-  ML.dots.forEach((d,k)=>d.setStyle(k===i?{radius:0,opacity:0,fillOpacity:0}:{radius:5,opacity:.9,fillOpacity:.55}));
+  ML.dots.forEach((d,k)=>d.setStyle(k===i?{radius:0,opacity:0,fillOpacity:0}:{radius:5,opacity:1,fillOpacity:.85}));
   if(ML.pin){ML.pin.setOpacity(1);ML.pin.setLatLng(ll);const el=ML.pin.getElement();if(el&&changed){el.classList.remove("drop");void el.offsetWidth;el.classList.add("drop")}}
   if(!changed&&!force)return;
   const c=map.getCenter(),far=locDist({lat:c.lat,lng:c.lng},{lat:ll[0],lng:ll[1]});
@@ -2258,19 +2284,22 @@ function mlScan(){ML.raf=0;if(S.tab!=="insights"||IS.sub!=="map")return;const li
 window.addEventListener("scroll",()=>{if(!ML.raf&&S.tab==="insights"&&IS.sub==="map")ML.raf=requestAnimationFrame(mlScan)},{passive:true});
 function initMapList(){
   const el=document.querySelector("#main #imap");if(!el||!IS.mapPts||!IS.mapPts.length)return;
-  loadLeaflet().then(()=>{if(!el.isConnected)return;const L=window.L,pts=IS.mapPts;
+  loadHeat().catch(()=>{}).then(()=>{if(!el.isConnected)return;const L=window.L,pts=IS.mapPts;if(!L)throw new Error("map");
     if(ML.map){try{ML.map.remove()}catch(_){}ML.map=null}
     el.innerHTML="";
     // look-only map: no dragging or pinching; the list and the +/− buttons move it
-    const map=L.map(el,{zoomControl:false,attributionControl:true,dragging:false,touchZoom:"center",doubleClickZoom:false,scrollWheelZoom:"center",boxZoom:false,keyboard:false,tap:false,inertia:false,bounceAtZoomLimits:false});ML.map=map;
+    const map=L.map(el,{zoomControl:false,attributionControl:true,dragging:false,touchZoom:false,doubleClickZoom:false,scrollWheelZoom:false,boxZoom:false,keyboard:false,tap:false,inertia:false,zoomSnap:0,zoomDelta:.5,bounceAtZoomLimits:false});ML.map=map;
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
     map.attributionControl.setPrefix(false);
-    ML.dots=pts.map(t=>L.circleMarker([t.loc.lat,t.loc.lng],{radius:5,color:"#c39bff",weight:1.5,fillColor:"#a14ee0",fillOpacity:.55,interactive:false}).addTo(map));
+    // dots that pile up glow hotter: one purchase is a blue dot, overlaps run purple → orange → red
+    ML.dots=[];
+    if(L.heatLayer)ML.heat=L.heatLayer(pts.map(t=>[t.loc.lat,t.loc.lng,1]),{radius:9,blur:5,maxZoom:1,max:3.2,minOpacity:.55,gradient:{0:"#1a73e8",.3:"#1a73e8",.45:"#7b3fe4",.62:"#ff8f00",.8:"#f4511e",1:"#c62828"}}).addTo(map);
+    else ML.dots=pts.map(t=>L.circleMarker([t.loc.lat,t.loc.lng],{radius:5,color:"#fff",weight:1.5,fillColor:"#1a73e8",fillOpacity:.85,interactive:false}).addTo(map));
     const t0=pts[Math.max(0,IS.mapActive)]||pts[0];
     ML.pin=L.marker([t0.loc.lat,t0.loc.lng],{interactive:false,keyboard:false,opacity:0,icon:L.divIcon({className:"mlpin",html:PIN_SVG+'<i></i>',iconSize:[36,36],iconAnchor:[18,34]})}).addTo(map);
     map.setView([t0.loc.lat,t0.loc.lng],15,{animate:false});
     ML.user=false;map.on("zoomstart",e=>{});el.addEventListener("touchstart",e=>{if(e.touches.length>1)ML.user=true},{passive:true});
-    map.on("zoomend",()=>{if(ML.user&&IS.mapActive>=0)IS.mapZoom=map.getZoom();ML.user=false});
+    map.on("zoomend",()=>{if(ML.user&&IS.mapActive>=0)IS.mapZoom=map.getZoom();ML.user=false;mlZoomUI()});map.on("zoom",mlZoomUI);mlZoomWire();
     el.classList.add("on");const cur=IS.mapActive;IS.mapActive=-2;mlSetActive(cur,true);setTimeout(mlScan,60);
     const tl=Object.values(map._layers).find(x=>x instanceof L.TileLayer);let ok=0,bad=0;
     if(tl){tl.on("tileload",()=>ok++);tl.on("tileerror",()=>{if(++bad>=4&&!ok&&!el.querySelector(".hmload")){const d=document.createElement("div");d.className="hmload";d.textContent="Map pictures aren't loading. Check your connection.";el.appendChild(d)}})}
@@ -2959,7 +2988,7 @@ async function refreshNow(){
   const rubber=d=>{const dim=Math.max(320,innerHeight*.75);return(1-1/(d*.55/dim+1))*dim};
   const atTop=()=>window.scrollY<=0;
   const atBottom=()=>window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
-  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest("input,textarea,select,.pscrub,svg.di,.imap"));
+  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest("input,textarea,select,.pscrub,svg.di,.imap,.mlzs"));
   let y0=null,x0=0,startY=0,mode=0,busy=false,armed=false,pull=0,raf=0,want=0,settleT=0;
   function paint(p){
     main.style.transform=p?"translate3d(0,"+p.toFixed(2)+"px,0)":"";
@@ -3003,7 +3032,7 @@ async function refreshNow(){
 /* ---------- swipe left / right between tabs (pages sit side by side like cards) ---------- */
 (()=>{
   const TABS=["budget","tx","insights"],main=$("#main"),EASE="cubic-bezier(.25,.9,.3,1)";
-  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest(".pscrub,svg.di,.imap,input,textarea,select,.isel,nav.tabs,.pad"));
+  const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest(".pscrub,svg.di,.imap,.mlzs,input,textarea,select,.isel,nav.tabs,.pad"));
   let x0=null,y0=0,on=false,dx=0,onRow=false,raf=0,busy=false,lastX=0,lastT=0,vel=0,peek=null,side=0;
   const W=()=>innerWidth;
   const pageHTML=tab=>{const g=groupsFor(S.ym);return tab==="budget"?renderBudget(g,spentMap()):tab==="tx"?renderTx(g):renderInsights(g,spentMap())};
