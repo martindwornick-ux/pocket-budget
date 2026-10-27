@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 27, 1:35 AM"</script>
+<script>window.PB_BUILD="Oct 27, 1:50 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -804,7 +804,13 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 .txs #f-ramt{flex:0 0 100px}
 .txs .rsum{margin:0;padding:10px 0 12px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
 .txs .rsum b{color:var(--fg)}.txs .rsum b.ok{color:var(--ok)}.txs .rsum b.bad{color:var(--over)}
-.txs .rlink{margin:0 4px 10px;font-size:14px}
+.txs .rlinkbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:0 0 12px;padding:12px 16px;border-radius:16px;background:rgba(24,128,56,.08);color:var(--fg)}
+.txs .rlinkbtn:active{background:rgba(24,128,56,.16)}
+.txs .rlinkbtn .ri{font-size:20px;color:var(--ok)}
+.txs .rlinkbtn .rt{flex:1;min-width:0;display:flex;flex-direction:column}
+.txs .rlinkbtn small{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700}
+.txs .rlinkbtn b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.txs .rlinkbtn span:not(.ri):not(.rt){font-size:13px;color:var(--muted)}
+.txs .rlinkbtn svg{width:18px;height:18px;color:var(--muted);flex:none}
 .txs .rmrow{flex-direction:column;align-items:stretch;gap:8px;padding:12px 0}
 .txs .rmeth{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;margin:0 -18px;padding:0 18px 2px;scrollbar-width:none}.txs .rmeth::-webkit-scrollbar{display:none}
 .txs .rmeth button{flex:none}
@@ -2710,6 +2716,8 @@ function txSheet(existing){
     '<div class="tseg" id="f-kind" role="group" aria-label="Type"><button data-k="expense" aria-pressed="'+(kind==="expense")+'">- Expense</button><button data-k="refund" aria-pressed="'+(kind==="refund")+'">+ Income</button></div>'+
     '<div class="tbody">'+
       '<button class="tamt num" id="f-amt" aria-label="Amount, tap to edit"></button>'+
+      (existing&&(existing.pair?(()=>{const pr=txPool().find(t=>t.id===existing.pair),isR=existing.type==="refund";
+          return '<button type="button" class="rlinkbtn" id="f-pair"><span class="ri">'+(isR?"↩︎":"↪︎")+'</span><span class="rt"><small>'+(isR?"Reimbursement for":"Paid back by")+'</small><b>'+(pr?esc(pr.merchant||"Purchase")+' · '+(pr.type==="refund"?"+":"")+money(+pr.amount||0):(isR?"the original purchase":"the reimbursement"))+'</b>'+(pr?'<span>'+esc(fmtLong(pr.date))+'</span>':'')+'</span>'+CHEV+'</button>'})():'')||'')+
       '<div class="tcard">'+
         '<div class="trow"><span>Date</span><span class="tv" id="f-dtxt">'+esc(fmtLong(d))+'</span><input class="ovl" id="f-date" type="date" value="'+esc(d)+'" aria-label="Date"></div>'+
         '<label class="trow"><span>Merchant</span><input class="tin" id="f-mer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-msug" aria-expanded="false" placeholder="Name" value="'+esc(merch0)+'"></label>'+
@@ -2722,7 +2730,7 @@ function txSheet(existing){
       '</div>'+
       '<div class="tcard"><div class="trow crow"><span>Budget Item</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel)+'</select></span></div>'+
         '<div class="msug csug" id="f-csug" role="listbox" aria-label="Budget item suggestions" hidden></div><div class="cplace" id="f-cplace" hidden></div><div class="trow" id="f-subrow" hidden><span>Subcategory</span><span class="tv" id="f-stxt"></span><select class="ovl" id="f-sub" aria-label="Misc subcategory"><option value="">Select</option>'+SUB.list.map(x=>'<option'+(existing&&existing.sub===x?" selected":"")+'>'+esc(x)+'</option>').join("")+'<option value="__new">+ New subcategory…</option></select></div><div class="trow" id="f-newsub" hidden><input class="tin" id="f-newsubin" autocomplete="off" maxlength="40" enterkeyhint="done" placeholder="New subcategory name" aria-label="New subcategory name" style="text-align:left"><button class="addlink" id="f-newsubok" style="padding:0 0 0 8px">Add</button></div></div>'+
-      (existing?(existing.pair?'<p class="note rlink">'+(existing.type==="refund"?"↩︎ Reimbursement for a purchase logged together with it.":"↩︎ Has a linked reimbursement in your transactions.")+'</p>':'')
+      (existing?''
         :'<div class="tcard rcard" id="f-rcard"><label class="trow"><span>Reimbursed</span><label class="tgl tglsm"><input type="checkbox" id="f-rb" role="switch" aria-label="Getting money back"><span class="sw"></span></label></label>'+
           '<div class="rbody" id="f-rbody" hidden>'+
             '<div class="trow"><span>Amount back</span><div class="rchips"><button type="button" data-rq="1">Full</button><button type="button" data-rq=".5">Half</button></div><input class="tin num" id="f-ramt" inputmode="decimal" autocomplete="off" placeholder="$0.00" aria-label="Amount reimbursed"></div>'+
@@ -2909,6 +2917,12 @@ function txSheet(existing){
         rdate.addEventListener("change",()=>{s.querySelector("#f-rdtxt").textContent=rdate.value?fmtLong(rdate.value):"Same day"});
         const pa=press;press=k=>{pa(k);drawR()}; // keep "Full" in step with the amount pad
         s.querySelector("#f-kind").addEventListener("click",()=>setTimeout(drawR,0))}
+      // jump between a purchase and its reimbursement
+      const pairB=s.querySelector("#f-pair");
+      if(pairB)pairB.onclick=async()=>{let pr=txPool().find(t=>t.id===existing.pair);
+        if(!pr&&S.db){try{const d=await S.db.doc("tx/"+existing.pair).get();if(d&&d.exists)pr=Object.assign({id:existing.pair},d.data())}catch(_){}}
+        if(!pr){toast("Couldn't find the linked transaction. It may have been deleted.");return}
+        try{haptic()}catch(_){}txSheet(pr)};
       let rMeth="Venmo";
       s.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",()=>{rMeth=b.dataset.rm;s.querySelectorAll("[data-rm]").forEach(x=>x.setAttribute("aria-checked",String(x===b)));try{haptic()}catch(_){}}));
       const vrow=s.querySelector("#f-vrow"),rcard=s.querySelector("#f-rcard");
