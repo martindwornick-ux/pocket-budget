@@ -1,5 +1,5 @@
 /* Pocket Budget service worker: opens offline, picks up updates when online. */
-const VERSION = "pb-2026-10-27i";
+const VERSION = "pb-2026-10-28a";
 const SHELL = ["./", "./index.html", "./platform.js", "./config.js", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
@@ -29,4 +29,13 @@ self.addEventListener("fetch", e => {
     })));
   }
   // everything else (your database, the sheet script) goes straight to the network
+});
+
+// tapping a notification opens (or brings back) the app
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+    for (const c of list) { if ("focus" in c) return c.focus(); }
+    return self.clients.openWindow((e.notification.data && e.notification.data.url) || "./");
+  }));
 });

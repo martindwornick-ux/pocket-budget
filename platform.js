@@ -258,6 +258,9 @@ function openSettings(){
       '<div class="pbx-row" style="margin-top:0"><button class="pbx-btn sec" id="pbx-test">Test</button><button class="pbx-btn" id="pbx-save">Save</button></div></section>'+
     '<section class="pbx-sec"><h3>Backup</h3><p>Save a copy of everything, or bring in a backup file. Importing replaces records with the same month or ID and keeps the rest.</p>'+
       '<button class="pbx-btn sec" id="pbx-exp">Save a backup</button><div style="height:10px"></div>'+importBlock+'</section>'+
+    '<section class="pbx-sec"><h3>Notifications <span class="pbx-pill" data-pbx-npill></span></h3><p>Check that Pocket Budget can show notifications on this phone.</p>'+
+      '<p data-pbx-nstat class="pbx-note" style="margin:0 0 10px"></p>'+
+      '<div class="pbx-row" style="margin-top:0"><button class="pbx-btn sec" id="pbx-ntest">Send test now</button><button class="pbx-btn sec" id="pbx-nlater">Test in 10 sec</button></div></section>'+
     '<section class="pbx-sec"><h3>Account</h3><p>Signed in as <b>'+esc(P.user&&P.user.email)+'</b></p><button class="pbx-btn danger" id="pbx-out">Sign out</button></section>'+
     '<p class="pbx-note" style="text-align:center;margin:0 0 12px">App version: '+esc(window.PB_BUILD||"unknown")+'</p><button class="pbx-btn sec" id="pbx-close">Done</button></div>';
   document.body.appendChild(sc);document.body.style.overflow="hidden";
@@ -272,6 +275,36 @@ function openSettings(){
   importUI(sc,{});
   sc.querySelector("#pbx-out").onclick=async()=>{closeSettings();await P.auth.signOut();location.reload()};
   sc.querySelector("#pbx-close").onclick=closeSettings;
+  notifyUI(sc);
+}
+
+/* ---------- notification test ----------
+   iPhone shows web-app notifications only for apps opened from the Home Screen (iOS 16.4+),
+   and only after you allow them from a tap. These are sent by the app itself, as a check that
+   notifications reach the lock screen / Notification Center. */
+function notifyState(){
+  if(!("Notification" in window)||!("serviceWorker" in navigator)){
+    const ios=/iPhone|iPad|iPod/.test(navigator.userAgent),home=window.navigator.standalone||matchMedia("(display-mode: standalone)").matches;
+    return{ok:false,msg:ios&&!home?"Open Pocket Budget from its Home Screen icon to use notifications.":"This browser can't show notifications."}}
+  const p=Notification.permission;
+  return{ok:true,perm:p,msg:p==="granted"?"Allowed. Tap a test button.":p==="denied"?"Turned off. Turn them on in iPhone Settings → Notifications → Pocket Budget (or Budget).":"Not asked yet. The first test will ask you to allow them."}}
+async function sendTestNotice(delay){
+  const st=notifyState();if(!st.ok)throw new Error(st.msg);
+  let p=Notification.permission;if(p==="default")p=await Notification.requestPermission();
+  if(p!=="granted")throw new Error(p==="denied"?"Notifications are turned off for Pocket Budget. Turn them on in iPhone Settings → Notifications.":"Notifications weren't allowed.");
+  const reg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),4000))]);
+  if(!reg)throw new Error("The app's background helper isn't running yet. Close Pocket Budget completely, reopen it, and try again.");
+  const fire=()=>reg.showNotification("Pocket Budget",{body:delay?"Delayed test notification ✓ It works even after you leave the app.":"Test notification ✓ Notifications are working.",icon:"icon-192.png",badge:"icon-192.png",tag:"pb-test-"+Date.now(),data:{url:"./"}});
+  if(!delay)return fire();
+  setTimeout(()=>{fire().catch(()=>{})},delay);
+}
+function notifyUI(sc){
+  const pill=sc.querySelector("[data-pbx-npill]"),st=sc.querySelector("[data-pbx-nstat]");
+  const draw=(msg,ok)=>{const s=notifyState(),on=s.ok&&s.perm==="granted";pill.className="pbx-pill "+(on?"on":"off");pill.textContent=on?"Allowed":s.ok&&s.perm==="denied"?"Off":s.ok?"Not set":"Unavailable";
+    st.className=ok===true?"pbx-ok":ok===false?"pbx-err":"pbx-note";st.style.margin="0 0 10px";st.textContent=msg||s.msg};
+  draw();
+  sc.querySelector("#pbx-ntest").onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{await sendTestNotice(0);draw("Sent. Look for it at the top of the screen.",true)}catch(x){draw(x.message,false)}b.disabled=false};
+  sc.querySelector("#pbx-nlater").onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{await sendTestNotice(10000);draw("Coming in 10 seconds. Go to your Home Screen to see it arrive.",true)}catch(x){draw(x.message,false)}b.disabled=false};
 }
 function toast(msg){const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
 function addGear(){
