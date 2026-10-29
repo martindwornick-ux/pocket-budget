@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 29, 6:05 PM"</script>
+<script>window.PB_BUILD="Oct 29, 6:20 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -95,6 +95,10 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .futw.shut .futb{grid-template-rows:0fr;opacity:0;margin-bottom:0}
 .futi{overflow:hidden;min-height:0}
 .futc{display:flex;flex-direction:column;gap:16px;padding:16px 16px 14px}
+.mtag{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:999px;background:var(--sel);color:var(--brand);font-size:11px;letter-spacing:.04em;vertical-align:1px}
+.mpill{display:inline-block;margin-right:8px;padding:2px 9px;border-radius:999px;background:var(--sel);color:var(--brand);font-size:13px;font-weight:600}
+.mpill.pop{animation:mpop .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes mpop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1145,7 +1149,7 @@ $("#main").addEventListener("click",e=>{const del=e.target.closest("[data-del]")
   if(SW.openRow){e.stopPropagation();e.preventDefault();swClose(SW.openRow)}},true);
 document.addEventListener("scroll",()=>{if(SW.openRow)swClose(SW.openRow)},{passive:true});
 function confirmDelete(id){
-  const t=S.tx.find(x=>x.id===id);if(!t)return;
+  const t=S.tx.concat(S.nextTx||[]).find(x=>x.id===id);if(!t)return;
   const synced=t.sheet==="synced";
   const root=document.createElement("div");root.className="alrt";root.setAttribute("role","alertdialog");root.setAttribute("aria-modal","true");
   root.innerHTML='<div class="abox"><h3>Delete transaction?</h3><p>Do you want to delete <b>'+esc(t.merchant||"Purchase")+'</b> for <b class="num">'+money(+t.amount||0)+'</b>?</p>'+(synced?'<p class="anote">It\'s already in your Finance Tracker, so remove that row from the sheet too.</p>':'<p class="anote">This can\'t be undone.</p>')+
@@ -1327,7 +1331,8 @@ function renderTx(groups){
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
   if(!list.length)return h+'<div class="card empty"><h3>No transactions this month</h3>Tap + to log a purchase. It takes about five seconds.</div>';
   const td0=today();
-  const fut=(!q&&!S.upcoming)?list.filter(t=>t.date>td0):[];
+  const nx=(!q&&!S.upcoming&&S.nextTx)?S.nextTx.slice().sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.createdAt||"").localeCompare(a.createdAt||"")):[];
+  const fut=(!q&&!S.upcoming)?nx.concat(list.filter(t=>t.date>td0)):[];
   if(fut.length){
     const rest=list.filter(t=>t.date<=td0);
     const hid=ls.get("pb.futHide")==="1";
@@ -1340,7 +1345,7 @@ function renderTx(groups){
 function txDays(list,groups){
   let h="",day=null,open=false;
   list.forEach(t=>{
-    if(t.date!==day){if(open)h+="</section>";day=t.date;const dsum=round2(list.filter(x=>x.date===day).reduce((a,x)=>a+sAmt(x),0));h+='<div class="daylabel num">'+esc(fmtDay(day))+' · '+money(dsum)+'</div><section class="card" style="padding-block:4px">';open=true}
+    if(t.date!==day){if(open)h+="</section>";day=t.date;const dsum=round2(list.filter(x=>x.date===day).reduce((a,x)=>a+sAmt(x),0));h+='<div class="daylabel num">'+esc(fmtDay(day))+' · '+money(dsum)+(ymOf(day)!==S.ym?'<span class="mtag">'+MONTHS[+day.slice(5,7)-1].slice(0,3)+' budget</span>':'')+'</div><section class="card" style="padding-block:4px">';open=true}
     const ref=t.type==="refund"||t.type==="income";
     const sw=!isHist(t);
     if(sw)h+='<div class="swr"><button class="swdel" data-del="'+esc(t.id)+'" tabindex="-1" aria-label="Delete '+esc(t.merchant||"Purchase")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>Delete</button>';
@@ -2694,8 +2699,8 @@ document.addEventListener("keydown",e=>{if(!PAD||e.target.closest&&e.target.clos
   const m={"Backspace":"⌫","Delete":"⌫","+":"+","-":"−","*":"×","/":"÷","=":"="};
   if(/^\d$/.test(e.key)){padKey(e.key);e.preventDefault()}else if(e.key==="Enter"){commitPad();e.preventDefault()}else if(m[e.key]&&(PAD.calc||m[e.key]==="⌫")){padKey(m[e.key]);e.preventDefault()}});
 
-function categoryOptions(groups,sel){
-  let h='';const inc=incomeFor(S.ym);if(inc.length){h+='<optgroup label="Income received">';inc.forEach(x=>h+='<option value="'+esc(x.id)+'"'+(x.id===sel?" selected":"")+'>'+esc(x.name)+'</option>');h+='</optgroup>'}
+function categoryOptions(groups,sel,ym){
+  let h='';const inc=incomeFor(ym||S.ym);if(inc.length){h+='<optgroup label="Income received">';inc.forEach(x=>h+='<option value="'+esc(x.id)+'"'+(x.id===sel?" selected":"")+'>'+esc(x.name)+'</option>');h+='</optgroup>'}
   groups.forEach(g=>{h+='<optgroup label="'+esc(g.name)+'">';g.items.forEach(it=>h+='<option value="'+esc(it.id)+'"'+(it.id===sel?" selected":"")+'>'+esc(it.name)+'</option>');h+='</optgroup>'});
   return h;
 }
@@ -2762,7 +2767,7 @@ function txSheet(existing){
       (existing&&(existing.pair?(()=>{const pr=txPool().find(t=>t.id===existing.pair),isR=existing.type==="refund";
           return '<button type="button" class="rlinkbtn" id="f-pair"><span class="ri">'+(isR?"↩︎":"↪︎")+'</span><span class="rt"><small>'+(isR?"Reimbursement for":"Paid back by")+'</small><b>'+(pr?esc(pr.merchant||"Purchase")+' · '+(pr.type==="refund"?"+":"")+money(+pr.amount||0):(isR?"the original purchase":"the reimbursement"))+'</b>'+(pr?'<span>'+esc(fmtLong(pr.date))+'</span>':'')+'</span>'+CHEV+'</button>'})():'')||'')+
       '<div class="tcard">'+
-        '<div class="trow"><span>Date</span><span class="tv" id="f-dtxt">'+esc(fmtLong(d))+'</span><input class="ovl" id="f-date" type="date" value="'+esc(d)+'" aria-label="Date"></div>'+
+        '<div class="trow"><span>Date</span><span class="tv"><span class="mpill" id="f-mpill"'+(ymOf(d)===S.ym?' hidden':'')+'>→ '+MONTHS[+d.slice(5,7)-1]+'</span><span id="f-dtxt">'+esc(fmtLong(d))+'</span></span><input class="ovl" id="f-date" type="date" value="'+esc(d)+'" aria-label="Date"></div>'+
         '<label class="trow"><span>Merchant</span><input class="tin" id="f-mer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-msug" aria-expanded="false" placeholder="Name" value="'+esc(merch0)+'"></label>'+
         '<div class="msug" id="f-msug" role="listbox" aria-label="Past merchants" hidden></div>'+
         '<label class="trow" id="f-vrow"><span>Venmo</span><input type="checkbox" class="tchk" id="f-venmo"'+(venmo0?" checked":"")+'></label>'+
@@ -2772,7 +2777,7 @@ function txSheet(existing){
         '<div class="msug lsug" id="f-lsug" role="listbox" aria-label="Location suggestions" hidden></div>'+
         (existing?'':'<div class="near" id="f-near" hidden></div>')+
       '</div>'+
-      '<div class="tcard"><div class="trow crow"><span>Budget Item</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel)+'</select></span></div>'+
+      '<div class="tcard"><div class="trow crow"><span>Budget Item</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel,ymOf(d))+'</select></span></div>'+
         '<div class="msug csug" id="f-csug" role="listbox" aria-label="Budget item suggestions" hidden></div><div class="cplace" id="f-cplace" hidden></div><div class="trow" id="f-subrow" hidden><span>Subcategory</span><span class="tv" id="f-stxt"></span><select class="ovl" id="f-sub" aria-label="Misc subcategory"><option value="">Select</option>'+SUB.list.map(x=>'<option'+(existing&&existing.sub===x?" selected":"")+'>'+esc(x)+'</option>').join("")+'<option value="__new">+ New subcategory…</option></select></div><div class="trow" id="f-newsub" hidden><input class="tin" id="f-newsubin" autocomplete="off" maxlength="40" enterkeyhint="done" placeholder="New subcategory name" aria-label="New subcategory name" style="text-align:left"><button class="addlink" id="f-newsubok" style="padding:0 0 0 8px">Add</button></div></div>'+
       (existing?''
         :'<div class="tcard rcard" id="f-rcard"><label class="trow"><span>Reimbursed</span><label class="tgl tglsm"><input type="checkbox" id="f-rb" role="switch" aria-label="Getting money back"><span class="sw"></span></label></label>'+
@@ -2939,7 +2944,11 @@ function txSheet(existing){
       s.querySelector("#f-x").onclick=closeSheet;
       s.querySelector("#f-save2").onclick=()=>save();
       s.querySelector("#f-kind").onclick=e=>{const b=e.target.closest("button");if(!b)return;kind=b.dataset.k;s.querySelectorAll("#f-kind button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.k===kind)));drawAmt()};
-      const dIn=s.querySelector("#f-date");dIn.addEventListener("change",()=>{if(dIn.value)s.querySelector("#f-dtxt").textContent=fmtLong(dIn.value)});
+      const dIn=s.querySelector("#f-date");let dYm=ymOf(d);dIn.addEventListener("change",()=>{if(!dIn.value)return;s.querySelector("#f-dtxt").textContent=fmtLong(dIn.value);
+        const ym=ymOf(dIn.value),mp=s.querySelector("#f-mpill");mp.textContent="→ "+MONTHS[+dIn.value.slice(5,7)-1];if(ym!==S.ym&&mp.hidden){mp.hidden=false;mp.classList.remove("pop");void mp.offsetWidth;mp.classList.add("pop")}else if(ym===S.ym)mp.hidden=true;
+        if(ym!==dYm){dYm=ym;const prev=cat.value,gs=groupsFor(ym),ok=!prev||findItem(gs,prev)||incomeFor(ym).some(x=>x.id===prev);
+          cat.innerHTML='<option value="">Select</option>'+categoryOptions(gs,ok?prev:"",ym);cat.value=ok?prev:"";drawCat();
+          if(!ok){cq.value="";toast("Pick a "+MONTHS[+ym.slice(5,7)-1]+" budget item")}}});
       cat.addEventListener("change",()=>{drawCat();cq.value=catLabel();cplace.hidden=true;s.querySelector(".crow").classList.remove("auto")});
       s.addEventListener("keydown",e=>{if(e.target.closest("input,select,textarea")||s.classList.contains("kboff"))return;
         const m={"Backspace":"⌫","Delete":"⌫","+":"+","-":"−","*":"×","/":"÷","=":"="};
@@ -3162,7 +3171,7 @@ $("#main").addEventListener("click",e=>{
   else if(t.dataset.item)itemSheet(t.dataset.item,t.dataset.msub);
   else if(t.dataset.gmenu)groupSheet(t.dataset.gmenu);
   else if(t.dataset.additem)newItemSheet(t.dataset.additem);
-  else if(t.dataset.tx){const x=S.tx.find(y=>y.id===t.dataset.tx);if(x)isHist(x)?histSheet(x):txSheet(x)}
+  else if(t.dataset.tx){const x=S.tx.concat(S.nextTx||[]).find(y=>y.id===t.dataset.tx);if(x)isHist(x)?histSheet(x):txSheet(x)}
   else if(t.dataset.tabGo){S.tab=t.dataset.tabGo;render()}
   else if(t.id==="addGroup")groupSheet(null);
   else if(t.id==="exportCsv")exportCsv();
@@ -3177,8 +3186,11 @@ async function syncAll(btn){
 
 /* ---------- data ---------- */
 let histUnsub=null;
+function nextYm(ym){const [y,m]=ym.split("-").map(Number);const d=new Date(y,m,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)}
+let nextUnsub=null;
 function subscribeTx(){
-  if(!S.db)return;txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;S.txLoaded=false;S.tx=[];
+  if(!S.db)return;txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;nextUnsub&&nextUnsub();nextUnsub=null;S.txLoaded=false;S.tx=[];S.nextTx=[];
+  if(S.ym===ymOf(today())){const ny=nextYm(S.ym),cy=S.ym;nextUnsub=S.db.collection("tx").where("date",">=",ny+"-01").where("date","<=",ny+"-31").limit(1000).onSnapshot(snap=>{if(cy!==S.ym)return;S.nextTx=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render()},()=>{})}
   const ym=S.ym;let live=[],past=[],gotLive=false,gotPast=ym>=HIST_BEFORE;
   const merge=()=>{if(ym!==S.ym)return;S.tx=live.concat(past);S.txLoaded=gotLive&&gotPast;render();if(S.txLoaded)setTimeout(reconcileSheet,800)};
   txUnsub=S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).onSnapshot(snap=>{
