@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 28, 6:30 PM"</script>
+<script>window.PB_BUILD="Oct 29, 6:05 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -87,6 +87,14 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--nav);
 nav.tabs button{padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
 nav.tabs button svg{width:28px;height:28px}
 nav.tabs button[aria-current="page"]{color:var(--bar)}
+.futw{display:flex;flex-direction:column}
+.futh{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 4px;margin:-6px 0 -8px;background:none;border:0;font:inherit;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--brand);font-weight:700;cursor:pointer}
+.futh svg{transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+.futw.shut .futh svg{transform:rotate(-90deg)}
+.futb{display:grid;grid-template-rows:1fr;margin:0 -16px -14px;transition:grid-template-rows .36s cubic-bezier(.2,.8,.2,1),opacity .28s ease,margin .36s cubic-bezier(.2,.8,.2,1)}
+.futw.shut .futb{grid-template-rows:0fr;opacity:0;margin-bottom:0}
+.futi{overflow:hidden;min-height:0}
+.futc{display:flex;flex-direction:column;gap:16px;padding:16px 16px 14px}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1318,7 +1326,19 @@ function renderTx(groups){
   if(pending.length)h+='<div class="card" style="padding:14px 18px"><div class="irow" style="font-size:16px"><span class="nm"><b>'+pending.length+' not in your sheet yet</b></span><button class="addlink" style="padding:0" id="syncAll">Send to sheet</button></div><p class="note" style="margin:6px 0 0">'+esc(pending[0].sheetMsg||"These were saved here but haven't reached your Transactions tab.")+'</p></div>';
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
   if(!list.length)return h+'<div class="card empty"><h3>No transactions this month</h3>Tap + to log a purchase. It takes about five seconds.</div>';
-  let day=null,open=false;
+  const td0=today();
+  const fut=(!q&&!S.upcoming)?list.filter(t=>t.date>td0):[];
+  if(fut.length){
+    const rest=list.filter(t=>t.date<=td0);
+    const hid=ls.get("pb.futHide")==="1";
+    const fsum=round2(fut.reduce((a,t)=>a+sAmt(t),0));
+    h+='<div class="futw'+(hid?' shut':'')+'"><button class="futh" id="futTog" aria-expanded="'+(!hid)+'"><span>Upcoming · '+fut.length+' · <span class="num">'+money(fsum)+'</span></span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="futb"><div class="futi"><div class="futc">'+txDays(fut,groups)+'</div></div></div></div>';
+    return h+txDays(rest,groups);
+  }
+  return h+txDays(list,groups);
+}
+function txDays(list,groups){
+  let h="",day=null,open=false;
   list.forEach(t=>{
     if(t.date!==day){if(open)h+="</section>";day=t.date;const dsum=round2(list.filter(x=>x.date===day).reduce((a,x)=>a+sAmt(x),0));h+='<div class="daylabel num">'+esc(fmtDay(day))+' · '+money(dsum)+'</div><section class="card" style="padding-block:4px">';open=true}
     const ref=t.type==="refund"||t.type==="income";
@@ -3133,6 +3153,7 @@ $("#main").addEventListener("click",e=>{
   if(e.target.closest("#txqClear")){S.q="";render();const i=$("#txq");i&&i.focus();return}
   if(e.target.closest("#histImport")){importHistory();return}
   if(e.target.closest("[data-upcoming]")){S.upcoming=true;S.q="";S.tab="tx";try{haptic()}catch(_){}render();window.scrollTo(0,0);return}
+  if(e.target.closest("#futTog")){const w=e.target.closest(".futw");const shut=!w.classList.contains("shut");w.classList.toggle("shut",shut);ls.set("pb.futHide",shut?"1":"0");e.target.closest("#futTog").setAttribute("aria-expanded",String(!shut));try{haptic()}catch(_){}return}
   if(e.target.closest("#clrUp")){S.upcoming=false;render();return}
   const pv=e.target.closest("[data-plan],[data-iplan]");if(pv){pv.dataset.plan?padOpen("item",pv.dataset.plan):padOpen("income",pv.dataset.iplan);return}
   const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#exportCsv");if(!t)return;
