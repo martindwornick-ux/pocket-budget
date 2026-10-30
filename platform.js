@@ -218,12 +218,25 @@ async function importBackup(file,onProgress){
   }
   return writes.length;
 }
-async function exportBackup(){
+async function buildBackup(){
   const B=base(),out={};
   for(const c of COLLS){const s=await B.collection(c).get();out[c]={};s.docs.forEach(d=>out[c][d.id]=d.data())}
   const d=new Date(),stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-  await saveFile("pocket-budget-backup-"+stamp+".json",JSON.stringify({app:"pocket-budget",version:2,exported:stamp,collections:out}),"application/json");
+  return {name:"pocket-budget-backup-"+stamp+".json",json:JSON.stringify({app:"pocket-budget",version:2,exported:stamp,collections:out})};
 }
+async function exportBackup(){const b=await buildBackup();await saveFile(b.name,b.json,"application/json")}
+/* ---------- weekly backup to Google Drive, through the same Apps Script as sheet sync ---------- */
+const DRIVE_EVERY=7*864e5;
+async function driveBackup(){const b=await buildBackup();const j=await callScript({action:"backup",name:b.name,data:b.json});
+  LS.set("pb.driveAt",String(Date.now()));LS.set("pb.driveUrl",j.url||"");LS.set("pb.driveErr",null);return j}
+function driveStatus(){const at=+LS.get("pb.driveAt")||0,err=LS.get("pb.driveErr");
+  if(err==="script")return "Your sheet script needs the backup update (see the note from Claude).";
+  if(err)return "Last try didn't work. It'll try again tomorrow.";
+  if(!at)return "No Drive backup yet.";
+  const d=new Date(at);return "Last backup "+d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" · next one about "+new Date(at+DRIVE_EVERY).toLocaleDateString("en-US",{month:"short",day:"numeric"})}
+async function autoDrive(){try{const c=sheetCfg();if(!c.url||!c.key)return;const at=+LS.get("pb.driveAt")||0,tr=+LS.get("pb.driveTry")||0,now=Date.now();
+  if(now-at<DRIVE_EVERY||now-tr<864e5)return;LS.set("pb.driveTry",String(now));await driveBackup()}
+  catch(e){LS.set("pb.driveErr",e&&e.message==="unknown_action"?"script":"fail")}}
 function importUI(root,{onDone}){
   root.querySelector("[data-pbx-file]").addEventListener("change",async e=>{
     const f=e.target.files&&e.target.files[0];if(!f)return;
@@ -257,7 +270,9 @@ function openSettings(){
       '<p data-pbx-sstat class="pbx-note" style="margin:0 0 10px"></p>'+
       '<div class="pbx-row" style="margin-top:0"><button class="pbx-btn sec" id="pbx-test">Test</button><button class="pbx-btn" id="pbx-save">Save</button></div></section>'+
     '<section class="pbx-sec"><h3>Backup</h3><p>Save a copy of everything, or bring in a backup file. Importing replaces records with the same month or ID and keeps the rest.</p>'+
-      '<button class="pbx-btn sec" id="pbx-exp">Save a backup</button><div style="height:10px"></div>'+importBlock+'</section>'+
+      '<button class="pbx-btn sec" id="pbx-exp">Save a backup</button><div style="height:10px"></div>'+importBlock+
+      '<h3 style="margin-top:16px">Google Drive</h3><p>Every week a backup is saved automatically to the <b>Pocket Budget Backups</b> folder in your Google Drive. The last 8 are kept.</p><p data-pbx-dstat class="pbx-note" style="margin:0 0 10px">'+esc(driveStatus())+'</p>'+
+      '<div class="pbx-row" style="margin-top:0"><button class="pbx-btn sec" id="pbx-drive">Back up to Drive now</button>'+(LS.get("pb.driveUrl")?'<a class="pbx-btn sec" style="text-align:center;text-decoration:none" href="'+esc(LS.get("pb.driveUrl"))+'" target="_blank" rel="noopener">Open latest</a>':'')+'</div></section>'+
     '<section class="pbx-sec"><h3>Notifications <span class="pbx-pill" data-pbx-npill></span></h3><p>Check that Pocket Budget can show notifications on this phone.</p>'+
       '<p data-pbx-nstat class="pbx-note" style="margin:0 0 10px"></p>'+
       '<div class="pbx-row" style="margin-top:0"><button class="pbx-btn sec" id="pbx-ntest">Send test now</button><button class="pbx-btn sec" id="pbx-nlater">Test in 10 sec</button></div></section>'+
@@ -272,6 +287,10 @@ function openSettings(){
     catch(x){say(x.code==="wrong_key"?"Wrong key. Copy the value in quotes on the KEY line of apps-script.gs.":x.code==="network"?"Couldn't reach the script. Check the URL and your connection.":x.message,false)}};
   sc.querySelector("#pbx-save").onclick=()=>{const v=val();LS.set("pb.sheetUrl",v.url||null);LS.set("pb.sheetKey",v.key||null);closeSettings();toast(v.url&&v.key?"Sheet sync saved":"Sheet sync turned off")};
   sc.querySelector("#pbx-exp").onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent="Preparing…";try{await exportBackup()}catch(x){toast("Couldn't make a backup")}b.disabled=false;b.textContent="Save a backup"};
+  sc.querySelector("#pbx-drive").onclick=async e=>{const b=e.currentTarget,ds=sc.querySelector("[data-pbx-dstat]");b.disabled=true;b.textContent="Backing up…";
+    try{await driveBackup();ds.className="pbx-ok";ds.textContent="Saved to Google Drive · "+driveStatus().replace(/^Last backup [^·]+· /,"")}
+    catch(x){LS.set("pb.driveErr",x.message==="unknown_action"?"script":x.code==="not_configured"?null:"fail");ds.className="pbx-err";ds.textContent=x.message==="unknown_action"?"Your sheet script needs the backup update first.":x.code==="not_configured"?"Set up Google Sheet sync above first.":x.code==="network"?"Couldn't reach your script. Check your connection.":"Couldn't save: "+x.message}
+    b.disabled=false;b.textContent="Back up to Drive now"};
   importUI(sc,{});
   sc.querySelector("#pbx-out").onclick=async()=>{closeSettings();await P.auth.signOut();location.reload()};
   sc.querySelector("#pbx-close").onclick=closeSettings;
@@ -336,7 +355,7 @@ async function start(){
     let empty=false;
     try{const s=await base().collection("budgets").limit(1).get();empty=s.empty}
     catch(e){const c=e&&e.code;showGate('<h1>Almost there</h1><p class="pbx-err">'+(c==="permission-denied"?"Your database refused access. In Firebase, open Firestore → Rules, paste firestore.rules and Publish.":"Couldn't reach your database: "+esc(e.message||c))+'</p><button class="pbx-btn" onclick="location.reload()">Try again</button>');return}
-    hideGate();addGear();dbResolve(DB);
+    hideGate();addGear();dbResolve(DB);setTimeout(autoDrive,12000);
     if(empty&&!LS.get("pb.firstRunDone:"+u.uid))firstRunScreen();
   });
 }

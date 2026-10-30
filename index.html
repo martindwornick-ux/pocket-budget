@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 12:30 AM"</script>
+<script>window.PB_BUILD="Oct 30, 1:00 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -159,6 +159,14 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .clw{margin-top:5px;font-size:13px;color:var(--over);font-weight:600}
 .ptoday .ptb{display:block;height:4px;border-radius:2px;background:var(--trk);margin-top:6px;overflow:hidden}
 .ptoday .ptb i{display:block;height:100%;border-radius:2px;background:var(--prog);transition:width .6s cubic-bezier(.3,1.3,.5,1)}
+.txs .tx-cam{width:44px;height:44px;display:grid;place-items:center;grid-column:1;grid-row:1;color:var(--link);background:none;border:0;padding:0}
+.txs .tx-cam svg{width:26px;height:26px}
+.txs .thead h3{grid-row:1}.txs .tx-x{grid-row:1}
+.rscan{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:rsin .25s ease;border-radius:inherit}
+.rscan.out{opacity:0;transition:opacity .25s}
+@keyframes rsin{from{opacity:0}}
+.rsc{width:min(280px,80%);text-align:center}.rsc b{display:block;font-size:17px;margin-top:12px}.rsc span{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.rsb{height:6px;border-radius:3px;background:var(--trk);overflow:hidden}.rsb i{display:block;height:100%;width:4%;background:var(--brand);transition:width .3s}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -2862,6 +2870,41 @@ function celebrate(amount,merchant,kind){
   el.addEventListener("click",close);setTimeout(close,reduce?1400:2100);
 }
 function reimbFroms(){const seen={};txPool().forEach(t=>{if(t.reimbFrom)seen[t.reimbFrom]=(seen[t.reimbFrom]||0)+1});return Object.keys(seen).sort((a,b)=>seen[b]-seen[a]).slice(0,12)}
+/* ---------- receipt scanning (on the phone, with Tesseract.js; nothing is uploaded) ---------- */
+let TESS=null;
+function loadTess(){if(window.Tesseract)return Promise.resolve();if(TESS)return TESS;
+  TESS=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";sc.onload=ok;sc.onerror=()=>{TESS=null;no(new Error("load"))};document.head.appendChild(sc)});return TESS}
+function receiptCanvas(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,1700/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+  const x=c.getContext("2d");x.drawImage(im,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height),a=d.data;
+  for(let i=0;i<a.length;i+=4){let g=.299*a[i]+.587*a[i+1]+.114*a[i+2];g=Math.max(0,Math.min(255,(g-128)*1.5+140));a[i]=a[i+1]=a[i+2]=g}x.putImageData(d,0,0);URL.revokeObjectURL(u);ok(c)};im.onerror=()=>{URL.revokeObjectURL(u);no(new Error("image"))};im.src=u})}
+function parseReceipt(text,known){
+  const lines=String(text||"").split(/\n/).map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean),MON=/(\d{1,4}(?:,\d{3})*[.,]\d{2})(?!\d)/g;
+  const nums=l=>[...l.matchAll(MON)].map(m=>parseFloat(m[1].replace(/,(?=\d{3})/g,"").replace(",",".")));
+  let amount=0;const tot=lines.filter(l=>/(grand\s*total|total\s*due|amount\s*due|balance\s*due|\btotal\b|amount\s*paid|\bpaid\b)/i.test(l)&&!/(sub\s*-?\s*total|tax|sav|discount|tip|change|items?\s*sold|you\s*saved)/i.test(l));
+  for(const l of tot.reverse()){const v=nums(l).filter(v=>v>0&&v<20000);if(v.length){amount=v[v.length-1];break}}
+  if(!amount){const all=lines.flatMap(nums).filter(v=>v>0&&v<5000);if(all.length)amount=Math.max(...all)}
+  let date="";const now=new Date(),okD=(y,m,d)=>{if(y<100)y+=2000;const dt=new Date(y,m-1,d);if(dt.getMonth()!==m-1||dt>new Date(now.getTime()+864e5)||now-dt>400*864e5)return"";return y+"-"+pad(m)+"-"+pad(d)};
+  const MN={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  for(const l of lines){let m;
+    if((m=l.match(/\b(20\d{2})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/))&&(date=okD(+m[1],+m[2],+m[3])))break;
+    if((m=l.match(/\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/))&&(date=okD(+m[3],+m[1],+m[2])))break;
+    if((m=l.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2}),?\s+(20\d{2})\b/i))&&(date=okD(+m[3],MN[m[1].toLowerCase()],+m[2])))break}
+  let merchant="";const low=lines.join(" ").toLowerCase();
+  const hit=(known||[]).filter(k=>k&&k.length>=4&&low.includes(k.toLowerCase())).sort((a,b)=>b.length-a.length)[0];
+  if(hit)merchant=hit;else{for(const l of lines.slice(0,6)){const letters=(l.match(/[a-z]/gi)||[]).length;
+    if(letters<3||letters<l.length*.5||/(receipt|welcome|thank|store\s*#|tel|phone|www|\.com|http|cashier|order)/i.test(l)||/^\d/.test(l))continue;
+    merchant=l.replace(/[^a-z0-9&' .-]/gi,"").trim().toLowerCase().replace(/(^|[\s&.-])([a-z])/g,(m,p,c)=>p+c.toUpperCase()).slice(0,40);break}}
+  return {amount:Math.round(amount*100)/100,date,merchant};
+}
+async function scanReceipt(file,sheet){
+  const ov=document.createElement("div");ov.className="rscan";ov.innerHTML='<div class="rsc"><div class="rsb"><i></i></div><b>Reading receipt…</b><span>Stays on your phone. First scan downloads the reader.</span></div>';sheet.appendChild(ov);
+  const bar=ov.querySelector(".rsb i"),lab=ov.querySelector("b");
+  try{const [c]=await Promise.all([receiptCanvas(file),loadTess()]);
+    const res=await Tesseract.recognize(c,"eng",{logger:m=>{if(m&&m.status==="recognizing text"){bar.style.width=Math.round(m.progress*100)+"%";lab.textContent="Reading receipt… "+Math.round(m.progress*100)+"%"}else if(m&&m.status){lab.textContent=/load|init/i.test(m.status)?"Getting the reader ready…":"Reading receipt…"}}});
+    return parseReceipt(res&&res.data&&res.data.text,merchIndex().map(e=>e.name))}
+  catch(e){toast(e&&e.message==="load"?"Couldn't load the receipt reader. Check your connection":"Couldn't read that photo");return null}
+  finally{ov.classList.add("out");setTimeout(()=>ov.remove(),250)}
+}
 function txSheet(existing){
   const d=existing?existing.date:(S.ym===ymOf(today())?today():S.ym+"-01");
   const groups=groupsFor(ymOf(d));
@@ -2873,7 +2916,7 @@ function txSheet(existing){
   const T={cur:existing?String(Math.round(+existing.amount*100)):"",ops:[],fresh:!!existing,calc:ls.get("pb.calc")==="1"};
   const X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>';
   openSheet(
-    '<div class="thead"><h3 style="grid-column:2">'+(existing?"Edit Transaction":"Add Transaction")+'</h3><button class="tx-x" id="f-x" aria-label="Close">'+X+'</button></div>'+
+    '<div class="thead">'+(existing?'':'<button class="tx-cam" id="f-cam" aria-label="Scan a receipt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.2" r="3.4"/></svg></button><input type="file" accept="image/*" id="f-camin" hidden>')+'<h3 style="grid-column:2">'+(existing?"Edit Transaction":"Add Transaction")+'</h3><button class="tx-x" id="f-x" aria-label="Close">'+X+'</button></div>'+
     '<div class="tseg" id="f-kind" role="group" aria-label="Type"><button data-k="expense" aria-pressed="'+(kind==="expense")+'">- Expense</button><button data-k="refund" aria-pressed="'+(kind==="refund")+'">+ Income</button></div>'+
     '<div class="tbody">'+
       '<button class="tamt num" id="f-amt" aria-label="Amount, tap to edit"></button>'+
@@ -3065,7 +3108,13 @@ function txSheet(existing){
       s.querySelector("#f-x").onclick=closeSheet;
       s.querySelector("#f-save2").onclick=()=>save();
       s.querySelector("#f-kind").onclick=e=>{const b=e.target.closest("button");if(!b)return;kind=b.dataset.k;s.querySelectorAll("#f-kind button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.k===kind)));drawAmt()};
-      const dIn=s.querySelector("#f-date");let dYm=ymOf(d);dIn.addEventListener("change",()=>{if(!dIn.value)return;try{setTimeout(updLeft,0)}catch(_){}s.querySelector("#f-dtxt").textContent=fmtLong(dIn.value);
+      const dIn=s.querySelector("#f-date");let dYm=ymOf(d);
+      {const cam=s.querySelector("#f-cam"),cin=s.querySelector("#f-camin");if(cam&&cin){cam.onclick=()=>cin.click();cin.onchange=async()=>{const f=cin.files&&cin.files[0];cin.value="";if(!f)return;
+        const r=await scanReceipt(f,s);if(!r)return;let n=0;
+        if(r.amount>0){T.cur=String(Math.round(r.amount*100));T.ops=[];T.fresh=false;drawAmt();n++}
+        if(r.merchant){const mi=s.querySelector("#f-mer");mi.value=r.merchant;mi.dispatchEvent(new Event("input",{bubbles:true}));mi.dispatchEvent(new Event("change",{bubbles:true}));n++}
+        if(r.date&&r.date!==dIn.value){dIn.value=r.date;dIn.dispatchEvent(new Event("change",{bubbles:true}));n++}
+        try{haptic()}catch(_){}toast(n?"Filled from the receipt. Give it a quick check":"Couldn't read that receipt. Try a flatter, brighter photo")}}}dIn.addEventListener("change",()=>{if(!dIn.value)return;try{setTimeout(updLeft,0)}catch(_){}s.querySelector("#f-dtxt").textContent=fmtLong(dIn.value);
         const ym=ymOf(dIn.value),mp=s.querySelector("#f-mpill");mp.textContent="→ "+MONTHS[+dIn.value.slice(5,7)-1];if(ym!==S.ym&&mp.hidden){mp.hidden=false;mp.classList.remove("pop");void mp.offsetWidth;mp.classList.add("pop")}else if(ym===S.ym)mp.hidden=true;
         if(ym!==dYm){dYm=ym;const prev=cat.value,gs=groupsFor(ym),ok=!prev||findItem(gs,prev)||incomeFor(ym).some(x=>x.id===prev);
           cat.innerHTML='<option value="">Select</option>'+categoryOptions(gs,ok?prev:"",ym);cat.value=ok?prev:"";drawCat();
