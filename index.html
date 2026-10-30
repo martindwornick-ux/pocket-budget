@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 29, 11:55 PM"</script>
+<script>window.PB_BUILD="Oct 29, 11:35 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -148,22 +148,6 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 @keyframes msrShine{to{background-position:260% 0}}
 @media (prefers-reduced-motion:reduce){.msx,.msum svg{transition:none}}
 .nm.solo{color:var(--muted)}
-.citem[data-sc]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;border-radius:14px;transition:background .25s,transform .3s cubic-bezier(.3,1.5,.5,1),box-shadow .25s}
-.citem.scsrc{background:var(--trk);margin-inline:-8px;padding-inline:8px}
-.citem.sctgt{background:var(--sel);transform:scale(1.025);margin-inline:-8px;padding-inline:8px;box-shadow:0 6px 20px rgba(26,115,232,.18)}
-.citem.sctgt.scok{background:#e6f4ea;box-shadow:0 6px 20px rgba(24,128,56,.18)}
-.scpill{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:var(--brand);color:#fff;font-size:13px;font-weight:700;vertical-align:2px;animation:mpop .3s cubic-bezier(.3,1.8,.5,1)}
-.scok .scpill{background:var(--ok)}
-.citem.scpour{animation:scpour .6s cubic-bezier(.3,1.6,.5,1)}
-@keyframes scpour{30%{transform:scale(1.04)}100%{transform:none}}
-#scdrop{position:fixed;left:0;top:0;z-index:60;pointer-events:none;display:none;will-change:transform}
-#scdrop.on{display:block}
-#scdrop .scb{width:var(--d,34px);height:var(--d,34px);border-radius:50%;background:#1a73e8;transform:translate(-50%,-50%);transition:width .16s cubic-bezier(.3,1.7,.5,1),height .16s cubic-bezier(.3,1.7,.5,1);box-shadow:0 8px 22px rgba(26,115,232,.35)}
-#scdrop .scb::after{content:"";position:absolute;left:22%;top:16%;width:30%;height:26%;border-radius:50%;background:rgba(255,255,255,.55)}
-#scdrop .sca{position:absolute;left:0;top:0;transform:translate(-50%,-50%);color:#fff;font-weight:700;font-size:14px;white-space:nowrap}
-i.scp{position:fixed;left:0;top:0;z-index:59;border-radius:50%;background:#1a73e8;pointer-events:none}
-.toast.sct{display:flex;align-items:center;gap:14px}
-.toast.sct button{background:none;border:0;color:#8ab4f8;font:inherit;font-weight:700;padding:0}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1305,79 +1289,15 @@ function itemHTML(it,sm,solo){
     return '<div class="item"><div class="irow"><button class="nm nmb" data-item="'+esc(it.id)+'">'+esc(it.name)+'</button><button class="v num vbtn'+vcls+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Planned for '+esc(it.name)+', '+money(val)+'. Tap to change">'+money(val)+'</button></div><button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true">'+barHTML+'</button></div>'}
   return '<button class="item" data-item="'+esc(it.id)+'"><div class="irow"><span class="nm">'+esc(it.name)+'</span><span class="v num'+vcls+'">'+money(val)+'</span></div>'+barHTML+'</button>';
 }
-/* ---------- scoop & pour: hold a budget row to scoop money out, drag onto another row, let go to pour ---------- */
-let SC=null,SC_EAT=false;
-function scRow(id){const el=document.querySelector('.citem[data-sc="'+CSS.escape(id)+'"]');if(!el)return;const f=findItem(groupsFor(S.ym),id);if(!f)return;
-  const solo=!!el.querySelector(".nm.solo");const w=document.createElement("div");w.innerHTML=itemComboHTML(f.it,spentMap(),solo);el.replaceWith(w.firstChild)}
-function scDropEl(){let d=document.getElementById("scdrop");if(!d){d=document.createElement("div");d.id="scdrop";d.innerHTML='<div class="scb"></div><div class="sca num"></div>';document.body.appendChild(d)}return d}
-function scInit(){
-  const main=$("#main");
-  document.addEventListener("touchmove",e=>{if(SC&&SC.mode!=="wait")e.preventDefault()},{passive:false});
-  document.addEventListener("click",e=>{if(SC_EAT){SC_EAT=false;e.stopPropagation();e.preventDefault()}},true);
-  document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest(".citem[data-sc]"))e.preventDefault()});
-  main.addEventListener("touchstart",e=>{
-    if(SC||e.touches.length!==1||S.tab!=="budget"||PAD)return;const row=e.target.closest(".citem[data-sc]");if(!row||e.target.closest(".capb"))return;
-    const id=row.dataset.sc,f=findItem(groupsFor(S.ym),id);if(!f)return;const sp=round2(spentMap()[id]||0),p0=+f.it.planned||0;if(p0-sp<=0)return;
-    const t=e.touches[0];SC={mode:"wait",src:id,p0,sp,v:0,x0:t.clientX,y0:t.clientY,x:t.clientX,y:t.clientY,tgt:null,ov:{},dx:t.clientX,dy:t.clientY,vx:0,vy:0};
-    // listen on the touched node itself: touch events keep firing on it even after the row re-renders and it leaves the page
-    const node=e.target,off=()=>{node.removeEventListener("touchmove",mv);node.removeEventListener("touchend",end);node.removeEventListener("touchcancel",end)};
-    const mv=ev=>{if(!SC){off();return}const q=ev.touches[0];SC.x=q.clientX;SC.y=q.clientY;
-      if(SC.mode==="wait"){if(Math.hypot(SC.x-SC.x0,SC.y-SC.y0)>9){clearTimeout(SC.timer);SC=null;off()}return}
-      ev.preventDefault();
-      if(SC.mode==="scoop"&&Math.hypot(SC.x-SC.x0,SC.y-SC.y0)>14)SC.mode="drag";
-      if(SC.mode==="drag")scHover()};
-    const end=()=>{off();if(!SC)return;clearTimeout(SC.timer);if(SC.mode==="wait"){SC=null;return}SC_EAT=true;setTimeout(()=>SC_EAT=false,400);scFinish()};
-    node.addEventListener("touchmove",mv,{passive:false});node.addEventListener("touchend",end);node.addEventListener("touchcancel",end);
-    SC.timer=setTimeout(scStart,300)},{passive:true});
-}
-function scStart(){if(!SC)return;SC.mode="scoop";window.PB_SCOOP=true;try{haptic()}catch(_){}
-  const d=scDropEl();d.className="on";SC.dx=SC.x;SC.dy=SC.y-40;scRow(SC.src);scGrow();scLoop()}
-function scGrow(){if(!SC||SC.mode!=="scoop")return;const can=round2(SC.p0-SC.v-SC.sp);
-  if(can>0){const st=SC.v<20?5:SC.v<100?10:25,v=Math.min(st,can);SC.v=round2(SC.v+v);SC.ov[SC.src]=round2(SC.p0-SC.v);scRow(SC.src);try{haptic()}catch(_){}}
-  const d=scDropEl();d.querySelector(".sca").textContent=money(SC.v).replace(/\.00$/,"");d.style.setProperty("--d",Math.round(34+Math.sqrt(SC.v)*3.6)+"px");
-  SC.timer=setTimeout(scGrow,SC.v<20?150:110)}
-function scHover(){const d=scDropEl();d.style.visibility="hidden";const el=document.elementFromPoint(SC.x,SC.y);d.style.visibility="";
-  const row=el&&el.closest&&el.closest(".citem[data-sc]"),id=row&&row.dataset.sc!==SC.src?row.dataset.sc:null;if(id===SC.tgt)return;
-  const old=SC.tgt;if(old){delete SC.ov[old];SC.tgt=null;scRow(old)}
-  if(id){const f=findItem(groupsFor(S.ym),id);if(f){SC.tgt=id;SC.ov[id]=round2((+f.it.planned||0)+SC.v);scRow(id);try{haptic()}catch(_){}}}}
-function scLoop(){const d=scDropEl(),b=d.querySelector(".scb");cancelAnimationFrame(SC&&SC.raf);
-  (function f(){if(!SC||SC.mode==="done")return;let tx=SC.x,ty=SC.y-46;
-    if(SC.tgt){const r=document.querySelector('.citem[data-sc="'+CSS.escape(SC.tgt)+'"] .track');if(r){const q=r.getBoundingClientRect();tx=tx*.65+(q.left+q.width*.6)*.35;ty=ty*.6+(q.top-20)*.4}}
-    SC.vx+=(tx-SC.dx)*.22;SC.vy+=(ty-SC.dy)*.22;SC.vx*=.62;SC.vy*=.62;SC.dx+=SC.vx;SC.dy+=SC.vy;
-    const sp=Math.min(.45,Math.hypot(SC.vx,SC.vy)/40),ang=Math.atan2(SC.vy,SC.vx)*57.3;
-    b.style.transform="translate(-50%,-50%) rotate("+ang.toFixed(1)+"deg) scale("+(1+sp).toFixed(3)+","+(1-sp*.6).toFixed(3)+")";
-    d.style.transform="translate3d("+SC.dx.toFixed(1)+"px,"+SC.dy.toFixed(1)+"px,0)";SC.raf=requestAnimationFrame(f)})()}
-function scFly(tx,ty,ms,shrink,done){const d=scDropEl(),b=d.querySelector(".scb"),x0=SC.dx,y0=SC.dy,t0=performance.now();cancelAnimationFrame(SC.raf);SC.mode="done";
-  (function f(n){const k=Math.min(1,(n-t0)/ms),e=shrink?k*k:1-Math.pow(1-k,3);const x=x0+(tx-x0)*e,y=y0+(ty-y0)*e;
-    d.style.transform="translate3d("+x+"px,"+y+"px,0)";b.style.transform="translate(-50%,-50%) scale("+(1-.75*e)+","+(1+(shrink?.25:0)*e)+")";
-    if(k<1)requestAnimationFrame(f);else{d.className="";done()}})(t0)}
-function scSplash(x,y){for(let k=0;k<14;k++){const p=document.createElement("i");p.className="scp";const z=4+Math.random()*6;p.style.width=p.style.height=z+"px";document.body.appendChild(p);
-  const a=-Math.PI*Math.random(),v=40+Math.random()*60,t0=performance.now();
-  (function f(n){const t=(n-t0)/600;if(t>1){p.remove();return}p.style.transform="translate3d("+(x+Math.cos(a)*v*t)+"px,"+(y+Math.sin(a)*v*t+140*t*t)+"px,0)";p.style.opacity=String(1-t);requestAnimationFrame(f)})(t0)}}
-function scFinish(){const G=SC;clearTimeout(G.timer);window.PB_SCOOP=false;
-  const clear=()=>{SC=null;render()};
-  if(G.tgt&&G.v>0){const tr=document.querySelector('.citem[data-sc="'+CSS.escape(G.tgt)+'"] .track'),q=tr?tr.getBoundingClientRect():{left:G.x,top:G.y,width:0};
-    scFly(q.left+q.width*.55,q.top+4,230,true,()=>{scSplash(q.left+q.width*.55,q.top+4);try{haptic();setTimeout(()=>{try{haptic()}catch(_){}},90)}catch(_){}
-      scMove(G.src,G.tgt,G.v,true);const tid=G.tgt;clear();const r=document.querySelector('.citem[data-sc="'+CSS.escape(tid)+'"]');if(r){r.classList.add("scpour")}})}
-  else{const tr=document.querySelector('.citem[data-sc="'+CSS.escape(G.src)+'"] .track'),q=tr?tr.getBoundingClientRect():{left:G.x,top:G.y,width:0};
-    scFly(q.left+q.width*.4,q.top+4,280,false,clear)}}
-function scMove(from,to,v,undoable){const gs=JSON.parse(JSON.stringify(groupsFor(S.ym))),a=findItem(gs,from),b=findItem(gs,to);if(!a||!b)return;
-  a.it.planned=round2((+a.it.planned||0)-v);b.it.planned=round2((+b.it.planned||0)+v);const inc=incomeFor(S.ym);
-  S.budgets[S.ym]=Object.assign({},S.budgets[S.ym]||{},{groups:gs,income:inc});saveGroups(gs,inc);
-  if(undoable)scToast("Poured "+money(v).replace(/\.00$/,"")+" into "+b.it.name,()=>{scMove(to,from,v,false);render();toast("Undone")})}
-function scToast(msg,undo){let t=$(".toast");if(t)t.remove();t=document.createElement("div");t.className="toast sct";t.setAttribute("role","status");
-  t.innerHTML='<span>'+esc(msg)+'</span><button type="button">Undo</button>';document.body.appendChild(t);
-  t.querySelector("button").onclick=e=>{e.stopPropagation();t.remove();undo()};clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),4200)}
 function itemComboHTML(it,sm,solo){
-  const scv=SC&&SC.ov[it.id]!=null?SC.ov[it.id]:null,sct=SC&&SC.tgt===it.id&&SC.v>0;
-  const planned=scv!=null?scv:(+it.planned||0), spent=round2(sm[it.id]||0), rem=round2(planned-spent), over=rem<0;
+  const planned=+it.planned||0, spent=round2(sm[it.id]||0), rem=round2(planned-spent), over=rem<0;
   const pct=planned>0?Math.min(100,spent/planned*100):(spent>0?100:0);
   const segs=null;
   let bar;
   if(over&&spent>0){const ok=planned/spent*100;bar='<div class="track fill cb">'+((segs&&segs(ok))||'<i style="width:'+ok.toFixed(1)+'%"></i>')+'<i class="ov" style="width:'+(100-ok).toFixed(1)+'%"></i></div>'}
   else bar='<div class="track fill cb">'+((segs&&segs(pct))||'<i style="width:'+pct.toFixed(1)+'%"></i>')+'</div>';
   const ed=PAD&&PAD.kind==="item"&&PAD.id===it.id;
-  return '<div class="item citem'+(SC&&SC.src===it.id?" scsrc":"")+(sct?" sctgt"+(over?"":" scok"):"")+'" data-sc="'+esc(it.id)+'"><button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm'+(solo?" solo":"")+'">'+(solo?(over?"Over":"Left"):esc(it.name))+(sct?'<span class="scpill num">+'+money(SC.v).replace(/\.00$/,"")+'</span>':'')+'</span><span class="v num'+(over?" neg":"")+'">'+money(rem)+'</span></button><button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true">'+bar+'</button>'+
+  return '<div class="item citem"><button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm'+(solo?" solo":"")+'">'+(solo?(over?"Over":"Left"):esc(it.name))+'</span><span class="v num'+(over?" neg":"")+'">'+money(rem)+'</span></button><button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true">'+bar+'</button>'+
     '<div class="icap"><span class="num'+(over?" neg":"")+'">'+money(spent)+' spent</span><span>of</span><button class="capb num'+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Planned for '+esc(it.name)+', '+money(planned)+'. Tap to change">'+money(planned)+PENCIL+'</button></div></div>';
 }
 const PENCIL='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
@@ -3377,7 +3297,7 @@ function subscribeTx(){
 /* no pinch / double-tap zoom: the layout is built for the phone screen */
 ["gesturestart","gesturechange"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 async function init(){
-  render();try{scInit()}catch(_){}
+  render();
   const db=await (window.claude?.use?.("db")||Promise.resolve(null)).catch(()=>null);
   if(!db){S.dbState="none";S.budgetsLoaded=true;S.txLoaded=true;render();return}
   S.db=db;S.dbState="ok";loadSubs();
@@ -3433,7 +3353,7 @@ async function refreshNow(){
   }
   document.addEventListener("touchstart",e=>{y0=null;mode=0;if(busy||e.touches.length!==1||blocked(e.target))return;
     y0=e.touches[0].clientY;x0=e.touches[0].clientX;armed=false},{passive:true});
-  document.addEventListener("touchmove",e=>{if(window.PB_SCOOP)return;if(y0===null)return;const t=e.touches[0];
+  document.addEventListener("touchmove",e=>{if(y0===null)return;const t=e.touches[0];
     if(!mode){const dy=t.clientY-y0,dx=t.clientX-x0;
       if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){y0=null;return}
       if(GEST&&GEST!=="pull"){y0=null;return}
@@ -3478,7 +3398,7 @@ async function refreshNow(){
   document.addEventListener("touchstart",e=>{x0=null;on=false;if(busy||e.touches.length!==1||blocked(e.target))return;
     const t=e.touches[0];if(t.clientX<16||t.clientX>innerWidth-8)return; // leave the screen edges to iOS
     x0=t.clientX;y0=t.clientY;lastT=Date.now();lastX=x0;vel=0;onRow=!!(e.target.closest&&e.target.closest(".swr"))},{passive:true});
-  document.addEventListener("touchmove",e=>{if(window.PB_SCOOP)return;if(x0===null)return;const t=e.touches[0],ddx=t.clientX-x0,ddy=t.clientY-y0;
+  document.addEventListener("touchmove",e=>{if(x0===null)return;const t=e.touches[0],ddx=t.clientX-x0,ddy=t.clientY-y0;
     if(!on){
       if(GEST&&GEST!=="tabs"){x0=null;dropPeek();return}
       if(Math.abs(ddy)>10&&Math.abs(ddy)>=Math.abs(ddx)){x0=null;dropPeek();return}
