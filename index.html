@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 29, 11:20 PM"</script>
+<script>window.PB_BUILD="Oct 29, 11:25 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1340,7 +1340,7 @@ function miscSubsHTML(){
   const {ks,by}=miscBreakdown();
   const pos=ks.filter(k=>Math.abs(by[k])>=.005);if(!pos.length)return "";
   const tot=pos.reduce((a,k)=>a+Math.max(0,by[k]),0)||1,TOP=4,more=pos.length-TOP,open=ls.get("pb.msubAll")==="1";
-  const tile=(k,i)=>'<button class="mst'+(i>=TOP?" xtra":"")+'" data-item="'+MISC_ID+'" data-msub="'+esc(k)+'" style="--sc:'+subColor(k)+'"><span class="mstn">'+esc(k)+'</span><span class="mstv num">'+money(by[k])+'</span><span class="mstp num">'+Math.round(Math.max(0,by[k])/tot*100)+'%</span></button>';
+  const tile=(k,i)=>'<button class="mst'+(i>=TOP?" xtra":"")+'" data-item="'+MISC_ID+'" data-msub="'+esc(k)+'" style="--sc:'+subColor(k)+'"><span class="mstn">'+esc(k)+'</span><span class="mstv num">'+money(by[k])+'</span><span class="mstp num">'+(p=>p>0&&p<1?"<1":Math.round(p))(Math.max(0,by[k])/tot*100)+'%</span></button>';
   return '<div class="msgrid'+(open?" all":"")+'">'+pos.map(tile).join("")+'</div>'+(more>0?'<button class="msmore" id="msMore">'+(open?"Show less":"Show all "+pos.length)+'</button>':'');
 }
 function renderBudget(groups,sm){
