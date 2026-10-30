@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 29, 6:20 PM"</script>
+<script>window.PB_BUILD="Oct 29, 10:45 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -60,6 +60,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var
 .banner{background:var(--card);border-bottom:1px solid var(--line);padding-block:5px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:15px;color:var(--ok);text-align:center}
 .banner.over{color:var(--over)}
 header .banner{margin:6px calc(-1 * max(16px,env(safe-area-inset-right,0px))) -6px calc(-1 * max(16px,env(safe-area-inset-left,0px)))}
+header .banner+.nowbar:not([hidden]){margin-top:6px}
 .banner svg{width:18px;height:18px;flex:none}
 main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;display:flex;flex-direction:column;gap:16px;max-width:640px;margin:0 auto}
 .card{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:20px 22px 18px}
@@ -95,10 +96,18 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .futw.shut .futb{grid-template-rows:0fr;opacity:0;margin-bottom:0}
 .futi{overflow:hidden;min-height:0}
 .futc{display:flex;flex-direction:column;gap:16px;padding:16px 16px 14px}
-.mtag{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:999px;background:var(--sel);color:var(--brand);font-size:11px;letter-spacing:.04em;vertical-align:1px}
 .mpill{display:inline-block;margin-right:8px;padding:2px 9px;border-radius:999px;background:var(--sel);color:var(--brand);font-size:13px;font-weight:600}
 .mpill.pop{animation:mpop .32s cubic-bezier(.2,.8,.2,1)}
 @keyframes mpop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+.nowbar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:calc(100% + 2 * max(16px,env(safe-area-inset-left,0px)));margin:6px calc(-1 * max(16px,env(safe-area-inset-right,0px))) -6px calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:7px max(16px,env(safe-area-inset-left,0px));border:0;font:inherit;font-size:14px;cursor:pointer;animation:nbin .32s cubic-bezier(.2,.8,.2,1)}
+.nowbar[hidden]{display:none}
+.nowbar.fut{background:#fef7e0;color:#8a5a00}
+.nowbar.past{background:#f1f3f4;color:#3c4043}
+.nowbar .nbk{font-weight:700;color:var(--brand)}
+@keyframes nbin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.txrow.flash{animation:txflash 2.4s ease-out}
+@keyframes txflash{0%,35%{background:rgba(251,188,4,.32)}100%{background:transparent}}
+.mpill.fut{background:#fef7e0;color:#8a5a00}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -891,7 +900,7 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
   </div>
   <div id="hsearch" hidden><div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="txq" type="search" enterkeyhint="search" autocomplete="off" aria-label="Search transactions"><button id="txqClear" aria-label="Clear search" hidden>✕</button></div></div>
   <div class="seg hsub" id="hisub" role="group" aria-label="Insight" hidden></div>
-  <div class="banner" id="banner"><span>Loading your budget…</span></div>
+  <div class="banner" id="banner"><span>Loading your budget…</span></div><button class="nowbar" id="nowBar" hidden></button>
 </header>
 <main id="main"></main>
 <button class="fab" id="fab" aria-label="Add transaction"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -1128,6 +1137,7 @@ const DOODLES=[
 ];
 function renderDoodle(){const b=$("#doodle");if(!b)return;const m=+S.ym.slice(5)-1;if(b.dataset.m===String(m))return;b.dataset.m=String(m);const [t,svg]=DOODLES[m];
   b.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true">'+svg+'</svg>';b.setAttribute("aria-label",t);b.title=t}
+$("#nowBar").addEventListener("click",()=>{S.ym=ymOf(today());S.upcoming=false;IS.calSel=null;S.flash=null;try{haptic()}catch(_){}subscribeTx();render();window.scrollTo(0,0)});
 $("#doodle").addEventListener("click",e=>{e.stopPropagation();const b=e.currentTarget;b.classList.remove("wig");void b.offsetWidth;b.classList.add("wig");try{haptic()}catch(_){};toast(b.title+"!")});
 /* ---------- swipe left on a transaction to reveal Delete ---------- */
 const SW={row:null,x0:0,y0:0,dx:0,mode:0,openRow:null,justSwiped:false};
@@ -1149,7 +1159,7 @@ $("#main").addEventListener("click",e=>{const del=e.target.closest("[data-del]")
   if(SW.openRow){e.stopPropagation();e.preventDefault();swClose(SW.openRow)}},true);
 document.addEventListener("scroll",()=>{if(SW.openRow)swClose(SW.openRow)},{passive:true});
 function confirmDelete(id){
-  const t=S.tx.concat(S.nextTx||[]).find(x=>x.id===id);if(!t)return;
+  const t=S.tx.find(x=>x.id===id);if(!t)return;
   const synced=t.sheet==="synced";
   const root=document.createElement("div");root.className="alrt";root.setAttribute("role","alertdialog");root.setAttribute("aria-modal","true");
   root.innerHTML='<div class="abox"><h3>Delete transaction?</h3><p>Do you want to delete <b>'+esc(t.merchant||"Purchase")+'</b> for <b class="num">'+money(+t.amount||0)+'</b>?</p>'+(synced?'<p class="anote">It\'s already in your Finance Tracker, so remove that row from the sheet too.</p>':'<p class="anote">This can\'t be undone.</p>')+
@@ -1172,8 +1182,19 @@ function confirmDelete(id){
         try{await S.db.doc("tx/"+id).delete();SW.openRow=null;closeSheet();toast("Deleted")}catch(e){b.disabled=false;toast("Couldn't delete. Try again.")}}});
 }
 const ISUBS=[["totals","Totals"],["cal","Calendar"],["pace","Pace"]].concat(window.top===window?[["map","Map"]]:[]);
+function goMonth(ym,flashId,quiet){
+  S.ym=ym;S.upcoming=false;S.q="";IS.calSel=null;S.tab="tx";S.flash=flashId||null;subscribeTx();render();window.scrollTo(0,0);
+  if(!quiet)toast("Moved to "+MONTHS[+ym.slice(5)-1]);else setTimeout(()=>toast("Filed under "+MONTHS[+ym.slice(5)-1]),1900);
+  if(flashId){let n=0;const seek=()=>{const r=document.querySelector('.txrow[data-tx="'+flashId+'"]');if(r){r.scrollIntoView({block:"center",behavior:"smooth"});setTimeout(()=>{if(S.flash===flashId)S.flash=null},2600);return}if(++n<30)setTimeout(seek,100)};setTimeout(seek,250)}
+}
+function renderNowBar(){
+  const b=$("#nowBar");if(!b)return;const cur=ymOf(today());
+  if(S.ym===cur){b.hidden=true;return}
+  const fut=S.ym>cur;b.hidden=false;b.className="nowbar"+(fut?" fut":" past");
+  b.innerHTML='<span><b>'+(fut?"Future month":"Past month")+'</b> · not '+MONTHS[+cur.slice(5)-1]+'</span><span class="nbk">Back to '+MONTHS[+cur.slice(5)-1]+' ›</span>';
+}
 function renderHeader(){
-  renderDoodle();
+  renderDoodle();renderNowBar();
   const [y,m]=S.ym.split("-");$("#mName").textContent=MONTHS[+m-1];$("#mYear").textContent=y;
   document.querySelectorAll("#seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===S.view)));
   $("#seg").hidden=S.tab!=="budget";
@@ -1331,8 +1352,7 @@ function renderTx(groups){
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
   if(!list.length)return h+'<div class="card empty"><h3>No transactions this month</h3>Tap + to log a purchase. It takes about five seconds.</div>';
   const td0=today();
-  const nx=(!q&&!S.upcoming&&S.nextTx)?S.nextTx.slice().sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.createdAt||"").localeCompare(a.createdAt||"")):[];
-  const fut=(!q&&!S.upcoming)?nx.concat(list.filter(t=>t.date>td0)):[];
+  const fut=(!q&&!S.upcoming)?list.filter(t=>t.date>td0):[];
   if(fut.length){
     const rest=list.filter(t=>t.date<=td0);
     const hid=ls.get("pb.futHide")==="1";
@@ -1345,11 +1365,11 @@ function renderTx(groups){
 function txDays(list,groups){
   let h="",day=null,open=false;
   list.forEach(t=>{
-    if(t.date!==day){if(open)h+="</section>";day=t.date;const dsum=round2(list.filter(x=>x.date===day).reduce((a,x)=>a+sAmt(x),0));h+='<div class="daylabel num">'+esc(fmtDay(day))+' · '+money(dsum)+(ymOf(day)!==S.ym?'<span class="mtag">'+MONTHS[+day.slice(5,7)-1].slice(0,3)+' budget</span>':'')+'</div><section class="card" style="padding-block:4px">';open=true}
+    if(t.date!==day){if(open)h+="</section>";day=t.date;const dsum=round2(list.filter(x=>x.date===day).reduce((a,x)=>a+sAmt(x),0));h+='<div class="daylabel num">'+esc(fmtDay(day))+' · '+money(dsum)+'</div><section class="card" style="padding-block:4px">';open=true}
     const ref=t.type==="refund"||t.type==="income";
     const sw=!isHist(t);
     if(sw)h+='<div class="swr"><button class="swdel" data-del="'+esc(t.id)+'" tabindex="-1" aria-label="Delete '+esc(t.merchant||"Purchase")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>Delete</button>';
-    h+='<button class="txrow" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
+    h+='<button class="txrow'+(S.flash===t.id?' flash':'')+'" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
   });
   if(open)h+="</section>";
   return h;
@@ -2767,7 +2787,7 @@ function txSheet(existing){
       (existing&&(existing.pair?(()=>{const pr=txPool().find(t=>t.id===existing.pair),isR=existing.type==="refund";
           return '<button type="button" class="rlinkbtn" id="f-pair"><span class="ri">'+(isR?"↩︎":"↪︎")+'</span><span class="rt"><small>'+(isR?"Reimbursement for":"Paid back by")+'</small><b>'+(pr?esc(pr.merchant||"Purchase")+' · '+(pr.type==="refund"?"+":"")+money(+pr.amount||0):(isR?"the original purchase":"the reimbursement"))+'</b>'+(pr?'<span>'+esc(fmtLong(pr.date))+'</span>':'')+'</span>'+CHEV+'</button>'})():'')||'')+
       '<div class="tcard">'+
-        '<div class="trow"><span>Date</span><span class="tv"><span class="mpill" id="f-mpill"'+(ymOf(d)===S.ym?' hidden':'')+'>→ '+MONTHS[+d.slice(5,7)-1]+'</span><span id="f-dtxt">'+esc(fmtLong(d))+'</span></span><input class="ovl" id="f-date" type="date" value="'+esc(d)+'" aria-label="Date"></div>'+
+        '<div class="trow"><span>Date</span><span class="tv"><span class="mpill fut" id="f-mpill"'+(ymOf(d)===S.ym?' hidden':'')+'>→ '+MONTHS[+d.slice(5,7)-1]+'</span><span id="f-dtxt">'+esc(fmtLong(d))+'</span></span><input class="ovl" id="f-date" type="date" value="'+esc(d)+'" aria-label="Date"></div>'+
         '<label class="trow"><span>Merchant</span><input class="tin" id="f-mer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-msug" aria-expanded="false" placeholder="Name" value="'+esc(merch0)+'"></label>'+
         '<div class="msug" id="f-msug" role="listbox" aria-label="Past merchants" hidden></div>'+
         '<label class="trow" id="f-vrow"><span>Venmo</span><input type="checkbox" class="tchk" id="f-venmo"'+(venmo0?" checked":"")+'></label>'+
@@ -3011,7 +3031,9 @@ function txSheet(existing){
           if(existing)await S.db.doc("tx/"+existing.id).set(body);
           else ref=await S.db.collection("tx").add(body);
           ls.set("pb.lastItem",itemId);closeSheet();
-          if(!existing)setTimeout(()=>celebrate(rOn?round2(a-rAmt):a,body.merchant,body.type),180);else if(ymOf(date)!==S.ym)toast("Saved to "+MONTHS[+date.slice(5,7)-1]);else toast("Saved");
+          const moved=ymOf(date)!==S.ym;
+          if(!existing)setTimeout(()=>celebrate(rOn?round2(a-rAmt):a,body.merchant,body.type),180);else if(!moved)toast("Saved");
+          if(moved)goMonth(ymOf(date),existing?existing.id:ref.id,!existing);
           let rref=null,rbodyDoc=null;
           if(ref&&rOn){const from=s.querySelector("#f-rfrom").value.trim(),nm=body.merchant.replace(VP,"");
             rbodyDoc=Object.assign({},body,{person:undefined,amount:rAmt,type:"refund",merchant:rMeth+": "+(from?from+" reimbursement":"Reimbursement for "+nm),reimbMethod:rMeth,date:rdate.value||date,note:"For "+nm+(rAmt<a-.004?" ("+money(rAmt)+" of "+money(a)+")":"")+(body.note?" · "+body.note:""),
@@ -3171,7 +3193,7 @@ $("#main").addEventListener("click",e=>{
   else if(t.dataset.item)itemSheet(t.dataset.item,t.dataset.msub);
   else if(t.dataset.gmenu)groupSheet(t.dataset.gmenu);
   else if(t.dataset.additem)newItemSheet(t.dataset.additem);
-  else if(t.dataset.tx){const x=S.tx.concat(S.nextTx||[]).find(y=>y.id===t.dataset.tx);if(x)isHist(x)?histSheet(x):txSheet(x)}
+  else if(t.dataset.tx){const x=S.tx.find(y=>y.id===t.dataset.tx);if(x)isHist(x)?histSheet(x):txSheet(x)}
   else if(t.dataset.tabGo){S.tab=t.dataset.tabGo;render()}
   else if(t.id==="addGroup")groupSheet(null);
   else if(t.id==="exportCsv")exportCsv();
@@ -3186,11 +3208,8 @@ async function syncAll(btn){
 
 /* ---------- data ---------- */
 let histUnsub=null;
-function nextYm(ym){const [y,m]=ym.split("-").map(Number);const d=new Date(y,m,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)}
-let nextUnsub=null;
 function subscribeTx(){
-  if(!S.db)return;txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;nextUnsub&&nextUnsub();nextUnsub=null;S.txLoaded=false;S.tx=[];S.nextTx=[];
-  if(S.ym===ymOf(today())){const ny=nextYm(S.ym),cy=S.ym;nextUnsub=S.db.collection("tx").where("date",">=",ny+"-01").where("date","<=",ny+"-31").limit(1000).onSnapshot(snap=>{if(cy!==S.ym)return;S.nextTx=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render()},()=>{})}
+  if(!S.db)return;txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;S.txLoaded=false;S.tx=[];
   const ym=S.ym;let live=[],past=[],gotLive=false,gotPast=ym>=HIST_BEFORE;
   const merge=()=>{if(ym!==S.ym)return;S.tx=live.concat(past);S.txLoaded=gotLive&&gotPast;render();if(S.txLoaded)setTimeout(reconcileSheet,800)};
   txUnsub=S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).onSnapshot(snap=>{
