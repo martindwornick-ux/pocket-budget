@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 1:00 AM"</script>
+<script>window.PB_BUILD="Oct 30, 1:10 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -167,6 +167,17 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 @keyframes rsin{from{opacity:0}}
 .rsc{width:min(280px,80%);text-align:center}.rsc b{display:block;font-size:17px;margin-top:12px}.rsc span{display:block;font-size:13px;color:var(--muted);margin-top:4px}
 .rsb{height:6px;border-radius:3px;background:var(--trk);overflow:hidden}.rsb i{display:block;height:100%;width:4%;background:var(--brand);transition:width .3s}
+.dcard{padding:16px 20px 14px}
+.drow{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.dhd{font-size:19px;font-weight:700}
+.dsd{font-size:14px;color:var(--muted)}
+.dln{border-top:1px solid var(--line);margin:12px 0 10px}
+.dit span{color:var(--muted);font-size:16px}
+.dit b{font-family:var(--display);font-weight:800;font-size:24px}
+.dit b.dpd{color:var(--ok)}.dit b.neg{color:var(--over)}
+.dit{animation:dup .55s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes dup{from{opacity:0;transform:translateY(8px)}}
+.dnote{text-align:right;font-size:13px;color:var(--muted);margin-top:4px}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1345,6 +1356,18 @@ const FIXED_GROUP=/housing|utilit|insurance|debt|bill|subscription/i;
 const FIXED_ITEM=/mortgage|\brent\b|lease|insurance|loan|car payment|internet|phone|cell|electric|water|sewer|trash|hoa|subscription|tuition|daycare|consumers/i;
 function isFixed(it,g){if(typeof it.fixed==="boolean")return it.fixed;return FIXED_GROUP.test(g.name)||FIXED_ITEM.test(it.name)}
 // Today tile: spent so far today vs today's allowance (what was left this morning ÷ days left, incl. today)
+// Top card: day + date, total remaining, leftover per day
+function dateCardHTML(itot,t0){
+  const rem=round2(itot-t0.s),td=today(),cur=ymOf(td),[y,m]=S.ym.split("-").map(Number),dim=new Date(y,m,0).getDate(),d=daysLeftAfterToday(S.ym);
+  let head,side,pl,pv,pn;
+  if(S.ym===cur){const dt=new Date(td+"T12:00:00");head=dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});side="Day "+dt.getDate()+" of "+dim;
+    pl="Leftover per day";pv=rem>0?money(round2(rem/d)):money(0);pn=d===1?"for today, the last day":"for the "+d+" days left, today included"}
+  else if(S.ym<cur){head=MONTHS[m-1]+" "+y;side="Month is over";pl=null}
+  else{head=MONTHS[m-1]+" "+y;side="Starts "+MONTHS[m-1].slice(0,3)+" 1";pl="Leftover per day";pv=rem>0?money(round2(rem/dim)):money(0);pn="across all "+dim+" days"}
+  return '<section class="card dcard"><div class="drow"><span class="dhd">'+head+'</span><span class="dsd">'+side+'</span></div><div class="dln"></div>'+
+    '<div class="drow dit"><span>'+(S.ym<cur?(rem<0?"Over budget":"Left over"):"Total remaining")+'</span><b class="num'+(rem<0?" neg":"")+'">'+money(rem<0&&S.ym<cur?-rem:rem)+'</b></div>'+
+    (pl?'<div class="drow dit" style="margin-top:8px;animation-delay:.12s"><span>'+pl+'</span><b class="num dpd'+(rem<0?" neg":"")+'">'+pv+'</b></div><div class="dnote">'+pn+'</div>':'')+'</section>';
+}
 function todayTileHTML(itot,t0){
   const td=today(),d=daysLeftAfterToday(S.ym);
   if(S.ym!==ymOf(td)||!d)return '<div class="pday"><small>Today</small><b class="num">—</b><span>'+(S.ym<ymOf(td)?"Month is over":"Not started")+'</span></div>';
@@ -1409,7 +1432,7 @@ function renderBudget(groups,sm){
   const frac=itot>0?Math.max(0,Math.min(1,(v==="planned"?t0.p:v==="spent"?t0.s:itot-t0.s)/itot)):0;
   const arcCol=v==="spent"?"var(--ok)":v==="remaining"?"var(--bar)":(round2(itot-t0.p)===0&&inc.length?"var(--ok)":"var(--bar)");
   const C=2*Math.PI*26;
-  h+='<section class="card pinc"><div class="ring"><svg class="arc" viewBox="0 0 62 62"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--line)" stroke-width="7"/>'+(frac>0?'<circle cx="31" cy="31" r="26" fill="none" stroke="'+arcCol+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+(C*frac).toFixed(1)+' '+C.toFixed(1)+'"/>':'')+'</svg><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5h.01M17.5 14.5h.01"/></svg></div><div><small>'+sumLabel+'</small><b class="num'+(sumVal<0?" neg":"")+'"'+(sumVal<0?' style="color:var(--over)"':'')+'>'+money(sumVal)+'</b>'+(COMBINED?'<span class="pcap num">'+money(t0.s)+' spent of '+money(itot)+'</span>':'')+'</div>'+(COMBINED?'</section><section class="card ptiles">':'')+perDayHTML(sumVal)+avgDailyHTML(groups)+(COMBINED?todayTileHTML(itot,t0):upcomingHTML())+'</section>';
+  if(COMBINED)h+=dateCardHTML(itot,t0)+'<section class="card ptiles">'+avgDailyHTML(groups)+todayTileHTML(itot,t0)+'</section>';else{h+='<section class="card pinc"><div class="ring"><svg class="arc" viewBox="0 0 62 62"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--line)" stroke-width="7"/>'+(frac>0?'<circle cx="31" cy="31" r="26" fill="none" stroke="'+arcCol+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+(C*frac).toFixed(1)+' '+C.toFixed(1)+'"/>':'')+'</svg><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5h.01M17.5 14.5h.01"/></svg></div><div><small>'+sumLabel+'</small><b class="num'+(sumVal<0?" neg":"")+'"'+(sumVal<0?' style="color:var(--over)"':'')+'>'+money(sumVal)+'</b>'+(COMBINED?'<span class="pcap num">'+money(t0.s)+' spent of '+money(itot)+'</span>':'')+'</div>'+(COMBINED?'</section><section class="card ptiles">':'')+perDayHTML(sumVal)+avgDailyHTML(groups)+(COMBINED?todayTileHTML(itot,t0):upcomingHTML())+'</section>';}
   h+='<section class="card"><div class="chead"><h2>Income</h2><span class="lbl">'+(COMBINED?"Received":v==="planned"?"Planned":v==="spent"?"Received":"Remaining")+'</span></div>';
   if(!inc.length)h+='<p class="note" style="margin:6px 0 0">Add your paychecks so you can see how much is left to budget.</p>';
   inc.forEach(x=>{const pl=+x.planned||0, rc=round2(rm[x.id]||0), left=round2(pl-rc);
