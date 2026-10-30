@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 29, 11:25 PM"</script>
+<script>window.PB_BUILD="Oct 29, 11:35 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -121,17 +121,32 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .ptiles .pday:first-child{border-left:0;padding-left:2px}
 .ptiles .pday b{display:block;font-family:var(--display);font-weight:800;font-size:clamp(17px,5vw,22px);margin-top:2px;white-space:nowrap}
 .ptiles .pday small{display:block;font-size:13px;color:var(--muted)}
-.msgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 4px}
-.mst{position:relative;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:6px;row-gap:2px;text-align:left;padding:9px 10px 9px 14px;border-radius:12px;background:var(--trk);overflow:hidden;font:inherit;color:inherit;border:0;transition:transform .15s}
-.mst::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--sc)}
-.mst:active{transform:scale(.97)}
-.mstn{grid-column:1/3;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mstv{font-size:16px;font-weight:700;white-space:nowrap}
-.mstp{font-size:12px;color:var(--muted);align-self:center}
-.msgrid .xtra{display:none}
-.msgrid.all .xtra{display:grid;animation:mstin .3s cubic-bezier(.2,.8,.2,1) both}
-@keyframes mstin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.msmore{display:block;width:100%;padding:8px 0 2px;background:none;border:0;font:inherit;font-size:14px;font-weight:600;color:var(--brand);text-align:center}
+.msum{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:10px 0 2px;padding:10px 12px;border:0;border-radius:12px;background:var(--trk);font:inherit;font-size:15px;color:var(--fg);text-align:left;cursor:pointer;transition:transform .18s cubic-bezier(.2,.8,.2,1),background .2s}
+.msum:active{transform:scale(.97)}
+.msum .mu{color:var(--muted)}
+.msp{flex:none;margin-left:-4px}
+.msc{flex:none;margin-left:auto;padding:2px 8px;border-radius:999px;background:var(--card);color:var(--muted);font-size:13px;font-weight:600}
+.mst2{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msum svg{flex:none;color:var(--muted);transition:transform .45s cubic-bezier(.3,1.5,.5,1)}
+.msum[aria-expanded="true"] svg{transform:rotate(180deg)}
+.msx{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.2,.8,.2,1)}
+.msx.op{grid-template-rows:1fr}
+.msxi{overflow:hidden;min-height:0;display:flex;flex-direction:column;gap:4px}
+.msxi::before{content:"";height:4px;flex:none}
+.msr{position:relative;display:flex;justify-content:space-between;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:9px;background:none;font:inherit;font-size:15px;color:var(--fg);text-align:left;overflow:hidden;cursor:pointer;transition:transform .15s,opacity .2s}
+.msr:active{transform:scale(.98)}
+.msr::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w);background:var(--sel);border-radius:9px}
+.msr>span{position:relative;z-index:1}
+.msn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msa{font-weight:600;white-space:nowrap}
+.msx.out .msr{opacity:0;transform:translateY(-6px)}
+.msx.anim .msr{animation:msrIn .55s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:calc(var(--i) * 45ms + 60ms)}
+.msx.anim .msr::before{animation:msrBar .9s cubic-bezier(.25,1,.3,1.12) both;animation-delay:calc(var(--i) * 45ms + 150ms)}
+.msx.anim .msr:first-child::after{content:"";position:absolute;top:0;bottom:0;left:0;width:var(--w);border-radius:9px;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.75) 50%,transparent 70%) no-repeat;background-size:60% 100%;background-position:-120% 0;animation:msrShine .9s ease-out 1s both;z-index:0}
+@keyframes msrIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes msrBar{from{width:0}}
+@keyframes msrShine{to{background-position:260% 0}}
+@media (prefers-reduced-motion:reduce){.msx,.msum svg{transition:none}}
 .nm.solo{color:var(--muted)}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
@@ -1277,7 +1292,7 @@ function itemHTML(it,sm,solo){
 function itemComboHTML(it,sm,solo){
   const planned=+it.planned||0, spent=round2(sm[it.id]||0), rem=round2(planned-spent), over=rem<0;
   const pct=planned>0?Math.min(100,spent/planned*100):(spent>0?100:0);
-  const segs=it.id===MISC_ID?(p=>miscSegs(p)):null;
+  const segs=null;
   let bar;
   if(over&&spent>0){const ok=planned/spent*100;bar='<div class="track fill cb">'+((segs&&segs(ok))||'<i style="width:'+ok.toFixed(1)+'%"></i>')+'<i class="ov" style="width:'+(100-ok).toFixed(1)+'%"></i></div>'}
   else bar='<div class="track fill cb">'+((segs&&segs(pct))||'<i style="width:'+pct.toFixed(1)+'%"></i>')+'</div>';
@@ -1338,10 +1353,24 @@ function miscSegs(fillPct){
 }
 function miscSubsHTML(){
   const {ks,by}=miscBreakdown();
-  const pos=ks.filter(k=>Math.abs(by[k])>=.005);if(!pos.length)return "";
-  const tot=pos.reduce((a,k)=>a+Math.max(0,by[k]),0)||1,TOP=4,more=pos.length-TOP,open=ls.get("pb.msubAll")==="1";
-  const tile=(k,i)=>'<button class="mst'+(i>=TOP?" xtra":"")+'" data-item="'+MISC_ID+'" data-msub="'+esc(k)+'" style="--sc:'+subColor(k)+'"><span class="mstn">'+esc(k)+'</span><span class="mstv num">'+money(by[k])+'</span><span class="mstp num">'+(p=>p>0&&p<1?"<1":Math.round(p))(Math.max(0,by[k])/tot*100)+'%</span></button>';
-  return '<div class="msgrid'+(open?" all":"")+'">'+pos.map(tile).join("")+'</div>'+(more>0?'<button class="msmore" id="msMore">'+(open?"Show less":"Show all "+pos.length)+'</button>':'');
+  const pos=ks.filter(k=>by[k]>=.005);if(!pos.length)return "";
+  const tot=pos.reduce((a,k)=>a+by[k],0)||1,mx=Math.max(...pos.map(k=>by[k]))||1,top=pos[0],open=ls.get("pb.msubOpen")==="1";
+  const pc=Math.round(by[top]/tot*100),n=pos.length-1;
+  const sum='<span class="mst2"><span class="mu">'+(n?"Mostly":"All")+'</span> '+esc(top)+'</span>'+(n?'<span class="mu msp num">'+pc+'%</span>':'');
+  const rows=pos.map((k,i)=>'<button class="msr" data-item="'+MISC_ID+'" data-msub="'+esc(k)+'" style="--w:'+Math.max(2.5,by[k]/mx*100).toFixed(1)+'%;--i:'+i+'"><span class="msn">'+esc(k)+'</span><span class="msa num" data-v="'+by[k]+'">'+money(by[k])+'</span></button>').join("");
+  return '<button class="msum" id="msTog" aria-expanded="'+open+'">'+sum+(n?'<span class="msc num">+'+n+'</span>':'')+'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="msx'+(open?' op':'')+'"><div class="msxi">'+rows+'</div></div>';
+}
+function msToggle(btn){
+  const x=btn.nextElementSibling;if(!x)return;const open=!x.classList.contains("op");
+  ls.set("pb.msubOpen",open?"1":"0");btn.setAttribute("aria-expanded",String(open));try{haptic()}catch(_){}
+  const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if(!open){x.classList.remove("anim");x.classList.add("out");x.classList.remove("op");setTimeout(()=>x.classList.remove("out"),420);return}
+  x.classList.remove("out","anim");void x.offsetWidth;x.classList.add("op");if(reduce)return;x.classList.add("anim");
+  const els=[...x.querySelectorAll(".msa")],t0=performance.now(),D=750,ease=t=>1-Math.pow(1-t,3);
+  els.forEach(e=>e.textContent=money(0));
+  const step=now=>{let done=true;els.forEach((e,i)=>{const st=t0+150+i*45,t=Math.min(1,Math.max(0,(now-st)/D));if(t<1)done=false;e.textContent=money(round2(+e.dataset.v*ease(t)))});
+    if(!done&&x.isConnected)requestAnimationFrame(step);else{els.forEach(e=>e.textContent=money(+e.dataset.v));if(x.isConnected)try{haptic()}catch(_){}}};
+  requestAnimationFrame(step);
 }
 function renderBudget(groups,sm){
   if(!S.budgetsLoaded&&S.dbState!=="none")return '<div class="empty">Loading…</div>';
@@ -3229,7 +3258,7 @@ $("#main").addEventListener("click",e=>{
   if(e.target.closest("#txqClear")){S.q="";render();const i=$("#txq");i&&i.focus();return}
   if(e.target.closest("#histImport")){importHistory();return}
   if(e.target.closest("[data-upcoming]")){S.upcoming=true;S.q="";S.tab="tx";try{haptic()}catch(_){}render();window.scrollTo(0,0);return}
-  if(e.target.closest("#msMore")){const g=document.querySelector(".msgrid");const on=!g.classList.contains("all");g.classList.toggle("all",on);ls.set("pb.msubAll",on?"1":"0");e.target.closest("#msMore").textContent=on?"Show less":"Show all "+g.children.length;try{haptic()}catch(_){}return}
+  const mtg=e.target.closest("#msTog");if(mtg){msToggle(mtg);return}
   if(e.target.closest("#futTog")){const w=e.target.closest(".futw");const shut=!w.classList.contains("shut");w.classList.toggle("shut",shut);ls.set("pb.futHide",shut?"1":"0");e.target.closest("#futTog").setAttribute("aria-expanded",String(!shut));try{haptic()}catch(_){}return}
   if(e.target.closest("#clrUp")){S.upcoming=false;render();return}
   const pv=e.target.closest("[data-plan],[data-iplan]");if(pv){pv.dataset.plan?padOpen("item",pv.dataset.plan):padOpen("income",pv.dataset.iplan);return}
