@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 1:10 AM"</script>
+<script>window.PB_BUILD="Oct 30, 1:20 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -167,17 +167,21 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 @keyframes rsin{from{opacity:0}}
 .rsc{width:min(280px,80%);text-align:center}.rsc b{display:block;font-size:17px;margin-top:12px}.rsc span{display:block;font-size:13px;color:var(--muted);margin-top:4px}
 .rsb{height:6px;border-radius:3px;background:var(--trk);overflow:hidden}.rsb i{display:block;height:100%;width:4%;background:var(--brand);transition:width .3s}
-.dcard{padding:16px 20px 14px}
-.drow{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.dhd{font-size:19px;font-weight:700}
-.dsd{font-size:14px;color:var(--muted)}
-.dln{border-top:1px solid var(--line);margin:12px 0 10px}
-.dit span{color:var(--muted);font-size:16px}
-.dit b{font-family:var(--display);font-weight:800;font-size:24px}
-.dit b.dpd{color:var(--ok)}.dit b.neg{color:var(--over)}
-.dit{animation:dup .55s cubic-bezier(.3,1.4,.5,1) both}
+.card.acard{background:#1a73e8;color:#fff;border:0;-webkit-backdrop-filter:none;backdrop-filter:none;padding:16px 18px 14px;box-shadow:0 10px 28px rgba(26,115,232,.28)}
+.card.acard.over{background:#d93025;box-shadow:0 10px 28px rgba(217,48,37,.28)}
+.atop{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:rgba(255,255,255,.85)}
+.achip{background:rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:4px 12px;font-weight:600}
+.abig{font-family:var(--display);font-weight:800;font-size:clamp(38px,11vw,48px);line-height:1.05;margin-top:12px;animation:dup .6s cubic-bezier(.3,1.4,.5,1) both}
+.asub{font-size:14px;color:rgba(255,255,255,.85)}
+.apd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;background:#fff;color:#174ea6;border-radius:16px;padding:11px 14px;animation:dup .6s .14s cubic-bezier(.3,1.4,.5,1) both}
+.over .apd{color:#a50e0e}
+.apd span{font-size:15px;font-weight:600}.apd small{display:block;font-size:12px;font-weight:500;opacity:.7;margin-top:1px}
+.apd b{font-family:var(--display);font-weight:800;font-size:26px}
+.adots{display:grid;gap:2px;margin-top:14px}
+.adots i{height:5px;border-radius:2px;background:rgba(255,255,255,.28);animation:dotin .4s both}
+.adots i.f{background:#fff}.adots i.t{background:#fbbc04}
+@keyframes dotin{from{transform:scaleY(0)}}
 @keyframes dup{from{opacity:0;transform:translateY(8px)}}
-.dnote{text-align:right;font-size:13px;color:var(--muted);margin-top:4px}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1359,14 +1363,15 @@ function isFixed(it,g){if(typeof it.fixed==="boolean")return it.fixed;return FIX
 // Top card: day + date, total remaining, leftover per day
 function dateCardHTML(itot,t0){
   const rem=round2(itot-t0.s),td=today(),cur=ymOf(td),[y,m]=S.ym.split("-").map(Number),dim=new Date(y,m,0).getDate(),d=daysLeftAfterToday(S.ym);
-  let head,side,pl,pv,pn;
-  if(S.ym===cur){const dt=new Date(td+"T12:00:00");head=dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});side="Day "+dt.getDate()+" of "+dim;
-    pl="Leftover per day";pv=rem>0?money(round2(rem/d)):money(0);pn=d===1?"for today, the last day":"for the "+d+" days left, today included"}
-  else if(S.ym<cur){head=MONTHS[m-1]+" "+y;side="Month is over";pl=null}
-  else{head=MONTHS[m-1]+" "+y;side="Starts "+MONTHS[m-1].slice(0,3)+" 1";pl="Leftover per day";pv=rem>0?money(round2(rem/dim)):money(0);pn="across all "+dim+" days"}
-  return '<section class="card dcard"><div class="drow"><span class="dhd">'+head+'</span><span class="dsd">'+side+'</span></div><div class="dln"></div>'+
-    '<div class="drow dit"><span>'+(S.ym<cur?(rem<0?"Over budget":"Left over"):"Total remaining")+'</span><b class="num'+(rem<0?" neg":"")+'">'+money(rem<0&&S.ym<cur?-rem:rem)+'</b></div>'+
-    (pl?'<div class="drow dit" style="margin-top:8px;animation-delay:.12s"><span>'+pl+'</span><b class="num dpd'+(rem<0?" neg":"")+'">'+pv+'</b></div><div class="dnote">'+pn+'</div>':'')+'</section>';
+  const isCur=S.ym===cur,past=S.ym<cur,dayN=isCur?+td.slice(8):past?dim+1:0;
+  const chip=isCur?new Date(td+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}):MONTHS[m-1]+" "+y;
+  const side=isCur?"Day "+dayN+" of "+dim:past?"Month is over":"Starts "+MONTHS[m-1].slice(0,3)+" 1";
+  const days=isCur?d:dim,pv=rem>0?money(round2(rem/days)):money(0),note=isCur?(d===1?"Last day of the month":d+" days left, today included"):"Across all "+dim+" days";
+  let dots="";for(let k=1;k<=dim;k++)dots+='<i class="'+(k<dayN?"f":k===dayN?"t":"")+'"></i>';
+  return '<section class="card acard'+(rem<0?" over":"")+'"><div class="atop"><span class="achip">'+chip+'</span><span>'+side+'</span></div>'+
+    '<div class="abig num">'+money(past&&rem<0?-rem:rem)+'</div><div class="asub">'+(past?(rem<0?"over budget":"left over"):rem<0?"over budget":"total remaining")+'</div>'+
+    (past?'':'<div class="apd"><span>Leftover per day<small>'+note+'</small></span><b class="num">'+pv+'</b></div>')+
+    '<div class="adots" style="grid-template-columns:repeat('+dim+',1fr)">'+dots+'</div></section>';
 }
 function todayTileHTML(itot,t0){
   const td=today(),d=daysLeftAfterToday(S.ym);
