@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Budget">
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 12:40 AM"</script>
+<script>window.PB_BUILD="Oct 30, 12:25 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -157,56 +157,6 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .clb i.nw{background:var(--brand);opacity:.55}
 .clb i.nw.ov{background:var(--over);opacity:.8}
 .clw{margin-top:5px;font-size:13px;color:var(--over);font-weight:600}
-.psum{padding:18px 20px 14px}
-.psl{font-size:15px;color:var(--muted)}
-.psv{display:flex;align-items:baseline;gap:4px;margin-top:2px}
-.psv b{font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,46px);line-height:1.05;letter-spacing:-.01em}
-.psv span{font-size:18px;font-weight:600;color:var(--muted)}
-.psum.over .psv b{color:var(--over)}
-.pss{font-size:14px;color:var(--muted);margin-top:4px}
-.psb{position:relative;height:8px;border-radius:4px;background:var(--trk);margin:14px 0 12px}
-.psb i{display:block;height:100%;border-radius:4px;background:var(--prog);transition:width .5s cubic-bezier(.3,1.3,.5,1)}
-.psum.over .psb i{background:var(--over)}
-.psb em{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--fg);opacity:.55;transform:translateX(-1px)}
-.psf{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
-.psf b{color:var(--fg);font-weight:700}
-.psu{display:inline-flex;align-items:center;gap:4px;background:none;border:0;padding:0;font:inherit;color:var(--link)}
-.psu b{color:var(--over)}.psu svg{width:14px;height:14px}
-.islw{display:flex;justify-content:center;margin-bottom:-4px}
-.isl{display:block;position:relative;width:212px;height:40px;border:0;border-radius:22px;background:#000;color:#fff;font:inherit;text-align:left;padding:0;overflow:hidden;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18);transition:width .6s cubic-bezier(.32,1.28,.5,1),height .6s cubic-bezier(.32,1.28,.5,1),border-radius .6s cubic-bezier(.32,1.28,.5,1),transform .15s}
-.isl:active{transform:scale(.97)}
-.isl.big{width:100%;height:146px;border-radius:30px}
-.isl .ic{display:flex;align-items:center;gap:9px;height:40px;padding:0 16px;font-size:15px;font-weight:600;white-space:nowrap}
-.idot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor;animation:idot 2.4s ease-in-out infinite}
-@keyframes idot{50%{opacity:.55}}
-.ich{margin-left:auto;opacity:.5;transition:transform .5s cubic-bezier(.3,1.5,.5,1)}
-.isl.big .ich{transform:rotate(90deg)}
-.isl .ix{display:block;padding:0 20px;opacity:0;transform:translateY(-6px) scale(.98);transition:opacity .2s,transform .3s}
-.isl.big .ix{opacity:1;transform:none;transition:opacity .35s .22s,transform .45s .18s cubic-bezier(.3,1.4,.5,1)}
-.ixl{display:block;font-size:12px;color:#9aa0a6}
-.ixv{display:block;font-family:var(--display);font-weight:800;font-size:28px;line-height:1.15}
-.ixv small{font-family:inherit;font-size:15px;font-weight:500;color:#9aa0a6}
-.ixb{display:block;height:6px;border-radius:3px;background:#3c4043;margin-top:8px;overflow:hidden}
-.ixb i{display:block;height:100%;border-radius:3px;width:0;transition:width .8s .35s cubic-bezier(.3,1.3,.5,1)}
-.isl:not(.big) .ixb i{width:0!important;transition:none}
-.ixr{display:flex;justify-content:space-between;gap:10px;margin-top:7px;font-size:12px;color:#bdc1c6}
-.ixr span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ixr span:last-child{flex:none}
-#dynStrip{position:fixed;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 10px);z-index:58;pointer-events:none;background:linear-gradient(#202124 0,#202124 calc(100% - 12px),rgba(32,33,36,0) 100%)}
-#dyn{position:fixed;left:50%;top:11px;width:126px;height:37px;margin:0;padding:0;border:0;border-radius:19px;background:#000;color:#fff;font:inherit;text-align:left;z-index:60;transform:translateX(-50%);overflow:hidden;opacity:0;pointer-events:none;transition:width .6s cubic-bezier(.32,1.28,.5,1),height .6s cubic-bezier(.32,1.28,.5,1),border-radius .6s cubic-bezier(.32,1.28,.5,1),top .6s cubic-bezier(.32,1.28,.5,1),opacity .2s}
-#dyn.compact,#dyn.big{opacity:1;pointer-events:auto}
-#dyn.compact{width:214px}
-#dyn.big{width:calc(100vw - 20px);height:166px;border-radius:44px}
-#dyn .dw{position:absolute;top:0;height:37px;display:flex;align-items:center;opacity:0;transition:opacity .25s}
-#dyn.compact .dw,#dyn.big .dw{opacity:1;transition-delay:.2s}
-#dyn .dwl{left:14px;gap:6px;font-size:14px}#dyn .dwl b{font-weight:700}
-#dyn .dwr{right:13px}#dyn .dwr svg{width:20px;height:20px}
-#dyn .idot{width:8px;height:8px;border-radius:50%;box-shadow:0 0 8px currentColor;animation:idot 2.4s ease-in-out infinite}
-#dyn.big .dwl{left:22px;top:6px}#dyn.big .dwr{right:22px;top:6px}
-#dyn .dx{position:absolute;left:22px;right:22px;top:52px;opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .3s}
-#dyn.big .dx{opacity:1;transform:none;transition:opacity .35s .25s,transform .45s .2s cubic-bezier(.3,1.4,.5,1)}
-#dyn .ixb i{transition:width .8s .4s cubic-bezier(.3,1.3,.5,1)}
-#dyn:not(.big) .ixb i{width:0!important;transition:none}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1384,70 +1334,6 @@ function upcomingHTML(){
 const FIXED_GROUP=/housing|utilit|insurance|debt|bill|subscription/i;
 const FIXED_ITEM=/mortgage|\brent\b|lease|insurance|loan|car payment|internet|phone|cell|electric|water|sewer|trash|hoa|subscription|tuition|daycare|consumers/i;
 function isFixed(it,g){if(typeof it.fixed==="boolean")return it.fixed;return FIXED_GROUP.test(g.name)||FIXED_ITEM.test(it.name)}
-/* ---------- today island: a black pill ("$7.66 left today") that opens briefly on launch ---------- */
-const ISL={open:false,played:false,user:false,t:null};
-function islandData(itot,t0){
-  const td=today();if(S.ym!==ymOf(td)||!(itot>0)||!S.txLoaded)return null;
-  const d=daysLeftAfterToday(S.ym);if(!d)return null;
-  const tt=S.tx.filter(t=>t.date===td&&t.type!=="income"),st=round2(tt.reduce((a,t)=>a+sAmt(t),0));
-  const allow=round2(Math.max(0,(itot-(t0.s-st))/d)),left=round2(allow-st),k=allow>0?left/allow:0;
-  const col=left<0?"#ea4335":k>.5?"#34a853":k>.2?"#fbbc04":"#ea4335";
-  const names=[...new Set(tt.slice().sort((a,b)=>sAmt(b)-sAmt(a)).map(t=>(t.merchant||"Purchase").replace(/^venmo\s*:\s*/i,"")))];
-  const what=names.length?names.slice(0,3).join(" · ")+(names.length>3?" +"+(names.length-3):""):"Nothing yet today";
-  return {st,allow,left,k,col,what,month:round2(itot-t0.s),pct:allow>0?Math.max(0,Math.min(100,st/allow*100)):(st>0?100:0)};
-}
-/* Fake Dynamic Island: on iPhones with the island, running from the Home Screen, draw a black shape over the real island that grows out of it */
-const DYN={on:false,el:null,state:"off",user:false,played:false,t:[]};
-function dynInit(){try{
-  const sa=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
-  const pr=document.createElement("div");pr.style.cssText="position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden;pointer-events:none";document.body.appendChild(pr);const top=pr.offsetHeight;pr.remove();
-  if(!sa||top<1)return;
-  const strip=document.createElement("div");strip.id="dynStrip";document.body.appendChild(strip); // keeps the white status-bar text readable
-  if(top<51||innerWidth>500)return;
-  DYN.on=true;document.documentElement.classList.add("dyn-on");
-  const el=document.createElement("button");el.id="dyn";el.type="button";el.setAttribute("aria-label","Today's spending");
-  el.innerHTML='<span class="dw dwl"><i class="idot"></i><b class="num"></b></span><span class="dw dwr"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5" fill="none" stroke="#3c4043" stroke-width="3"/><circle class="dra" cx="10" cy="10" r="7.5" fill="none" stroke-width="3" stroke-linecap="round" transform="rotate(-90 10 10)" stroke-dasharray="0 48"/></svg></span><span class="dx"><span class="ixl">Today so far</span><span class="ixv num"></span><span class="ixb"><i></i></span><span class="ixr"><span class="dwh"></span><span class="num dmo"></span></span></span>';
-  el.onclick=()=>{dynSet(DYN.state==="big"?"compact":"big",true)};document.body.appendChild(el);DYN.el=el}catch(_){}}
-function dynSet(st,user){if(!DYN.el)return;DYN.state=st;DYN.el.className=st==="off"?"":st;if(user){DYN.user=true;DYN.t.forEach(clearTimeout)}if(user||st==="big")try{haptic()}catch(_){}}
-function dynUpdate(d){if(!DYN.on||!DYN.el)return;const el=DYN.el;
-  if(!d){if(DYN.state!=="off")dynSet("off");return}
-  el.querySelector(".idot").style.background=d.col;el.querySelector(".dwl b").textContent=money(Math.abs(d.left)).replace(/\.\d\d$/,m=>Math.abs(d.left)>=100?"":m);
-  const a=el.querySelector(".dra");a.setAttribute("stroke",d.col);a.setAttribute("stroke-dasharray",(Math.max(0,Math.min(1,d.left>0?d.k:0))*47.1).toFixed(1)+" 48");
-  el.querySelector(".ixv").innerHTML=money(d.st)+' <small>of '+money(d.allow)+'</small>';el.querySelector(".ixb i").style.cssText="width:"+d.pct.toFixed(1)+"%;background:"+d.col;
-  el.querySelector(".dwh").textContent=d.left<0?money(-d.left)+" over today":money(d.left)+" left today · "+d.what;el.querySelector(".dmo").textContent=money(d.month)+" this month";
-  if(!DYN.played){DYN.played=true;dynSet("off");if(matchMedia("(prefers-reduced-motion:reduce)").matches){dynSet("compact");return}
-    DYN.t.push(setTimeout(()=>dynSet("big"),600));DYN.t.push(setTimeout(()=>{if(!DYN.user)dynSet("compact")},3600))}
-  else if(DYN.state==="off")dynSet("compact")}
-function islandHTML(itot,t0){
-  const td=today();if(DYN.on||S.ym!==ymOf(td)||!(itot>0)||!S.txLoaded)return "";
-  const d=daysLeftAfterToday(S.ym);if(!d)return "";
-  const tt=S.tx.filter(t=>t.date===td&&t.type!=="income"),st=round2(tt.reduce((a,t)=>a+sAmt(t),0));
-  const allow=round2(Math.max(0,(itot-(t0.s-st))/d)),left=round2(allow-st),k=allow>0?left/allow:0;
-  const col=left<0?"var(--over)":k>.5?"#34a853":k>.2?"#fbbc04":"#ea4335";
-  const names=[...new Set(tt.slice().sort((a,b)=>sAmt(b)-sAmt(a)).map(t=>(t.merchant||"Purchase").replace(/^venmo\s*:\s*/i,"")))];
-  const what=names.length?names.slice(0,3).join(" · ")+(names.length>3?" +"+(names.length-3):""):"Nothing yet today";
-  const pct=allow>0?Math.max(0,Math.min(100,st/allow*100)):(st>0?100:0);
-  return '<div class="islw"><button class="isl'+(ISL.open?" big":"")+'" id="isl" aria-expanded="'+ISL.open+'"><span class="ic"><i class="idot" style="background:'+col+'"></i><span class="num">'+(left<0?money(-left)+" over today":money(left)+" left today")+'</span><span class="ich">›</span></span>'+
-    '<span class="ix"><span class="ixl">Today so far</span><span class="ixv num">'+money(st)+' <small>of '+money(allow)+'</small></span><span class="ixb"><i style="width:'+pct.toFixed(1)+'%;background:'+col+'"></i></span><span class="ixr"><span>'+esc(what)+'</span><span class="num">'+money(round2(itot-t0.s))+' left this month</span></span></span></button></div>';
-}
-function islAfterRender(){const el=document.getElementById("isl");if(!el)return;
-  if(!ISL.played&&!matchMedia("(prefers-reduced-motion:reduce)").matches){ISL.played=true;setTimeout(()=>islSet(true,false),450);ISL.t=setTimeout(()=>{if(!ISL.user)islSet(false,false)},3300)}else ISL.played=true}
-function islSet(open,user){ISL.open=open;if(user){ISL.user=true;clearTimeout(ISL.t)}const el=document.getElementById("isl");if(!el)return;el.classList.toggle("big",open);el.setAttribute("aria-expanded",String(open));if(user||open)try{haptic()}catch(_){}}
-function summaryComboHTML(itot,t0,groups){
-  const rem=round2(itot-t0.s),[y,m]=S.ym.split("-").map(Number),dim=new Date(y,m,0).getDate(),cur=ymOf(today()),d=daysLeftAfterToday(S.ym);
-  const past=S.ym<cur,fut=S.ym>cur,elapsed=past?dim:fut?0:new Date().getDate();
-  let lab,big,unit="",sub;
-  if(past){lab=rem<0?"Over budget":"Left over";big=money(Math.abs(rem));sub="Month is over · "+money(t0.s)+" spent of "+money(itot)}
-  else{lab=rem<0?"Over budget":"Left to spend per day";big=money(rem<0?-rem:round2(rem/d));unit=rem<0?"":"/day";sub=(rem<0?"Spent "+money(t0.s)+" of "+money(itot):money(rem)+" left · "+d+" day"+(d===1?"":"s")+" to go")}
-  const sp=itot>0?Math.max(0,Math.min(100,t0.s/itot*100)):0,tm=elapsed/dim*100;
-  const fixedIds=new Set();groups.forEach(g=>g.items.forEach(it=>{if(isFixed(it,g))fixedIds.add(it.id)}));
-  const varSpent=round2(S.tx.filter(t=>t.type!=="income"&&!fixedIds.has(t.itemId)&&t.date<=today()).reduce((a,t)=>a+sAmt(t),0));
-  const avg=elapsed?money(round2(varSpent/elapsed)):"—";
-  const td=today(),fx=S.tx.filter(t=>t.type!=="income"&&!isHist(t)&&t.date>td),up=round2(fx.reduce((a,t)=>a+sAmt(t),0));
-  return '<section class="card psum'+(rem<0?" over":"")+'"><div class="psl">'+lab+'</div><div class="psv num"><b>'+big+'</b>'+(unit?'<span>'+unit+'</span>':'')+'</div><div class="pss num">'+sub+'</div>'+
-    '<div class="psb" aria-hidden="true"><i style="width:'+sp.toFixed(1)+'%"></i>'+(!past&&!fut?'<em style="left:'+tm.toFixed(1)+'%"></em>':'')+'</div>'+
-    '<div class="psf"><span>Avg daily <b class="num">'+avg+'</b></span>'+(fx.length?'<button class="psu" data-upcoming="1">Upcoming <b class="num">'+money(up)+'</b>'+CHEV+'</button>':'<span>Nothing upcoming</span>')+'</div></section>';
-}
 function avgDailyHTML(groups){
   if(!COMBINED&&S.view!=="spent")return "";
   const fixedIds=new Set();groups.forEach(g=>g.items.forEach(it=>{if(isFixed(it,g))fixedIds.add(it.id)}));
@@ -1505,8 +1391,7 @@ function renderBudget(groups,sm){
   const frac=itot>0?Math.max(0,Math.min(1,(v==="planned"?t0.p:v==="spent"?t0.s:itot-t0.s)/itot)):0;
   const arcCol=v==="spent"?"var(--ok)":v==="remaining"?"var(--bar)":(round2(itot-t0.p)===0&&inc.length?"var(--ok)":"var(--bar)");
   const C=2*Math.PI*26;
-  h+=islandHTML(itot,t0);
-  if(COMBINED)h+=summaryComboHTML(itot,t0,groups);else h+='<section class="card pinc"><div class="ring"><svg class="arc" viewBox="0 0 62 62"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--line)" stroke-width="7"/>'+(frac>0?'<circle cx="31" cy="31" r="26" fill="none" stroke="'+arcCol+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+(C*frac).toFixed(1)+' '+C.toFixed(1)+'"/>':'')+'</svg><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5h.01M17.5 14.5h.01"/></svg></div><div><small>'+sumLabel+'</small><b class="num'+(sumVal<0?" neg":"")+'"'+(sumVal<0?' style="color:var(--over)"':'')+'>'+money(sumVal)+'</b>'+(COMBINED?'<span class="pcap num">'+money(t0.s)+' spent of '+money(itot)+'</span>':'')+'</div>'+(COMBINED?'</section><section class="card ptiles">':'')+perDayHTML(sumVal)+avgDailyHTML(groups)+upcomingHTML()+'</section>';
+  h+='<section class="card pinc"><div class="ring"><svg class="arc" viewBox="0 0 62 62"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--line)" stroke-width="7"/>'+(frac>0?'<circle cx="31" cy="31" r="26" fill="none" stroke="'+arcCol+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+(C*frac).toFixed(1)+' '+C.toFixed(1)+'"/>':'')+'</svg><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5h.01M17.5 14.5h.01"/></svg></div><div><small>'+sumLabel+'</small><b class="num'+(sumVal<0?" neg":"")+'"'+(sumVal<0?' style="color:var(--over)"':'')+'>'+money(sumVal)+'</b>'+(COMBINED?'<span class="pcap num">'+money(t0.s)+' spent of '+money(itot)+'</span>':'')+'</div>'+(COMBINED?'</section><section class="card ptiles">':'')+perDayHTML(sumVal)+avgDailyHTML(groups)+upcomingHTML()+'</section>';
   h+='<section class="card"><div class="chead"><h2>Income</h2><span class="lbl">'+(COMBINED?"Received":v==="planned"?"Planned":v==="spent"?"Received":"Remaining")+'</span></div>';
   if(!inc.length)h+='<p class="note" style="margin:6px 0 0">Add your paychecks so you can see how much is left to budget.</p>';
   inc.forEach(x=>{const pl=+x.planned||0, rc=round2(rm[x.id]||0), left=round2(pl-rc);
@@ -2803,8 +2688,6 @@ function render(){if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.c
   const m=$("#main");
   const ae=document.activeElement, keep=ae&&ae.id==="txq"?[ae.selectionStart,ae.selectionEnd]:null;
   m.innerHTML=S.tab==="budget"?renderBudget(groups,sm):S.tab==="tx"?renderTx(groups):renderInsights(groups,sm);
-  if(S.tab==="budget")islAfterRender();
-  if(DYN.on){try{dynUpdate(islandData(incomeTotal(incomeFor(S.ym)),totals(groups,sm)))}catch(_){}}
   const snap=S.tab==="insights"&&IS.sub==="map"&&!!m.querySelector(".mlrow");document.documentElement.classList.toggle("mlsnap",snap);if(snap)mlSnapVar();
   if(keep){const i=$("#txq");if(i){i.focus();try{i.setSelectionRange(keep[0],keep[1])}catch(e){}}}
 }
@@ -3392,7 +3275,6 @@ $("#main").addEventListener("click",e=>{
   if(e.target.closest("#txqClear")){S.q="";render();const i=$("#txq");i&&i.focus();return}
   if(e.target.closest("#histImport")){importHistory();return}
   if(e.target.closest("[data-upcoming]")){S.upcoming=true;S.q="";S.tab="tx";try{haptic()}catch(_){}render();window.scrollTo(0,0);return}
-  const isl=e.target.closest("#isl");if(isl){islSet(!isl.classList.contains("big"),true);return}
   const mtg=e.target.closest("#msTog");if(mtg){msToggle(mtg);return}
   if(e.target.closest("#futTog")){const w=e.target.closest(".futw");const shut=!w.classList.contains("shut");w.classList.toggle("shut",shut);ls.set("pb.futHide",shut?"1":"0");e.target.closest("#futTog").setAttribute("aria-expanded",String(!shut));try{haptic()}catch(_){}return}
   if(e.target.closest("#clrUp")){S.upcoming=false;render();return}
@@ -3432,7 +3314,7 @@ function subscribeTx(){
 /* no pinch / double-tap zoom: the layout is built for the phone screen */
 ["gesturestart","gesturechange"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 async function init(){
-  dynInit();render();
+  render();
   const db=await (window.claude?.use?.("db")||Promise.resolve(null)).catch(()=>null);
   if(!db){S.dbState="none";S.budgetsLoaded=true;S.txLoaded=true;render();return}
   S.db=db;S.dbState="ok";loadSubs();
