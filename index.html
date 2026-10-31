@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 9:35 PM"</script>
+<script>window.PB_BUILD="Oct 30, 9:50 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -202,6 +202,25 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .iplain{padding:12px 0}
 .iplain .vbtn{display:inline-flex;align-items:center;gap:6px;color:var(--brand);font-weight:700}
 .iplain .vbtn svg{width:15px;height:15px}
+.mfold{margin:12px 0 4px}
+.mfh{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border:0;border-radius:14px 14px 0 0;background:var(--sel);color:var(--link);font:inherit;font-size:15px;text-align:left;cursor:pointer;position:relative;z-index:2;transition:border-radius .3s,transform .15s}
+.mfold:not(.op).shut .mfh,.mfold:not(.op) .mfh{border-radius:14px}
+.mfold.op .mfh{border-radius:14px 14px 0 0}
+.mfh:active{transform:scale(.98)}
+.mft{font-weight:700}.mfs2{flex:1;min-width:0;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mfh svg{flex:none;transition:transform .5s cubic-bezier(.3,1.4,.5,1)}.mfold.op .mfh svg{transform:rotate(180deg)}
+.mfst{position:relative;perspective:700px;perspective-origin:50% 0}
+.mfp{position:absolute;left:0;right:0;top:0;transform-origin:50% 0;transform-style:preserve-3d;backface-visibility:hidden}
+.mfp .mfp{top:100%}
+.mff{position:relative;background:var(--card);border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.mfp.last>.mff{border-bottom:1px solid var(--line);border-radius:0 0 14px 14px;overflow:hidden}
+.mfsh{position:absolute;inset:0;pointer-events:none}
+.mfr{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;height:44px;padding:0 14px;border:0;border-top:1px dashed var(--line);background:none;font:inherit;font-size:15px;color:var(--fg);text-align:left}
+.mff>.mfr:first-child{border-top:1px solid var(--line)}
+.mfr:active{background:var(--trk)}
+.mfn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mfn i{display:block;height:3px;border-radius:2px;background:#8ab4f8;margin-top:4px}
+.mfr .num{font-weight:600;flex:none}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1429,24 +1448,30 @@ function miscSegs(fillPct){
 function miscSubsHTML(){
   const {ks,by}=miscBreakdown();
   const pos=ks.filter(k=>by[k]>=.005);if(!pos.length)return "";
-  const tot=pos.reduce((a,k)=>a+by[k],0)||1,mx=Math.max(...pos.map(k=>by[k]))||1,top=pos[0],open=ls.get("pb.msubOpen")==="1";
-  const pc=Math.round(by[top]/tot*100),n=pos.length-1;
-  const sum='<span class="mst2"><span class="mu">'+(n?"Mostly":"All")+'</span> '+esc(top)+'</span>'+(n?'<span class="mu msp num">'+pc+'%</span>':'');
-  const rows=pos.map((k,i)=>'<button class="msr" data-item="'+MISC_ID+'" data-msub="'+esc(k)+'" style="--w:'+Math.max(2.5,by[k]/mx*100).toFixed(1)+'%;--i:'+i+'"><span class="msn">'+esc(k)+'</span><span class="msa num" data-v="'+by[k]+'">'+money(by[k])+'</span></button>').join("");
-  return '<div class="misl'+(open?' op':'')+'"><button class="msum" id="msTog" aria-expanded="'+open+'">'+sum+(n?'<span class="msc num">+'+n+'</span>':'')+'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="msx'+(open?' op':'')+'"><div class="msxi">'+rows+'</div></div></div>';
+  const tot=pos.reduce((a,k)=>a+by[k],0)||1,mx=Math.max(...pos.map(k=>by[k]))||1,top=pos[0],open=ls.get("pb.msubOpen")==="1",pc=Math.round(by[top]/tot*100);
+  const PER=3,RH=44,gs=[];for(let i=0;i<pos.length;i+=PER)gs.push(pos.slice(i,i+PER));
+  let inner="";for(let i=gs.length-1;i>=0;i--){const h=gs[i].length*RH;
+    inner='<div class="mfp'+(i===gs.length-1?" last":"")+'" data-h="'+h+'"><div class="mff">'+gs[i].map(k=>'<button class="mfr" data-item="'+MISC_ID+'" data-msub="'+esc(k)+'"><span class="mfn">'+esc(k)+'<i style="width:'+Math.max(3,by[k]/mx*100).toFixed(1)+'%"></i></span><span class="num">'+money(by[k])+'</span></button>').join("")+'<span class="mfsh"></span></div>'+inner+'</div>'}
+  const total=gs.reduce((a,g)=>a+g.length*RH,0);
+  return '<div class="mfold'+(open?' op':'')+'"><button class="mfh" id="msTog" aria-expanded="'+open+'"><span class="mft">Subcategories</span><span class="mfs2">· mostly '+esc(top)+', '+pc+'%</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="mfst" style="height:'+(open?total:0)+'px'+(open?'':';visibility:hidden')+'">'+inner+'</div></div>';
 }
+// paper fold: panels hinged to each other; each has its own angle so the fold ripples down (or up) like a wave
 function msToggle(btn){
-  const x=btn.nextElementSibling;if(!x)return;const open=!x.classList.contains("op");
-  ls.set("pb.msubOpen",open?"1":"0");btn.setAttribute("aria-expanded",String(open));btn.parentNode.classList.toggle("op",open);try{haptic()}catch(_){}
-  const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
-  if(!open){x.classList.remove("anim");x.classList.add("out");x.classList.remove("op");setTimeout(()=>x.classList.remove("out"),420);return}
-  x.classList.remove("out","anim");void x.offsetWidth;x.classList.add("op");if(reduce)return;x.classList.add("anim");
-  const els=[...x.querySelectorAll(".msa")],t0=performance.now(),D=750,ease=t=>1-Math.pow(1-t,3);
-  els.forEach(e=>e.textContent=money(0));
-  const step=now=>{let done=true;els.forEach((e,i)=>{const st=t0+150+i*45,t=Math.min(1,Math.max(0,(now-st)/D));if(t<1)done=false;e.textContent=money(round2(+e.dataset.v*ease(t)))});
-    if(!done&&x.isConnected)requestAnimationFrame(step);else{els.forEach(e=>e.textContent=money(+e.dataset.v));if(x.isConnected)try{haptic()}catch(_){}}};
-  requestAnimationFrame(step);
+  const w=btn.parentNode,st=w.querySelector(".mfst"),pns=[...st.querySelectorAll(".mfp")];if(!pns.length)return;
+  const open=!w.classList.contains("op");w.classList.toggle("op",open);btn.setAttribute("aria-expanded",String(open));ls.set("pb.msubOpen",open?"1":"0");try{haptic()}catch(_){}
+  const MAXA=88,n=pns.length,reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  const A=w._ang||pns.map(()=>open?MAXA:0),V=w._vel||pns.map(()=>0);w._ang=A;w._vel=V;
+  const tgt=open?0:MAXA,t0=performance.now(),delay=i=>(open?i:(n-1-i))*95;
+  const paint=()=>{let h=0;pns.forEach((pn,i)=>{const abs=(i%2?1:-1)*A[i],prev=i?(((i-1)%2?1:-1)*A[i-1]):0,rel=abs-prev;pn.style.transform="rotateX("+rel.toFixed(2)+"deg)";
+      const r=A[i]*Math.PI/180,sn=Math.sin(r);pn.querySelector(".mfsh").style.background=i%2?"linear-gradient(rgba(0,0,0,"+(.34*sn).toFixed(3)+"),rgba(0,0,0,"+(.12*sn).toFixed(3)+"))":"linear-gradient(rgba(0,0,0,"+(.04*sn).toFixed(3)+"),rgba(0,0,0,"+(.16*sn).toFixed(3)+"))";
+      h+=(+pn.dataset.h)*Math.cos(r)});st.style.height=Math.max(0,h).toFixed(1)+"px";const shut=A.every(a=>a>MAXA-.5);st.style.visibility=shut?"hidden":"visible";w.classList.toggle("shut",shut)};
+  if(reduce){A.fill(tgt);paint();return}
+  cancelAnimationFrame(w._raf);
+  const step=now=>{let moving=false;pns.forEach((_,i)=>{if(now-t0<delay(i)){moving=true;return}V[i]+=(tgt-A[i])*.085;V[i]*=.8;A[i]+=V[i];if(A[i]<0){A[i]=0;V[i]*=-.3}if(A[i]>MAXA){A[i]=MAXA;V[i]=0}
+      if(Math.abs(tgt-A[i])>.05||Math.abs(V[i])>.05)moving=true;else{A[i]=tgt;V[i]=0}});paint();if(moving&&w.isConnected)w._raf=requestAnimationFrame(step)};
+  if(open){st.style.visibility="visible"}w._raf=requestAnimationFrame(step);
 }
+
 function renderBudget(groups,sm){
   if(!S.budgetsLoaded&&S.dbState!=="none")return '<div class="empty">Loading…</div>';
   let h=historyCardHTML();
