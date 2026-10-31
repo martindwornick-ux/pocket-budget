@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 9:25 PM"</script>
+<script>window.PB_BUILD="Oct 30, 9:35 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3251,18 +3251,18 @@ function txSheet(existing){
 }
 function itemSheet(id,preSub){
   const groups=JSON.parse(JSON.stringify(groupsFor(S.ym)));const f=findItem(groups,id);if(!f)return;
-  const list=sortedTx().filter(t=>t.itemId===id);const spent=round2(list.reduce((a,t)=>a+(+t.amount||0),0));
+  const list=sortedTx().filter(t=>t.itemId===id);const spent=round2(list.reduce((a,t)=>a+sAmt(t),0)),back=round2(list.filter(t=>t.type==="refund"||t.type==="income").reduce((a,t)=>a+(+t.amount||0),0));
   const isM=id===MISC_ID,NOSUB="No subcategory",subOf=t=>t.sub||NOSUB;
   let subsH="";
   if(isM&&list.length){const by={},cnt={};list.forEach(t=>{const k=subOf(t);by[k]=round2((by[k]||0)+sAmt(t));cnt[k]=(cnt[k]||0)+1});
     const ks=Object.keys(by).sort((a,b)=>(a===NOSUB)-(b===NOSUB)||by[b]-by[a]);const mx=Math.max(...ks.map(k=>by[k]),0.01);
     subsH='<div class="subs" role="group" aria-label="Spending by subcategory"><h4>By subcategory <span>· tap to filter</span></h4>'+ks.map(k=>'<button class="subr" data-subf="'+esc(k)+'" aria-pressed="false"><div class="irow"><span class="nm">'+esc(k)+' <span class="cnt">'+cnt[k]+'</span></span><span class="v num">'+money(by[k])+'</span></div><div class="track fill"><i style="width:'+Math.max(2,by[k]/mx*100).toFixed(1)+'%;background:'+subColor(k)+'"></i></div></button>').join("")+'</div>'}
-  let tx=list.map(t=>'<button class="txrow" data-tx="'+esc(t.id)+'"'+(isM?' data-sub="'+esc(subOf(t))+'"':'')+'><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(fmtDay(t.date))+(isM?' · '+esc(subOf(t)):'')+'</div></div><div class="a num">'+money(+t.amount)+'</div></button>').join("");
+  let tx=list.map(t=>'<button class="txrow" data-tx="'+esc(t.id)+'"'+(isM?' data-sub="'+esc(subOf(t))+'"':'')+'><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(fmtDay(t.date))+(isM?' · '+esc(subOf(t)):'')+'</div></div><div class="a num"'+(t.type==="refund"||t.type==="income"?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</div></button>').join("");
   openSheet('<h3>'+esc(f.it.name)+'</h3>'+
     '<div class="two"><div class="field"><label for="i-name">Name</label><input id="i-name" value="'+esc(f.it.name)+'"></div><div class="field"><label for="i-plan">Planned</label><input id="i-plan" inputmode="decimal" value="'+(+f.it.planned||0).toFixed(2)+'"></div></div>'+
     '<div class="ltb" id="i-ltb"></div>'+
     '<label class="chk"><input type="checkbox" id="i-fixed"'+(isFixed(f.it,f.g)?" checked":"")+'><span><b>Fixed cost</b><br><span class="note">Bills, mortgage, lease and the like. Left out of Avg Daily Spend.</span></span></label>'+
-    '<p class="note num" style="margin:0 0 14px">'+money(spent)+' spent in '+MONTHS[+S.ym.slice(5)-1]+'. Planned amounts carry into new months until you change them.</p>'+
+    '<p class="note num" style="margin:0 0 14px">'+money(spent)+' spent in '+MONTHS[+S.ym.slice(5)-1]+(back?' (after '+money(back)+' back)':'')+'. Planned amounts carry into new months until you change them.</p>'+
     '<div class="btnrow"><button class="btn" id="i-save">Save</button><button class="btn sec" id="i-add">Log purchase</button></div>'+
     (subsH?'<div style="margin-top:16px">'+subsH+'</div>':'')+
     (tx?'<div style="margin-top:'+(subsH?4:16)+'px" id="i-txs">'+tx+'</div>':'')+
