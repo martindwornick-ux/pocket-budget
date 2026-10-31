@@ -3179,7 +3179,7 @@ function txSheet(existing){
         padEl.innerHTML='<div>'+(c?'<div class="texpr num">'+esc(expr)+'</div>':'')+'<div class="keys'+(c?" calc":"")+'">'+keys.map(k=>k?'<button class="key'+(OPS[k]?" op":"")+'" data-k="'+k+'"'+(KEY_LABEL[k]?' aria-label="'+KEY_LABEL[k]+'"':'')+'>'+(k==="⌫"?BACK_SVG:k)+'</button>':'<span></span>').join("")+'</div>'+
           '<div class="padfoot"><label class="tgl"><input type="checkbox" id="f-calc" role="switch"'+(c?" checked":"")+'><span class="sw"></span><b>Calculator</b></label>'+(c?'<button class="btn sec padEq" data-k="=" aria-label="Equals">=</button>':'')+'<button class="btn padDone" id="f-save">'+(existing?"Save":"Done")+'</button></div></div>'};
       const subSel=s.querySelector("#f-sub"),subRow=s.querySelector("#f-subrow"),stxt=s.querySelector("#f-stxt"),merIn=s.querySelector("#f-mer");let subTouched=!!(existing&&existing.sub);
-      const drawSub=()=>{subRow.hidden=cat.value!==MISC_ID;if(subRow.hidden)nsRow.hidden=true;stxt.innerHTML=(subSel.value?esc(subSel.value):"Select")+CHEV};
+      const drawSub=()=>{subRow.hidden=cat.value!==MISC_ID;if(subRow.hidden)nsRow.hidden=true;stxt.innerHTML=(subSel.value?esc(subSel.value):"Select")+CHEV;try{merIn.placeholder=catLabel()||"Name"}catch(_){}};
       const autoSub=()=>{if(subTouched||cat.value!==MISC_ID)return;const g=suggestSub((s.querySelector("#f-venmo").checked?"Venmo: ":"")+merIn.value);if(g&&SUB.list.includes(g))subSel.value=g;drawSub()};
       const cq=s.querySelector("#f-cq");
       const catLabel=()=>{if(!cat.value)return"";const o=cat.options[cat.selectedIndex];const nm=o?o.textContent:"";return cat.value===MISC_ID&&subSel.value&&subSel.value!=="__new"?subSel.value:nm};
@@ -3395,7 +3395,7 @@ function txSheet(existing){
         const g2=groupsFor(ymOf(date)); const f=findItem(g2,itemId)||findItem(groups,itemId);
         const incSrc=incomeFor(ymOf(date)).find(x=>x.id===itemId)||incomeFor(S.ym).find(x=>x.id===itemId);
         const locNow=LF.value();
-        const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim();return s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
+        const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim()||catLabel()||(incSrc?incSrc.name:(f?f.it.name:""));return s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
         if(locNow)body.loc=locNow;
         {const who=s.querySelector("#f-person").value.trim();if(s.querySelector("#f-venmo").checked&&who)body.person=who}
         const rOn=!existing&&rb&&rb.checked&&body.type==="expense",rAmt=rOn?rVal():0;
