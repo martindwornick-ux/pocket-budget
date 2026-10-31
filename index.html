@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 4:15 PM"</script>
+<script>window.PB_BUILD="Oct 31, 5:55 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1731,7 +1731,8 @@ function merchLoad(){
 function merchIndex(){
   const seen=new Map();Object.values(IS.hist).forEach(a=>(a||[]).forEach(t=>seen.set(t.id,t)));S.tx.forEach(t=>seen.set(t.id,t));
   const by={},VPX=/^\s*venmo\s*:\s*/i;
-  seen.forEach(t=>{const raw=String(t.merchant||"");const name=raw.replace(VPX,"").replace(/\s+/g," ").trim();const k=name.toLowerCase();if(!k)return;
+  seen.forEach(t=>{const raw=String(t.merchant||"");const name=raw.replace(VPX,"").replace(/\s+/g," ").trim();
+    {const nl=name.toLowerCase();if(nl&&(nl===String(t.itemName||"").trim().toLowerCase()||nl===String(t.sub||"").trim().toLowerCase()))return} /* saved with no merchant: not a real merchant */const k=name.toLowerCase();if(!k)return;
     const e=by[k]||(by[k]={name,n:0,d:""});e.n++;
     if((t.date||"")>=e.d){e.d=t.date||"";e.name=name;e.venmo=VPX.test(raw);e.itemId=t.itemId||"";e.itemName=t.itemName||"";e.sub=t.sub||""}});
   return Object.values(by);
@@ -1769,7 +1770,7 @@ const LOC={
   nearby(v){
     const dist=(a,b)=>{const R=6371e3,r=Math.PI/180,dl=(b.lat-a.lat)*r,dg=(b.lng-a.lng)*r,x=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(x))};
     const by={};txPool().forEach(t=>{if(!t.loc||t.loc.lat==null||!t.merchant)return;const d=dist(v,t.loc);if(d>200+Math.min(150,(v.acc||0)))return;
-      const name=String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"").trim(),k=name.toLowerCase();const e=by[k]||(by[k]={name,n:0,d});e.n++;e.d=Math.min(e.d,d)});
+      const name=String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"").trim(),k=name.toLowerCase();if(k===String(t.itemName||"").trim().toLowerCase()||k===String(t.sub||"").trim().toLowerCase())return;const e=by[k]||(by[k]={name,n:0,d});e.n++;e.d=Math.min(e.d,d)});
     const out=Object.values(by).sort((a,b)=>a.d/(1+a.n)-b.d/(1+b.n)).slice(0,3);
     if(v.poi&&!out.some(e=>e.name.toLowerCase()===v.poi.toLowerCase()))out.push({name:v.poi,poi:true});
     return out.slice(0,4)}
@@ -3129,7 +3130,7 @@ function txSheet(existing){
   const groups=groupsFor(ymOf(d));
   if(!allItems(groups).length){openSheet('<h3>Add a category first</h3><p class="note">Transactions go into budget items like Groceries or Auto Gas &amp; Oil. Add a group and an item on the Budget tab, then log purchases here.</p><div class="btnrow" style="margin-top:14px"><button class="btn" id="okc">Got it</button></div>',s=>s.querySelector("#okc").onclick=closeSheet);return}
   const last=ls.get("pb.lastItem")||"";
-  const sel=existing?existing.itemId:(findItem(groups,last)||incomeFor(S.ym).some(x=>x.id===last)?last:"");
+  const sel=existing?existing.itemId:""; // no automatic default: start empty unless the merchant suggests one
   let kind=existing&&(existing.type==="refund"||existing.type==="income")?"refund":"expense";
   const VP=/^\s*venmo\s*:\s*/i;const mRaw=existing?(existing.merchant||""):"";const venmo0=VP.test(mRaw);const merch0=mRaw.replace(VP,"");
   const T={cur:existing?String(Math.round(+existing.amount*100)):"",ops:[],fresh:!!existing,calc:ls.get("pb.calc")==="1"};
