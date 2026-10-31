@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 10:10 PM"</script>
+<script>window.PB_BUILD="Oct 30, 10:15 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -249,6 +249,10 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .pb-card.is-open .pb-mini>i{width:var(--w);transition:width .7s var(--pb-spring) .15s}
 @media (prefers-reduced-motion:reduce){.pb-card *{transition-duration:.01s!important;transition-delay:0s!important}}
 /* ===== end component ===== */
+.aplan{display:inline-flex;align-items:center;gap:5px;border:0;background:rgba(255,255,255,.18);color:#fff;font:inherit;font-weight:700;padding:2px 10px;border-radius:999px;margin-left:2px;vertical-align:1px;transition:background .2s,transform .15s}
+.aplan svg{width:13px;height:13px}
+.aplan:active{transform:scale(.96)}
+.aplan.editing{background:#fff;color:#174ea6}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1448,9 +1452,11 @@ function dateCardHTML(itot,t0){
   const chip=isCur?new Date(td+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}):MONTHS[m-1]+" "+y;
   const side=isCur?"Day "+dayN+" of "+dim:past?"Month is over":"Starts "+MONTHS[m-1].slice(0,3)+" 1";
   const days=isCur?d:dim,pv=rem>0?money(round2(rem/days)):money(0),note=isCur?(d===1?"Last day of the month":d+" days left, today included"):"Across all "+dim+" days";
+  const inc=incomeFor(S.ym),ed=PAD&&PAD.kind==="income"&&inc.length===1&&PAD.id===inc[0].id;
+  const planBtn=inc.length===1?'<button class="aplan num'+(ed?" editing":"")+'" data-iplan="'+esc(inc[0].id)+'" aria-label="Planned '+money(itot)+'. Tap to change">'+money(itot)+' planned'+PENCIL+'</button>':inc.length?'<span class="aplan num">'+money(itot)+' planned</span>':'<button class="aplan" id="addIncome">set planned'+PENCIL+'</button>';
   let dots="";for(let k=1;k<=dim;k++)dots+='<i class="'+(k<dayN?"f":k===dayN?"t":"")+'"></i>';
   return '<section class="card acard'+(rem<0?" over":"")+'"><div class="atop"><span class="achip">'+chip+'</span><span>'+side+'</span></div>'+
-    '<div class="abig num">'+money(past&&rem<0?-rem:rem)+'</div><div class="asub">'+(past?(rem<0?"over budget":"left over"):rem<0?"over budget":"total remaining")+'</div>'+
+    '<div class="abig num">'+money(past&&rem<0?-rem:rem)+'</div><div class="asub">'+(past?(rem<0?"over budget":"left over"):rem<0?"over budget":"total remaining")+' of '+planBtn+'</div>'+
     (past?'':'<div class="apd"><span>Leftover per day<small>'+note+'</small></span><b class="num">'+pv+'</b></div>')+
     '<div class="adots" style="grid-template-columns:repeat('+dim+',1fr)">'+dots+'</div></section>';
 }
@@ -1525,7 +1531,7 @@ function renderBudget(groups,sm){
   const arcCol=v==="spent"?"var(--ok)":v==="remaining"?"var(--bar)":(round2(itot-t0.p)===0&&inc.length?"var(--ok)":"var(--bar)");
   const C=2*Math.PI*26;
   if(COMBINED)h+=dateCardHTML(itot,t0);else{h+='<section class="card pinc"><div class="ring"><svg class="arc" viewBox="0 0 62 62"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--line)" stroke-width="7"/>'+(frac>0?'<circle cx="31" cy="31" r="26" fill="none" stroke="'+arcCol+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+(C*frac).toFixed(1)+' '+C.toFixed(1)+'"/>':'')+'</svg><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5h.01M17.5 14.5h.01"/></svg></div><div><small>'+sumLabel+'</small><b class="num'+(sumVal<0?" neg":"")+'"'+(sumVal<0?' style="color:var(--over)"':'')+'>'+money(sumVal)+'</b>'+(COMBINED?'<span class="pcap num">'+money(t0.s)+' spent of '+money(itot)+'</span>':'')+'</div>'+(COMBINED?'</section><section class="card ptiles">':'')+perDayHTML(sumVal)+avgDailyHTML(groups)+(COMBINED?todayTileHTML(itot,t0):upcomingHTML())+'</section>';}
-  h+='<section class="card"><div class="chead"><h2>Income</h2><span class="lbl">'+(COMBINED?(inc.length>1?money(itot):""):v==="planned"?"Planned":v==="spent"?"Received":"Remaining")+'</span></div>';
+  if(!COMBINED||inc.length>1){h+='<section class="card"><div class="chead"><h2>Income</h2><span class="lbl">'+(COMBINED?(inc.length>1?money(itot):""):v==="planned"?"Planned":v==="spent"?"Received":"Remaining")+'</span></div>';
   if(!inc.length)h+='<p class="note" style="margin:6px 0 0">Add your paychecks so you can see how much is left to budget.</p>';
   inc.forEach(x=>{const pl=+x.planned||0, rc=round2(rm[x.id]||0), left=round2(pl-rc);
     if(COMBINED){const ed=PAD&&PAD.kind==="income"&&PAD.id===x.id;
@@ -1535,7 +1541,7 @@ function renderBudget(groups,sm){
     const bar=v==="planned"?'':'<i style="width:'+pct.toFixed(1)+'%"></i>';
     if(v==="planned"){const ed=PAD&&PAD.kind==="income"&&PAD.id===x.id;h+='<div class="item"><div class="irow"><button class="nm nmb" data-income="'+esc(x.id)+'">'+esc(x.name)+'</button><button class="v num vbtn inc'+(ed?" editing":"")+'" data-iplan="'+esc(x.id)+'" aria-label="Planned for '+esc(x.name)+', '+money(val)+'. Tap to change">'+money(val)+'</button></div><div class="track" style="justify-content:flex-start"></div></div>';return}
     h+='<button class="item" data-income="'+esc(x.id)+'"><div class="irow"><span class="nm">'+esc(x.name)+'</span><span class="v num'+(v==="planned"?" inc":"")+'">'+money(val)+'</span></div><div class="track" style="justify-content:flex-start">'+bar+'</div></button>'});
-  h+='<button class="addlink" id="addIncome">Add Income</button></section>';
+  h+='<button class="addlink" id="addIncome">Add Income</button></section>';}
   if(!groups.length)h+='<div class="card empty"><h3>No categories yet</h3>Add a group like Food, then items like Groceries and Restaurants.</div>';
   groups.forEach(g=>{
     h+='<section class="card"><div class="chead"><h2>'+esc(g.name)+'</h2><button class="dots" data-gmenu="'+esc(g.id)+'" aria-label="Options for '+esc(g.name)+'"><svg width="26" height="8" viewBox="0 0 26 8" fill="currentColor"><circle cx="4" cy="4" r="3"/><circle cx="13" cy="4" r="3"/><circle cx="22" cy="4" r="3"/></svg></button></div>';
