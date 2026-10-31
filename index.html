@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 9:55 PM"</script>
+<script>window.PB_BUILD="Oct 30, 10:10 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -222,6 +222,33 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .mfn i{display:block;height:3px;border-radius:2px;background:#8ab4f8;margin-top:4px}
 .mfr .num{font-weight:600;flex:none}
 .sublist .txrow{width:100%}
+/* ===== Category card with expandable subcategories (drop-in, adapted to app colors) ===== */
+.pb-card{--pb-spring:cubic-bezier(.32,.72,0,1);--pb-bounce:cubic-bezier(.34,1.56,.64,1);--pb-green:var(--prog);--pb-blue:var(--link);--pb-track:var(--trk);--pb-muted:var(--muted);--pb-hair:var(--line);container-type:inline-size;-webkit-tap-highlight-color:transparent}
+.pb-bar{height:10px;border-radius:5px;background:var(--pb-track);overflow:hidden;cursor:pointer;margin-top:10px;transition:height .5s var(--pb-spring),transform .2s var(--pb-spring)}
+.pb-bar>span{display:block;height:100%;background:var(--pb-green);border-radius:5px}
+.pb-card.is-open .pb-bar{height:12px}
+.pb-toggle{display:flex;justify-content:space-between;align-items:center;width:100%;padding:8px 0 0;cursor:pointer;font-size:14px;color:var(--pb-muted);gap:10px}
+.pb-toggle>span:first-child{white-space:nowrap;flex:none}
+@container (max-width:300px){.pb-word{display:none}}
+.pb-toggle .pb-budget{color:var(--pb-blue);margin:0;padding:0 2px}
+.pb-toggle-label{display:flex;align-items:center;gap:4px;color:var(--pb-blue);white-space:nowrap;font-weight:600;transition:transform .2s var(--pb-spring)}
+.pb-chev{width:18px;height:18px;transition:transform .55s var(--pb-bounce)}
+.pb-card.is-open .pb-chev{transform:rotate(180deg)}
+.pb-bar:active,.pb-toggle:active .pb-toggle-label{transform:scale(.97)}
+.pb-panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s var(--pb-spring)}
+.pb-card.is-open .pb-panel{grid-template-rows:1fr;transition-duration:.55s}
+.pb-panel>div{overflow:hidden;min-height:0}
+.pb-list{list-style:none;margin:0;padding:12px 0 0}
+.pb-row{border-top:.5px solid var(--pb-hair);opacity:0;transform:translateY(-6px) scale(.98);transition:opacity .2s ease,transform .3s var(--pb-spring)}
+.pb-card.is-open .pb-row{opacity:1;transform:none;transition:opacity .4s ease,transform .55s var(--pb-spring);transition-delay:calc(var(--i) * 40ms + 40ms)}
+.pb-row>button{display:block;width:100%;padding:11px 0;border:0;background:none;font:inherit;font-size:15px;color:var(--fg);text-align:left}
+.pb-row-top{display:flex;justify-content:space-between;gap:12px}
+.pb-row-top span:last-child{font-variant-numeric:tabular-nums}
+.pb-mini{display:block;height:4px;border-radius:2px;background:var(--pb-track);margin-top:8px;overflow:hidden}
+.pb-mini>i{display:block;height:100%;width:0;background:var(--pb-green);border-radius:2px;transition:width .3s var(--pb-spring)}
+.pb-card.is-open .pb-mini>i{width:var(--w);transition:width .7s var(--pb-spring) .15s}
+@media (prefers-reduced-motion:reduce){.pb-card *{transition-duration:.01s!important;transition-delay:0s!important}}
+/* ===== end component ===== */
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1363,7 +1390,21 @@ function itemHTML(it,sm,solo){
     return '<div class="item"><div class="irow"><button class="nm nmb" data-item="'+esc(it.id)+'">'+esc(it.name)+'</button><button class="v num vbtn'+vcls+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Planned for '+esc(it.name)+', '+money(val)+'. Tap to change">'+money(val)+'</button></div><button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true">'+barHTML+'</button></div>'}
   return '<button class="item" data-item="'+esc(it.id)+'"><div class="irow"><span class="nm">'+esc(it.name)+'</span><span class="v num'+vcls+'">'+money(val)+'</span></div>'+barHTML+'</button>';
 }
+/* ---------- Category card with expandable subcategories (adapted from category-card.html renderCategoryCard) ---------- */
+function catCardMiscHTML(it,sm,solo){
+  const planned=+it.planned||0,spent=round2(sm[it.id]||0),left=round2(planned-spent),pct=planned>0?Math.min(100,spent/planned*100):(spent>0?100:0);
+  const {ks,by}=miscBreakdown(),subs=ks.filter(k=>by[k]>=.005).map(k=>({name:k,spent:by[k]})).sort((a,b)=>b.spent-a.spent),tot=subs.reduce((a,x)=>a+x.spent,0);
+  const open=subs.length&&ls.get("pb.msubOpen")==="1",ed=PAD&&PAD.kind==="item"&&PAD.id===it.id,n=subs.length;
+  const rows=subs.map((x,i)=>'<li class="pb-row" style="--i:'+i+'"><button data-item="'+MISC_ID+'" data-msub="'+esc(x.name)+'"><span class="pb-row-top"><span>'+esc(x.name)+'</span><span class="num">'+money(x.spent)+'</span></span><span class="pb-mini"><i style="--w:'+(tot>0?x.spent/tot*100:0).toFixed(1)+'%"></i></span></button></li>').join("");
+  return '<div class="item citem pb-card'+(open?" is-open":"")+'" data-sc="'+esc(it.id)+'">'+
+    '<button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm'+(solo?" solo":"")+'">'+(solo?(left<0?"Over":"Left"):esc(it.name))+'</span><span class="v num'+(left<0?" neg":"")+'">'+money(left)+'</span></button>'+
+    '<div class="pb-bar"'+(n?' data-mtog="1"':'')+' aria-hidden="true"><span style="width:'+pct.toFixed(1)+'%"></span></div>'+
+    '<div class="pb-toggle"'+(n?' data-mtog="1" role="button" tabindex="0" aria-expanded="'+!!open+'" aria-label="Show '+n+' subcategories"':'')+'><span class="num">'+money(spent)+' of <button class="capb pb-budget num'+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Planned for '+esc(it.name)+', '+money(planned)+'. Tap to change">'+money(planned)+'</button></span>'+
+      (n?'<span class="pb-toggle-label">'+n+'<span class="pb-word"> subcategor'+(n===1?'y':'ies')+'</span><svg class="pb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>':'')+'</div>'+
+    '<div class="pb-panel"><div><ul class="pb-list">'+rows+'</ul></div></div></div>';
+}
 function itemComboHTML(it,sm,solo){
+  if(it.id===MISC_ID)return catCardMiscHTML(it,sm,solo);
   const planned=+it.planned||0, spent=round2(sm[it.id]||0), rem=round2(planned-spent), over=rem<0;
   const pct=planned>0?Math.min(100,spent/planned*100):(spent>0?100:0);
   const segs=null;
@@ -1499,7 +1540,7 @@ function renderBudget(groups,sm){
   groups.forEach(g=>{
     h+='<section class="card"><div class="chead"><h2>'+esc(g.name)+'</h2><button class="dots" data-gmenu="'+esc(g.id)+'" aria-label="Options for '+esc(g.name)+'"><svg width="26" height="8" viewBox="0 0 26 8" fill="currentColor"><circle cx="4" cy="4" r="3"/><circle cx="13" cy="4" r="3"/><circle cx="22" cy="4" r="3"/></svg></button></div>';
     const solo=g.items.length===1&&g.items[0].name.trim().toLowerCase()===g.name.trim().toLowerCase();
-    g.items.forEach(it=>{h+=itemHTML(it,sm,solo);if(it.id===MISC_ID)h+=miscSubsHTML()});
+    g.items.forEach(it=>{h+=itemHTML(it,sm,solo)});
     h+='<button class="addlink" data-additem="'+esc(g.id)+'">Add Item</button></section>';
   });
   const known=new Set(allItems(groups).map(x=>x.it.id));
@@ -3417,6 +3458,8 @@ $("#main").addEventListener("click",e=>{
   if(e.target.closest("#histImport")){importHistory();return}
   if(e.target.closest("[data-upcoming]")){S.upcoming=true;S.q="";S.tab="tx";try{haptic()}catch(_){}render();window.scrollTo(0,0);return}
   const mtg=e.target.closest("#msTog");if(mtg){msToggle(mtg);return}
+  const ct=e.target.closest("[data-mtog]");if(ct&&!e.target.closest("[data-plan]")){const c=ct.closest(".pb-card");const op=!c.classList.contains("is-open");c.classList.toggle("is-open",op);
+    const tg=c.querySelector(".pb-toggle");if(tg)tg.setAttribute("aria-expanded",String(op));ls.set("pb.msubOpen",op?"1":"0");try{haptic()}catch(_){}return}
   if(e.target.closest("#futTog")){const w=e.target.closest(".futw");const shut=!w.classList.contains("shut");w.classList.toggle("shut",shut);ls.set("pb.futHide",shut?"1":"0");e.target.closest("#futTog").setAttribute("aria-expanded",String(!shut));try{haptic()}catch(_){}return}
   if(e.target.closest("#clrUp")){S.upcoming=false;render();return}
   const pv=e.target.closest("[data-plan],[data-iplan]");if(pv){pv.dataset.plan?padOpen("item",pv.dataset.plan):padOpen("income",pv.dataset.iplan);return}
