@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 11:45 PM"</script>
+<script>window.PB_BUILD="Oct 31, 3:15 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2956,7 +2956,20 @@ function dragSheet(sc,sh){
     else{sh.style.transition="transform .32s "+SHEET_EASE;sc.style.transition="background .28s";sh.style.transform="";sc.style.background="";setTimeout(()=>{sh.style.transition="";sc.style.transition=""},300)}};
   sh.addEventListener("touchend",end);sh.addEventListener("touchcancel",end);
 }
+/* iOS keeps a shrunken layout after the keyboard closes, so fixed bars (tab bar, + button) float mid-screen.
+   When no text field is focused and the visual viewport is back to full height, nudge the page so iOS re-lays it out. */
+(function kbFix(){
+  const isField=el=>el&&el.matches&&el.matches("input,textarea,select,[contenteditable]");
+  let t=0;const settle=()=>{clearTimeout(t);t=setTimeout(()=>{if(isField(document.activeElement))return;
+    const y=window.scrollY;window.scrollTo(window.scrollX,y+1);window.scrollTo(window.scrollX,y);
+    document.documentElement.style.height="100.1%";requestAnimationFrame(()=>{document.documentElement.style.height=""})},120)};
+  document.addEventListener("focusout",e=>{if(isField(e.target))settle()},true);
+  if(window.visualViewport){let last=visualViewport.height;visualViewport.addEventListener("resize",()=>{const h=visualViewport.height;if(h>last+80)settle();last=h})}
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")settle()});
+  window.addEventListener("orientationchange",settle);
+})();
 function closeSheet(){
+  try{const a=document.activeElement;if(a&&a.blur&&a.matches&&a.matches("input,textarea,select"))a.blur()}catch(_){}
   const root=$("#sheetRoot"),sc=root.firstChild;document.body.style.overflow="";
   if(!sc)return;const sh=sc.querySelector(".sheet");
   if(!sh||matchMedia("(prefers-reduced-motion:reduce)").matches){root.innerHTML="";return}
