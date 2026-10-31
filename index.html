@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 11:15 PM"</script>
+<script>window.PB_BUILD="Oct 30, 11:40 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -282,6 +282,22 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .eqt b.neg,.eqd b.neg{color:var(--over)}
 .eqd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:3px;font-size:14px;color:var(--muted)}
 .eqd b{color:var(--ok);font-weight:700;font-size:16px}
+.pnban{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;text-align:left;font:inherit;color:var(--fg);cursor:pointer}
+.pnban:active{transform:scale(.985)}
+.pnic{width:40px;height:40px;border-radius:12px;background:var(--sel);color:var(--link);display:grid;place-items:center;flex:none}.pnic svg{width:22px;height:22px}
+.pnt{flex:1;min-width:0}.pnt b{display:block;font-size:16px;font-weight:700}.pnt small{display:block;font-size:13px;color:var(--muted)}
+.pnban>svg{width:18px;height:18px;color:var(--muted);flex:none}
+.pntot{position:sticky;top:-10px;z-index:2;background:transparent;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:10px 0 12px;border-bottom:1px solid var(--line)}
+.pntr{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}.pntr b{color:var(--fg)}
+.pnbar{height:8px;border-radius:4px;background:var(--trk);overflow:hidden;margin-top:8px}.pnbar i{display:block;height:100%;width:0;border-radius:4px;transition:width .4s cubic-bezier(.3,1.3,.5,1),background .3s}
+.pnr{padding:12px 0;border-bottom:1px solid var(--line)}
+.pnrt{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:16px}
+.pnv{width:110px;text-align:right;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font:inherit;font-weight:700;color:var(--fg);background:var(--bg)}
+.pnf{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:#fce8e6;color:#c5221f;vertical-align:2px}
+.pnn{font-size:12px;color:var(--muted);margin-top:3px}
+.pnch{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pnc{font:inherit;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--fg)}
+.pnc.on{background:var(--sel);color:var(--link);border-color:var(--link);font-weight:600}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1549,9 +1565,56 @@ function msToggle(btn){
   if(open){st.style.visibility="visible"}w._raf=requestAnimationFrame(step);
 }
 
+/* ---------- Plan next month: banner from the 25th, review sheet with 3-month averages ---------- */
+function nextYmOf(ym){const [y,m]=ym.split("-").map(Number),d=new Date(y,m,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)}
+function planBannerHTML(){const td=today();if(S.ym!==ymOf(td)||+td.slice(8)<25||!S.db||S.readOnly||!S.budgetsLoaded)return "";const nx=nextYmOf(S.ym);if(S.budgets[nx])return "";
+  return '<button class="card pnban" data-plannext="1"><span class="pnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg></span><span class="pnt"><b>Plan '+MONTHS[+nx.slice(5)-1]+'</b><small>2 minutes · suggestions from your last 3 months</small></span>'+CHEV+'</button>';}
+function txForMonth(ym){
+  if(ym===S.ym)return Promise.resolve(S.tx);if(IS.hist[ym])return Promise.resolve(IS.hist[ym]);
+  return Promise.all([S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).get(),ym<HIST_BEFORE?S.db.doc("hist/"+ym).get().catch(()=>null):Promise.resolve(null)])
+    .then(([snap,hs])=>{const a=snap.docs.map(d=>Object.assign({id:d.id},d.data())).concat(hs&&hs.exists?histToTx(ym,hs.data()):[]);IS.hist[ym]=a;return a}).catch(()=>[]);
+}
+async function planNextSheet(){
+  const cur=S.ym,nx=nextYmOf(cur),[y,m]=cur.split("-").map(Number),mons=[2,1,0].map(k=>{const d=new Date(y,m-1-k,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)});
+  openSheet('<h3>Plan '+MONTHS[+nx.slice(5)-1]+'</h3><p class="note">Looking at your last 3 months…</p>');
+  const txs=await Promise.all(mons.map(txForMonth));
+  const groups=JSON.parse(JSON.stringify(groupsFor(cur))),inc=incomeFor(cur),INC=incomeTotal(inc);
+  const spentBy=(list,id)=>round2(list.filter(t=>t.itemId===id&&t.type!=="income").reduce((a,t)=>a+sAmt(t),0));
+  const rows=[];groups.forEach(g=>g.items.forEach(it=>{
+    const sp=txs.map(l=>spentBy(l,it.id)),pl=mons.map(ym=>{const f=findItem(groupsFor(ym),it.id);return f?(+f.it.planned||0):0});
+    const used=sp.filter((v,i)=>v>0||pl[i]>0),avg=Math.round(used.length?used.reduce((a,v)=>a+v,0)/used.length:0),keep=+it.planned||0,fixed=isFixed(it,g);
+    const over=pl.every((p,i)=>p>0&&sp[i]>p+.5);
+    const curList=txs[2].filter(t=>t.itemId===it.id&&t.type!=="income"),big=curList.reduce((b,t)=>(+t.amount||0)>(b?+b.amount:0)?t:b,null);
+    const prevAvg=(sp[0]+sp[1])/2,spike=big&&+big.amount>200&&sp[2]>2*Math.max(prevAvg,1)&&+big.amount>sp[2]*.4;
+    let note=fixed?"Fixed: same every month":spike?MONTHS[m-1]+" had a one-time "+money(+big.amount).replace(/\.00$/,"")+(big.merchant?" ("+big.merchant+")":""):over?"Over plan 3 months in a row":"";
+    rows.push({id:it.id,name:it.name,keep,avg,over,fixed,note,half:over?Math.round(keep+(avg-keep)/2):null,v:keep})}));
+  const sav=rows.find(r=>/saving/i.test(r.name));
+  const chip=(r,label,val)=>'<button class="pnc'+(Math.round(r.v)===Math.round(val)?" on":"")+'" data-pk="'+esc(r.id)+'" data-pv="'+val+'">'+label+' '+money(val).replace(/\.00$/,"")+'</button>';
+  const body=rows.map(r=>'<div class="pnr" data-row="'+esc(r.id)+'"><div class="pnrt"><span>'+esc(r.name)+(r.over?'<span class="pnf">always over</span>':'')+'</span><input class="pnv num" inputmode="decimal" data-pid="'+esc(r.id)+'" value="'+Math.round(r.v)+'" aria-label="'+esc(r.name)+' for '+MONTHS[+nx.slice(5)-1]+'"></div>'+(r.note?'<div class="pnn">'+esc(r.note)+'</div>':'')+
+    (!r.fixed&&Math.abs(r.avg-r.keep)>=1?'<div class="pnch">'+chip(r,"Keep",r.keep)+chip(r,"3-mo avg",r.avg)+(r.half!=null&&Math.abs(r.half-r.keep)>=1&&Math.abs(r.half-r.avg)>=1?chip(r,"Meet halfway",r.half):"")+'</div>':'')+'</div>').join("");
+  openSheet('<h3>Plan '+MONTHS[+nx.slice(5)-1]+'</h3><p class="note" style="margin:-6px 0 6px">Starting from '+MONTHS[m-1]+'. Change only what you want.</p>'+
+    '<div class="pntot"><div class="pntr"><span>Planned <b class="num">'+money(INC)+'</b></span><span id="pnLeft"></span></div><div class="pnbar"><i id="pnBar"></i></div></div>'+body+
+    '<button class="btn" id="pnGo" style="width:100%;margin-top:14px">Start '+MONTHS[+nx.slice(5)-1]+'</button><p class="note" style="text-align:center;margin:8px 0 0">You can still edit anything afterward.</p>',
+  sh=>{const val=id=>{const r=rows.find(x=>x.id===id);return r};
+    const recalc=()=>{const sum=round2(rows.reduce((a,r)=>a+(+r.v||0),0)),d=round2(INC-sum),b=sh.querySelector("#pnBar");b.style.width=Math.min(100,INC>0?sum/INC*100:0)+"%";b.style.background=d<-.004?"var(--over)":"var(--prog)";
+      sh.querySelector("#pnLeft").innerHTML=Math.abs(d)<.005?'<b style="color:var(--ok)">Zero-based ✓</b>':d>0?'<b class="num" style="color:var(--link)">'+money(d)+'</b> left to plan':'<b class="num" style="color:var(--over)">'+money(-d)+'</b> over';
+      sh.querySelector("#pnGo").textContent="Start "+MONTHS[+nx.slice(5)-1]+(d>.004&&sav?" · put "+money(d)+" in "+sav.name:"");return d};
+    sh.addEventListener("click",e=>{const c=e.target.closest("[data-pk]");if(!c)return;const r=val(c.dataset.pk);r.v=+c.dataset.pv;const row=sh.querySelector('[data-row="'+CSS.escape(r.id)+'"]');
+      row.querySelector(".pnv").value=Math.round(r.v);row.querySelectorAll(".pnc").forEach(x=>x.classList.toggle("on",x===c));try{haptic()}catch(_){}recalc()});
+    sh.addEventListener("input",e=>{const i=e.target.closest(".pnv");if(!i)return;const r=val(i.dataset.pid),v=parseFloat(i.value.replace(/[^0-9.]/g,""));r.v=isNaN(v)?0:v;
+      i.closest(".pnr").querySelectorAll(".pnc").forEach(x=>x.classList.toggle("on",Math.round(+x.dataset.pv)===Math.round(r.v)));recalc()});
+    recalc();
+    sh.querySelector("#pnGo").onclick=async e=>{const b=e.currentTarget;let d=recalc();if(d>.004&&sav)sav.v=round2(sav.v+d);
+      const gs=JSON.parse(JSON.stringify(groups));gs.forEach(g=>g.items.forEach(it=>{const r=rows.find(x=>x.id===it.id);if(r)it.planned=round2(+r.v||0)}));
+      b.disabled=true;b.textContent="Saving…";
+      try{await S.db.doc("budgets/"+nx).set({groups:gs,income:inc,updatedAt:new Date().toISOString()});S.budgets[nx]={groups:gs,income:inc};closeSheet();try{haptic()}catch(_){}
+        toast(MONTHS[+nx.slice(5)-1]+" is set");S.ym=nx;S.upcoming=false;subscribeTx();render();window.scrollTo(0,0)}
+      catch(x){b.disabled=false;b.textContent="Start "+MONTHS[+nx.slice(5)-1];toast("Couldn't save. Check your connection.")}};
+  });
+}
 function renderBudget(groups,sm){
   if(!S.budgetsLoaded&&S.dbState!=="none")return '<div class="empty">Loading…</div>';
-  let h=historyCardHTML();
+  let h=historyCardHTML()+planBannerHTML();
   const inc=incomeFor(S.ym), itot=incomeTotal(inc), t0=totals(groups,sm), rm=receivedMap();
   const v=COMBINED?"remaining":S.view;
   const sumLabel=v==="planned"?"Planned Income":v==="spent"?"Spent So Far":"Remaining to Spend";
@@ -3492,6 +3555,7 @@ $("#main").addEventListener("click",e=>{
   if(e.target.closest("#openVenmo")){e.preventDefault();let left=false;const off=()=>{left=true};document.addEventListener("visibilitychange",off,{once:true});addEventListener("pagehide",off,{once:true});
     location.href="venmo://";setTimeout(()=>{if(!left&&document.visibilityState==="visible")window.open("https://venmo.com/","_blank","noopener")},1600);return}
   const pv=e.target.closest("[data-plan],[data-iplan]");if(pv){pv.dataset.plan?padOpen("item",pv.dataset.plan):padOpen("income",pv.dataset.iplan);return}
+  if(e.target.closest("[data-plannext]")){planNextSheet();return}
   const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#exportCsv,#syncAll");if(!t)return;
   if(t.dataset.income)incomeSheet(t.dataset.income);
   else if(t.id==="addIncome")incomeSheet(null);
