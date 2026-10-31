@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 10:55 PM"</script>
+<script>window.PB_BUILD="Oct 30, 11:00 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2322,18 +2322,10 @@ function paceCard(fh){
   if(!dayNow){h+='<p class="note" style="margin:12px 0 0">This month hasn\'t started yet. Planned: '+money(planned)+'.</p>';return h+'</section>'}
   const ref=cur?paceNow:planned,ou=round2(spentNow-ref),isOver=ou>0;
   if(planned<=0){
-    h+='<div class="pstat"><div><small>Spent</small><b class="num">'+money(spentNow)+'</b></div><div><small>'+(cur?"Scheduled":"Refunds")+'</small><b class="num">'+money(cur?committed:round2(txOf(ym).filter(t=>t.type==="refund"&&(!IS.group||groupNameOf(t,ym)===IS.group)&&(!IS.item||itemNameOf(t,ym)===IS.item)).reduce((a,t)=>a+(+t.amount||0),0)))+'</b></div><div><small>Total</small><b class="num">'+money(cur?round2(spentNow+committed):full)+'</b></div></div>';
     h+='<p class="note" style="margin:12px 0 0">Nothing planned for '+esc(label)+(cur?' this month, so there\'s no pace to compare against.':' that month.')+(cur&&committed?' The dotted line shows what\'s already scheduled.':'')+'</p>';
-    h+=paceGroupsHTML(ym,dayNow,dim);
     return h+'</section>';
   }
   h+=paceRings(spentNow,planned,dayNow,dim,cur);
-  h+='<div class="pstat"><div><small>Spent</small><b class="num">'+money(spentNow)+'</b></div><div><small>'+(cur?"Pace":"Planned")+'</small><b class="num">'+money(ref)+'</b></div><div><small>'+(isOver?"Over":"Under")+'</small><b class="num" style="color:'+(isOver?"var(--over)":"var(--ok)")+'">'+money(Math.abs(ou))+'</b></div></div>';
-  if(planned<=0)h+='<p class="note" style="margin:12px 0 0">Nothing planned for '+esc(label)+' this month, so there\'s no pace to compare against.</p>';
-  else if(cur){const diff=round2(spentNow-paceNow),dl=daysLeft?" ("+money(perDay)+"/day for "+daysLeft+" day"+(daysLeft===1?"":"s")+")":"";
-    h+='<p class="pverd '+(diff>0||free<0?"bad":"ok")+'">'+(diff>0?money(diff)+" ahead of pace":money(-diff)+" under pace")+' · '+(committed>0?money(committed)+" scheduled · ":"")+(free>=0?money(free)+(committed>0?" free":" left")+dl:money(-free)+" over plan"+(committed>0?" incl. scheduled":""))+'</p>'}
-  else{const d=round2(full-planned);h+='<p class="pverd '+(d>0?"bad":"ok")+'">'+(d>0?"Finished "+money(d)+" over plan":"Finished "+money(-d)+" under plan")+'</p>'}
-  h+=paceGroupsHTML(ym,dayNow,dim);
   return h+'</section>';
 }
 function daySheet(iso){
