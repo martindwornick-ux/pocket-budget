@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 4:00 PM"</script>
+<script>window.PB_BUILD="Oct 31, 4:05 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3041,7 +3041,7 @@ document.addEventListener("keydown",e=>{if(!PAD||e.target.closest&&e.target.clos
   if(/^\d$/.test(e.key)){padKey(e.key);e.preventDefault()}else if(e.key==="Enter"){commitPad();e.preventDefault()}else if(m[e.key]&&(PAD.calc||m[e.key]==="⌫")){padKey(m[e.key]);e.preventDefault()}});
 
 function categoryOptions(groups,sel,ym){
-  let h='';const inc=incomeFor(ym||S.ym);if(inc.length){h+='<optgroup label="Income received">';inc.forEach(x=>h+='<option value="'+esc(x.id)+'"'+(x.id===sel?" selected":"")+'>'+esc(x.name)+'</option>');h+='</optgroup>'}
+  let h='';const inc=incomeFor(ym||S.ym);if(inc.length&&(!COMBINED||inc.some(x=>x.id===sel))){h+='<optgroup label="Income received">';inc.forEach(x=>h+='<option value="'+esc(x.id)+'"'+(x.id===sel?" selected":"")+'>'+esc(x.name)+'</option>');h+='</optgroup>'}
   groups.forEach(g=>{h+='<optgroup label="'+esc(g.name)+'">';g.items.forEach(it=>h+='<option value="'+esc(it.id)+'"'+(it.id===sel?" selected":"")+'>'+esc(it.name)+'</option>');h+='</optgroup>'});
   return h;
 }
@@ -3153,7 +3153,7 @@ function txSheet(existing){
         '<div class="msug lsug" id="f-lsug" role="listbox" aria-label="Location suggestions" hidden></div>'+
         (existing?'':'<div class="near" id="f-near" hidden></div>')+
       '</div>'+
-      '<div class="tcard"><div class="trow crow"><span>Budget Item</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel,ymOf(d))+'</select></span></div>'+
+      '<div class="tcard"><div class="trow crow"><span id="f-clab">'+(kind==="refund"?"Add to":"Budget Item")+'</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel,ymOf(d))+'</select></span></div>'+
         '<div class="msug csug" id="f-csug" role="listbox" aria-label="Budget item suggestions" hidden></div><div class="cplace" id="f-cplace" hidden></div><div class="trow" id="f-subrow" hidden><span>Subcategory</span><span class="tv" id="f-stxt"></span><select class="ovl" id="f-sub" aria-label="Misc subcategory"><option value="">Select</option>'+SUB.list.map(x=>'<option'+(existing&&existing.sub===x?" selected":"")+'>'+esc(x)+'</option>').join("")+'<option value="__new">+ New subcategory…</option></select></div><div class="trow" id="f-newsub" hidden><input class="tin" id="f-newsubin" autocomplete="off" maxlength="40" enterkeyhint="done" placeholder="New subcategory name" aria-label="New subcategory name" style="text-align:left"><button class="addlink" id="f-newsubok" style="padding:0 0 0 8px">Add</button></div><div class="cleft" id="f-cleft" hidden></div></div>'+
       (existing?''
         :'<div class="tcard rcard" id="f-rcard"><label class="trow"><span>Reimbursed</span><label class="tgl tglsm"><input type="checkbox" id="f-rb" role="switch" aria-label="Getting money back"><span class="sw"></span></label></label>'+
@@ -3336,7 +3336,7 @@ function txSheet(existing){
       s.querySelectorAll(".tin,.tnote").forEach(i=>{i.addEventListener("focus",()=>showPad(false));i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();i.blur();showPad(true)}})});
       s.querySelector("#f-x").onclick=closeSheet;
       s.querySelector("#f-save2").onclick=()=>save();
-      s.querySelector("#f-kind").onclick=e=>{const b=e.target.closest("button");if(!b)return;kind=b.dataset.k;s.querySelectorAll("#f-kind button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.k===kind)));drawAmt()};
+      s.querySelector("#f-kind").onclick=e=>{const b=e.target.closest("button");if(!b)return;kind=b.dataset.k;s.querySelectorAll("#f-kind button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.k===kind)));const cl=s.querySelector("#f-clab");if(cl)cl.textContent=kind==="refund"?"Add to":"Budget Item";drawAmt()};
       const dIn=s.querySelector("#f-date");let dYm=ymOf(d);
       {const cam=s.querySelector("#f-cam"),cin=s.querySelector("#f-camin");if(cam&&cin){cam.onclick=()=>cin.click();cin.onchange=async()=>{const f=cin.files&&cin.files[0];cin.value="";if(!f)return;
         const r=await scanReceipt(f,s);if(!r)return;let n=0;
