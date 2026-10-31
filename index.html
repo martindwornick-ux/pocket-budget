@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 9:50 PM"</script>
+<script>window.PB_BUILD="Oct 30, 9:55 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -221,6 +221,7 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .mfn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mfn i{display:block;height:3px;border-radius:2px;background:#8ab4f8;margin-top:4px}
 .mfr .num{font-weight:600;flex:none}
+.sublist .txrow{width:100%}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -3274,6 +3275,14 @@ function txSheet(existing){
       };
     });
 }
+// Just the transactions in one Misc subcategory this month
+function subSheet(sub){
+  const NOSUB="No subcategory",list=sortedTx().filter(t=>t.itemId===MISC_ID&&(t.sub||NOSUB)===sub),tot=round2(list.reduce((a,t)=>a+sAmt(t),0));
+  const rows=list.map(t=>{const back=t.type==="refund"||t.type==="income";return '<button class="txrow" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(fmtDay(t.date))+(t.note?" · "+esc(t.note):"")+'</div></div><div class="a num"'+(back?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</div></button>'}).join("");
+  openSheet('<h3>'+esc(sub)+'</h3><p class="note num" style="margin:-4px 0 12px">'+money(tot)+' · '+list.length+' transaction'+(list.length===1?"":"s")+' in '+MONTHS[+S.ym.slice(5)-1]+'</p>'+
+    (rows?'<div class="sublist">'+rows+'</div>':'<p class="note">Nothing in '+esc(sub)+' this month.</p>')+'<div class="btnrow" style="margin-top:14px"><button class="btn sec" id="ss-done">Done</button></div>',
+    sh=>{sh.querySelector("#ss-done").onclick=closeSheet;sh.querySelectorAll("[data-tx]").forEach(b=>b.onclick=()=>{const t=S.tx.find(x=>x.id===b.dataset.tx);if(t)isHist(t)?histSheet(t):txSheet(t)})});
+}
 function itemSheet(id,preSub){
   const groups=JSON.parse(JSON.stringify(groupsFor(S.ym)));const f=findItem(groups,id);if(!f)return;
   const list=sortedTx().filter(t=>t.itemId===id);const spent=round2(list.reduce((a,t)=>a+sAmt(t),0)),back=round2(list.filter(t=>t.type==="refund"||t.type==="income").reduce((a,t)=>a+(+t.amount||0),0));
@@ -3414,6 +3423,7 @@ $("#main").addEventListener("click",e=>{
   const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#exportCsv");if(!t)return;
   if(t.dataset.income)incomeSheet(t.dataset.income);
   else if(t.id==="addIncome")incomeSheet(null);
+  else if(t.dataset.item&&t.dataset.msub)subSheet(t.dataset.msub);
   else if(t.dataset.item)itemSheet(t.dataset.item,t.dataset.msub);
   else if(t.dataset.gmenu)groupSheet(t.dataset.gmenu);
   else if(t.dataset.additem)newItemSheet(t.dataset.additem);
