@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 4:10 PM"</script>
+<script>window.PB_BUILD="Oct 31, 4:15 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -298,6 +298,7 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .pnch{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .pnc{font:inherit;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--fg)}
 .pnc.on{background:var(--sel);color:var(--link);border-color:var(--link);font-weight:600}
+.pb-bar.over>span{background:var(--over)}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1441,13 +1442,13 @@ function itemHTML(it,sm,solo){
 }
 /* ---------- Category card with expandable subcategories (adapted from category-card.html renderCategoryCard) ---------- */
 function catCardMiscHTML(it,sm,solo){
-  const planned=+it.planned||0,spent=round2(sm[it.id]||0),left=round2(planned-spent),pct=planned>0?Math.min(100,spent/planned*100):(spent>0?100:0);
+  const planned=+it.planned||0,spent=round2(sm[it.id]||0),left=round2(planned-spent),pct=left<0?(planned>0?Math.min(100,-left/planned*100):100):(planned>0?Math.max(0,left/planned*100):0);
   const {ks,by}=miscBreakdown(),subs=ks.filter(k=>by[k]>=.005).map(k=>({name:k,spent:by[k]})).sort((a,b)=>b.spent-a.spent),tot=subs.reduce((a,x)=>a+x.spent,0);
   const open=subs.length&&ls.get("pb.msubOpen")==="1",ed=PAD&&PAD.kind==="item"&&PAD.id===it.id,n=subs.length;
   const rows=subs.map((x,i)=>'<li class="pb-row" style="--i:'+i+'"><button data-item="'+MISC_ID+'" data-msub="'+esc(x.name)+'"><span class="pb-row-top"><span>'+esc(x.name)+'</span><span class="num">'+money(x.spent)+'</span></span><span class="pb-mini"><i style="--w:'+(tot>0?x.spent/tot*100:0).toFixed(1)+'%"></i></span></button></li>').join("");
   return '<div class="item citem pb-card'+(open?" is-open":"")+'" data-sc="'+esc(it.id)+'">'+
     '<button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm'+(solo?" solo":"")+'">'+(solo?(left<0?"Over":"Left"):esc(it.name))+'</span><span class="v num'+(left<0?" neg":"")+'">'+money(left)+'</span></button>'+
-    '<div class="pb-bar"'+(n?' data-mtog="1"':'')+' aria-hidden="true"><span style="width:'+pct.toFixed(1)+'%"></span></div>'+
+    '<div class="pb-bar'+(left<0?" over":"")+'"'+(n?' data-mtog="1"':'')+' aria-hidden="true"><span style="width:'+(left<0?Math.max(4,pct):pct).toFixed(1)+'%"></span></div>'+
     '<div class="pb-toggle"'+(n?' data-mtog="1" role="button" tabindex="0" aria-expanded="'+!!open+'" aria-label="Show '+n+' subcategories"':'')+'><span class="num">'+money(spent)+' of <button class="capb pb-budget num'+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Planned for '+esc(it.name)+', '+money(planned)+'. Tap to change">'+money(planned)+'</button></span>'+
       (n?'<span class="pb-toggle-label">'+n+'<span class="pb-word"> subcategor'+(n===1?'y':'ies')+'</span><svg class="pb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>':'')+'</div>'+
     '<div class="pb-panel"><div><ul class="pb-list">'+rows+'</ul></div></div></div>';
@@ -1457,9 +1458,9 @@ function itemComboHTML(it,sm,solo){
   const planned=+it.planned||0, spent=round2(sm[it.id]||0), rem=round2(planned-spent), over=rem<0;
   const pct=planned>0?Math.min(100,spent/planned*100):(spent>0?100:0);
   const segs=null;
-  let bar;
-  if(over&&spent>0){const ok=planned/spent*100;bar='<div class="track fill cb">'+((segs&&segs(ok))||'<i style="width:'+ok.toFixed(1)+'%"></i>')+'<i class="ov" style="width:'+(100-ok).toFixed(1)+'%"></i></div>'}
-  else bar='<div class="track fill cb">'+((segs&&segs(pct))||'<i style="width:'+pct.toFixed(1)+'%"></i>')+'</div>';
+  // bar shows what's LEFT (full = untouched); over budget shows red, sized by how far over
+  const lp=planned>0?Math.max(0,Math.min(100,rem/planned*100)):0,op=over?(planned>0?Math.min(100,-rem/planned*100):100):0;
+  const bar=over?'<div class="track fill cb"><i class="ov" style="width:'+Math.max(4,op).toFixed(1)+'%;margin-left:0"></i></div>':'<div class="track fill cb"><i style="width:'+lp.toFixed(1)+'%"></i></div>';
   const ed=PAD&&PAD.kind==="item"&&PAD.id===it.id;
   return '<div class="item citem"><button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm'+(solo?" solo":"")+'">'+(solo?(over?"Over":"Left"):esc(it.name))+'</span><span class="v num'+(over?" neg":"")+'">'+money(rem)+'</span></button><button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true">'+bar+'</button>'+
     '<div class="icap"><span class="num'+(over?" neg":"")+'">'+money(spent)+' spent</span><span>of</span><button class="capb num'+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Planned for '+esc(it.name)+', '+money(planned)+'. Tap to change">'+money(planned)+PENCIL+'</button></div></div>';
