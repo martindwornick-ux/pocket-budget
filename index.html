@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 11:05 PM"</script>
+<script>window.PB_BUILD="Oct 30, 11:10 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1598,7 +1598,7 @@ function renderTx(groups){
     h+='<div class="fchip"><span>Upcoming after today · <b class="num">'+money(round2(list.reduce((a,t)=>a+sAmt(t),0)))+'</b></span><button id="clrUp">Show all</button></div>';
     if(!list.length)return h+'<div class="card empty"><h3>Nothing scheduled</h3>No transactions are dated after today this month.</div>'}
   if(q)h+='<p class="note" style="margin:-6px 4px 0">'+list.length+' match'+(list.length===1?"":"es")+' · '+money(round2(list.reduce((a,t)=>a+sAmt(t),0)))+' spent</p>';
-  h+='<div class="btnrow"><a class="btn sec" style="text-align:center;text-decoration:none" href="'+SHEET_URL+'" target="_blank" rel="noopener">Open Finance Tracker</a><a class="btn sec" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none" href="https://venmo.com/u/Martin-Dwornick" target="_blank" rel="noopener" aria-label="Open Venmo"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>Venmo</a></div>';
+  h+='<div class="btnrow"><a class="btn sec" style="text-align:center;text-decoration:none" href="'+SHEET_URL+'" target="_blank" rel="noopener">Open Finance Tracker</a><a class="btn sec" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none" href="venmo://" id="openVenmo" aria-label="Open Venmo"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>Venmo</a></div>';
   if(pending.length)h+='<div class="card" style="padding:14px 18px"><div class="irow" style="font-size:16px"><span class="nm"><b>'+pending.length+' not in your sheet yet</b></span><button class="addlink" style="padding:0" id="syncAll">Send to sheet</button></div><p class="note" style="margin:6px 0 0">'+esc(pending[0].sheetMsg||"These were saved here but haven't reached your Transactions tab.")+'</p></div>';
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
   if(!list.length)return h+'<div class="card empty"><h3>No transactions this month</h3>Tap + to log a purchase. It takes about five seconds.</div>';
@@ -3489,6 +3489,8 @@ $("#main").addEventListener("click",e=>{
     const tg=c.querySelector(".pb-toggle");if(tg)tg.setAttribute("aria-expanded",String(op));ls.set("pb.msubOpen",op?"1":"0");try{haptic()}catch(_){}return}
   if(e.target.closest("#futTog")){const w=e.target.closest(".futw");const shut=!w.classList.contains("shut");w.classList.toggle("shut",shut);ls.set("pb.futHide",shut?"1":"0");e.target.closest("#futTog").setAttribute("aria-expanded",String(!shut));try{haptic()}catch(_){}return}
   if(e.target.closest("#clrUp")){S.upcoming=false;render();return}
+  if(e.target.closest("#openVenmo")){e.preventDefault();let left=false;const off=()=>{left=true};document.addEventListener("visibilitychange",off,{once:true});addEventListener("pagehide",off,{once:true});
+    location.href="venmo://";setTimeout(()=>{if(!left&&document.visibilityState==="visible")window.open("https://venmo.com/","_blank","noopener")},1600);return}
   const pv=e.target.closest("[data-plan],[data-iplan]");if(pv){pv.dataset.plan?padOpen("item",pv.dataset.plan):padOpen("income",pv.dataset.iplan);return}
   const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#exportCsv,#syncAll");if(!t)return;
   if(t.dataset.income)incomeSheet(t.dataset.income);
