@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 10:30 PM"</script>
+<script>window.PB_BUILD="Oct 30, 10:35 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -270,6 +270,18 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .wpd span{font-size:15px;color:var(--muted)}
 .wpd b{font-family:var(--display);font-weight:800;font-size:22px;color:var(--ok)}
 @keyframes dup{from{opacity:0;transform:translateY(8px)}}
+.eqcard .chead{margin-bottom:4px}
+.eql{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:9px 0;font-size:17px}
+.eql+.eql{border-top:1px solid var(--line)}
+.eql>span:first-child{color:var(--muted)}
+.eqpl{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--link);border-radius:8px;transition:background .2s}
+.eqpl svg{width:14px;height:14px}.eqpl.editing{background:var(--sel);padding:0 6px;margin-right:-6px}
+.eqt{border-top:2px solid var(--fg)!important;padding-top:10px;margin-top:2px}
+.eqt>span:first-child{color:var(--fg);font-weight:700}
+.eqt b{font-family:var(--display);font-weight:800;font-size:24px}
+.eqt b.neg,.eqd b.neg{color:var(--over)}
+.eqd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:6px;font-size:14px;color:var(--muted)}
+.eqd b{color:var(--ok);font-weight:700;font-size:16px}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1466,15 +1478,16 @@ function isFixed(it,g){if(typeof it.fixed==="boolean")return it.fixed;return FIX
 function dateCardHTML(itot,t0){
   const rem=round2(itot-t0.s),td=today(),cur=ymOf(td),[y,m]=S.ym.split("-").map(Number),dim=new Date(y,m,0).getDate(),d=daysLeftAfterToday(S.ym);
   const isCur=S.ym===cur,past=S.ym<cur,over=rem<0;
-  const dt=isCur?new Date(td+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}):MONTHS[m-1]+" "+y;
+  const title=isCur?new Date(td+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}):MONTHS[m-1]+" "+y;
   const side=isCur?"Day "+(+td.slice(8))+" of "+dim:past?"Month is over":"Starts "+MONTHS[m-1].slice(0,3)+" 1";
   const inc=incomeFor(S.ym),ed=PAD&&PAD.kind==="income"&&inc.length===1&&PAD.id===inc[0].id;
-  const plan=inc.length===1?'<button class="wpl num'+(ed?" editing":"")+'" data-iplan="'+esc(inc[0].id)+'" aria-label="Planned '+money(itot)+'. Tap to change">'+money(itot)+PENCIL+'</button>':inc.length?'<span class="wpl num">'+money(itot)+'</span>':'<button class="wpl" id="addIncome">Set amount'+PENCIL+'</button>';
-  const sp=itot>0?Math.min(100,t0.s/itot*100):(t0.s>0?100:0),days=isCur?d:dim,pd=rem>0&&days?money(round2(rem/days)):money(0);
-  let bar;if(over&&t0.s>0){const ok=itot/t0.s*100;bar='<div class="track fill wbar"><i style="width:'+ok.toFixed(1)+'%"></i><i class="ov" style="width:'+(100-ok).toFixed(1)+'%"></i></div>'}else bar='<div class="track fill wbar"><i style="width:'+sp.toFixed(1)+'%"></i></div>';
-  return '<section class="card wcard"><div class="wtop"><div><small>Planned</small>'+plan+'</div><div class="wdt"><b>'+dt+'</b><small>'+side+'</small></div></div>'+
-    '<div class="wrem"><span>'+(past?(over?"Over budget":"Left over"):over?"Over budget":"Remaining")+'</span><b class="num'+(over?" neg":"")+'">'+money(Math.abs(rem))+'</b></div>'+bar+
-    (past?'':'<div class="whr"></div><div class="wpd"><span>Per day · '+(isCur?(d===1?"last day":d+" days left"):"all "+dim+" days")+'</span><b class="num'+(over?" neg":"")+'">'+pd+'</b></div>')+'</section>';
+  const plan=inc.length===1?'<button class="eqpl num'+(ed?" editing":"")+'" data-iplan="'+esc(inc[0].id)+'" aria-label="Planned '+money(itot)+'. Tap to change">'+money(itot)+PENCIL+'</button>':inc.length?'<span class="eqpl num">'+money(itot)+'</span>':'<button class="eqpl" id="addIncome">Set amount'+PENCIL+'</button>';
+  const days=isCur?d:dim,pd=rem>0&&days?money(round2(rem/days)):money(0);
+  return '<section class="card eqcard"><div class="chead"><h2>'+title+'</h2><span class="lbl">'+side+'</span></div>'+
+    '<div class="eql"><span>Planned</span>'+plan+'</div>'+
+    '<div class="eql"><span>Spent</span><span class="num">− '+money(t0.s)+'</span></div>'+
+    '<div class="eql eqt"><span>'+(over?"Over budget":past?"Left over":"Remaining")+'</span><b class="num'+(over?" neg":"")+'">'+money(Math.abs(rem))+'</b></div>'+
+    (past?'':'<div class="eqd"><span>'+(isCur?(d===1?"Last day of the month":d+" days left, today included"):"Across all "+dim+" days")+'</span><b class="num'+(over?" neg":"")+'">'+pd+' a day</b></div>')+'</section>';
 }
 function todayTileHTML(itot,t0){
   const td=today(),d=daysLeftAfterToday(S.ym);
