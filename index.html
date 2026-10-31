@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 11:40 PM"</script>
+<script>window.PB_BUILD="Oct 30, 11:45 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3206,9 +3206,18 @@ function txSheet(existing){
         sugEl.hidden=false;merIn.setAttribute("aria-expanded","true")};
       const pickSug=e=>{
         merIn.value=e.name;s.querySelector("#f-venmo").checked=!!e.venmo;
-        if(!existing&&!catTouched&&e.itemId&&[...cat.options].some(o=>o.value===e.itemId))cat.value=e.itemId;
+        let miss="";
+        if(!existing&&!catTouched){const opts=[...cat.options],nm=String(e.itemName||"").trim().toLowerCase();
+          if(e.itemId&&opts.some(o=>o.value===e.itemId))cat.value=e.itemId;
+          else{const byName=nm&&opts.find(o=>o.value&&o.textContent.trim().toLowerCase()===nm);
+            if(byName)cat.value=byName.value;
+            else{const sub=nm&&SUB.list.find(x=>x.toLowerCase()===nm);
+              if(sub&&opts.some(o=>o.value===MISC_ID)){cat.value=MISC_ID;e=Object.assign({},e,{sub})}
+              else if(e.itemName){cat.value="";miss=e.itemName}}}}
         drawCat();
         if(cat.value===MISC_ID&&!subTouched&&e.sub&&SUB.list.includes(e.sub)){subSel.value=e.sub;subPrev=e.sub;drawSub()}
+        if(miss){hideSug();merIn.blur();s.querySelector(".crow").classList.remove("auto");setTimeout(()=>{cq.focus();cq.value=miss;cq.dispatchEvent(new Event("input",{bubbles:true}))},60);
+          toast("“"+miss+"” isn't in "+MONTHS[+((s.querySelector("#f-date")||{}).value||d).slice(5,7)-1]+"'s budget. Pick one or create it");return}
         hideSug();merIn.blur();try{haptic()}catch(_){}
         LF.merchantChanged();showPad(true)};
       sugEl.addEventListener("pointerdown",e=>{if(e.target.closest("[data-mi]"))e.preventDefault()});
