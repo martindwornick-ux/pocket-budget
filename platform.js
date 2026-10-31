@@ -11,11 +11,11 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 
 /* ---------- styles for the setup, sign-in and settings screens ---------- */
 const css=`
-.pbx-gate{position:fixed;inset:0;z-index:100;background:#fff;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 48px) 20px calc(env(safe-area-inset-bottom,0px) + 32px);font-family:"Figtree",-apple-system,system-ui,sans-serif;color:#202124}
+.pbx-gate{position:fixed;inset:0;z-index:100;background:#fff;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 48px) 20px calc(env(safe-area-inset-bottom,0px) + 32px);font-family:"Hanken Grotesk",-apple-system,system-ui,sans-serif;color:#202124}
 .pbx-gate::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(38% 28% at 8% 6%,rgba(66,133,244,.20),transparent 70%),radial-gradient(34% 26% at 96% 18%,rgba(234,67,53,.12),transparent 70%),radial-gradient(40% 30% at 88% 82%,rgba(52,168,83,.14),transparent 70%),radial-gradient(36% 26% at 6% 70%,rgba(251,188,4,.14),transparent 70%),#fff}
 .pbx-box{width:100%;max-width:420px}
 .pbx-logo{width:64px;height:64px;border-radius:16px;display:block;margin:0 0 18px;box-shadow:0 8px 24px rgba(26,115,232,.3)}
-.pbx-box h1{font-family:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;font-weight:800;font-size:30px;margin:0 0 6px;letter-spacing:-.01em}
+.pbx-box h1{font-family:"Hanken Grotesk","Avenir Next",system-ui,sans-serif;font-weight:800;font-size:30px;margin:0 0 6px;letter-spacing:-.01em}
 .pbx-box p{margin:0 0 16px;font-size:16px;line-height:1.45;color:#5f6368}
 .pbx-f{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
 .pbx-f label{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#5f6368;font-weight:600}
@@ -31,12 +31,12 @@ const css=`
 .pbx-err{color:#d93025;font-size:15px;line-height:1.4;margin:0 0 12px;min-height:0}
 .pbx-ok{color:#188038;font-size:15px;line-height:1.4;margin:0 0 12px}
 .pbx-note{font-size:14px;color:#5f6368;line-height:1.45;margin:10px 0 0}
-.pbx-scrim{position:fixed;inset:0;z-index:90;background:rgba(32,33,36,.28);display:flex;align-items:flex-end;justify-content:center;font-family:"Figtree",-apple-system,system-ui,sans-serif;color:#202124}
+.pbx-scrim{position:fixed;inset:0;z-index:90;background:rgba(32,33,36,.28);display:flex;align-items:flex-end;justify-content:center;font-family:"Hanken Grotesk",-apple-system,system-ui,sans-serif;color:#202124}
 .pbx-sheet{width:100%;max-width:640px;max-height:calc(100% - 40px);overflow:auto;background:rgba(255,255,255,.96);-webkit-backdrop-filter:saturate(180%) blur(30px);backdrop-filter:saturate(180%) blur(30px);border-radius:24px 24px 0 0;padding:12px 20px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.18);animation:pbxup .32s cubic-bezier(.32,.72,0,1)}
 @keyframes pbxup{from{transform:translateY(100%)}}
 @media (prefers-reduced-motion:reduce){.pbx-sheet{animation:none}}
 .pbx-grab{width:42px;height:5px;border-radius:3px;background:rgba(60,64,67,.18);margin:0 auto 12px}
-.pbx-sheet h2{font-family:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;font-weight:800;font-size:22px;margin:0 0 14px}
+.pbx-sheet h2{font-family:"Hanken Grotesk","Avenir Next",system-ui,sans-serif;font-weight:800;font-size:22px;margin:0 0 14px}
 .pbx-sec{background:#fff;border:1px solid rgba(60,64,67,.1);border-radius:18px;padding:16px;margin:0 0 12px;box-shadow:0 1px 2px rgba(60,64,67,.08)}
 .pbx-sec h3{margin:0 0 4px;font-size:17px}
 .pbx-sec>p{margin:0 0 12px;font-size:14px;color:#5f6368;line-height:1.45}
