@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 3:35 PM"</script>
+<script>window.PB_BUILD="Oct 31, 4:00 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1498,10 +1498,12 @@ function dateCardHTML(itot,t0){
   const side=isCur?"":past?"Month is over":"Starts "+MONTHS[m-1].slice(0,3)+" 1";
   const inc=incomeFor(S.ym),ed=PAD&&PAD.kind==="income"&&inc.length===1&&PAD.id===inc[0].id;
   const plan=inc.length===1?'<button class="eqpl num'+(ed?" editing":"")+'" data-iplan="'+esc(inc[0].id)+'" aria-label="Planned '+money(itot)+'. Tap to change">'+money(itot)+PENCIL+'</button>':inc.length?'<span class="eqpl num">'+money(itot)+'</span>':'<button class="eqpl" id="addIncome">Set amount'+PENCIL+'</button>';
+  const gross=round2(S.tx.filter(t=>t.type==="expense"||!t.type).reduce((a,t)=>a+(+t.amount||0),0)),back=round2(gross-t0.s);
   const days=isCur?d:dim,pd=rem>0&&days?money(round2(rem/days)):money(0);
   return '<section class="card eqcard"><div class="chead"><h2>'+title+'</h2>'+(side?'<span class="lbl">'+side+'</span>':'')+'</div>'+
     '<div class="eql"><span>Planned</span>'+plan+'</div>'+
-    '<div class="eql"><span>Spent</span><span class="num">− '+money(t0.s)+'</span></div>'+
+    '<div class="eql"><span>Spent</span><span class="num">− '+money(gross)+'</span></div>'+
+    (back>0?'<div class="eql"><span>Money back</span><span class="num" style="color:var(--ok)">+ '+money(back)+'</span></div>':'')+
     '<div class="eql eqt"><span>'+(over?"Over budget":past?"Left over":"Remaining")+'</span><b class="num'+(over?" neg":"")+'">'+money(Math.abs(rem))+'</b></div>'+
     (past?'':'<div class="eqd"><span>'+(isCur?(d===1?"Last day of the month":d+" days left, today included"):"Across all "+dim+" days")+'</span><b class="num'+(over?" neg":"")+'">'+pd+' a day</b></div>')+'</section>';
 }
