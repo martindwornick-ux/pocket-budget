@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 10:25 PM"</script>
+<script>window.PB_BUILD="Oct 30, 10:30 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1466,16 +1466,15 @@ function isFixed(it,g){if(typeof it.fixed==="boolean")return it.fixed;return FIX
 function dateCardHTML(itot,t0){
   const rem=round2(itot-t0.s),td=today(),cur=ymOf(td),[y,m]=S.ym.split("-").map(Number),dim=new Date(y,m,0).getDate(),d=daysLeftAfterToday(S.ym);
   const isCur=S.ym===cur,past=S.ym<cur,over=rem<0;
-  const title=isCur?new Date(td+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}):MONTHS[m-1]+" "+y;
+  const dt=isCur?new Date(td+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}):MONTHS[m-1]+" "+y;
   const side=isCur?"Day "+(+td.slice(8))+" of "+dim:past?"Month is over":"Starts "+MONTHS[m-1].slice(0,3)+" 1";
   const inc=incomeFor(S.ym),ed=PAD&&PAD.kind==="income"&&inc.length===1&&PAD.id===inc[0].id;
-  const plan=inc.length===1?'<button class="capb num'+(ed?" editing":"")+'" data-iplan="'+esc(inc[0].id)+'" aria-label="Planned '+money(itot)+'. Tap to change">'+money(itot)+PENCIL+'</button>':inc.length?'<b class="num" style="color:var(--link)">'+money(itot)+'</b>':'<button class="capb" id="addIncome">set planned'+PENCIL+'</button>';
-  const sp=itot>0?Math.min(100,t0.s/itot*100):(t0.s>0?100:0),days=isCur?d:dim,pd=rem>0&&days?round2(rem/days):0;
-  let bar;if(over&&t0.s>0){const ok=itot/t0.s*100;bar='<div class="track fill cb"><i style="width:'+ok.toFixed(1)+'%"></i><i class="ov" style="width:'+(100-ok).toFixed(1)+'%"></i></div>'}else bar='<div class="track fill cb"><i style="width:'+sp.toFixed(1)+'%"></i></div>';
-  return '<section class="card"><div class="chead"><h2>'+title+'</h2><span class="lbl">'+side+'</span></div>'+
-    '<div class="item citem"><div class="irow"><span class="nm">'+(past?(over?"Over budget":"Left over"):over?"Over budget":"Remaining")+'</span><span class="v num'+(over?" neg":"")+'">'+money(past?Math.abs(rem):rem)+'</span></div>'+bar+
-      '<div class="icap"><span class="num'+(over?" neg":"")+'">'+money(t0.s)+' spent</span><span>of</span>'+plan+'</div></div>'+
-    (past?'':'<div class="item citem"><div class="irow"><span class="nm">Per day</span><span class="v num" style="color:'+(over?"var(--over)":"var(--ok)")+'">'+money(pd)+'</span></div><div class="icap"><span>'+(isCur?(d===1?"Last day of the month":d+" days left, today included"):"Across all "+dim+" days")+'</span></div></div>')+'</section>';
+  const plan=inc.length===1?'<button class="wpl num'+(ed?" editing":"")+'" data-iplan="'+esc(inc[0].id)+'" aria-label="Planned '+money(itot)+'. Tap to change">'+money(itot)+PENCIL+'</button>':inc.length?'<span class="wpl num">'+money(itot)+'</span>':'<button class="wpl" id="addIncome">Set amount'+PENCIL+'</button>';
+  const sp=itot>0?Math.min(100,t0.s/itot*100):(t0.s>0?100:0),days=isCur?d:dim,pd=rem>0&&days?money(round2(rem/days)):money(0);
+  let bar;if(over&&t0.s>0){const ok=itot/t0.s*100;bar='<div class="track fill wbar"><i style="width:'+ok.toFixed(1)+'%"></i><i class="ov" style="width:'+(100-ok).toFixed(1)+'%"></i></div>'}else bar='<div class="track fill wbar"><i style="width:'+sp.toFixed(1)+'%"></i></div>';
+  return '<section class="card wcard"><div class="wtop"><div><small>Planned</small>'+plan+'</div><div class="wdt"><b>'+dt+'</b><small>'+side+'</small></div></div>'+
+    '<div class="wrem"><span>'+(past?(over?"Over budget":"Left over"):over?"Over budget":"Remaining")+'</span><b class="num'+(over?" neg":"")+'">'+money(Math.abs(rem))+'</b></div>'+bar+
+    (past?'':'<div class="whr"></div><div class="wpd"><span>Per day · '+(isCur?(d===1?"last day":d+" days left"):"all "+dim+" days")+'</span><b class="num'+(over?" neg":"")+'">'+pd+'</b></div>')+'</section>';
 }
 function todayTileHTML(itot,t0){
   const td=today(),d=daysLeftAfterToday(S.ym);
