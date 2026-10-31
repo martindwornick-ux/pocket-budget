@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 11:00 PM"</script>
+<script>window.PB_BUILD="Oct 30, 11:05 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3490,7 +3490,7 @@ $("#main").addEventListener("click",e=>{
   if(e.target.closest("#futTog")){const w=e.target.closest(".futw");const shut=!w.classList.contains("shut");w.classList.toggle("shut",shut);ls.set("pb.futHide",shut?"1":"0");e.target.closest("#futTog").setAttribute("aria-expanded",String(!shut));try{haptic()}catch(_){}return}
   if(e.target.closest("#clrUp")){S.upcoming=false;render();return}
   const pv=e.target.closest("[data-plan],[data-iplan]");if(pv){pv.dataset.plan?padOpen("item",pv.dataset.plan):padOpen("income",pv.dataset.iplan);return}
-  const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#exportCsv");if(!t)return;
+  const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#exportCsv,#syncAll");if(!t)return;
   if(t.dataset.income)incomeSheet(t.dataset.income);
   else if(t.id==="addIncome")incomeSheet(null);
   else if(t.dataset.item&&t.dataset.msub)subSheet(t.dataset.msub);
@@ -3506,8 +3506,10 @@ $("#main").addEventListener("click",e=>{
 async function syncAll(btn){
   const list=sortedTx().filter(t=>t.sheet!=="synced").reverse();
   btn.disabled=true;btn.textContent="Sending…";let n=0;
-  for(const t of list){if(await pushToSheet(t.id,t))n++;else break}
-  toast(n?"Added "+n+" to your sheet":"Nothing was sent");
+  if(!list.length){btn.disabled=false;btn.textContent="Send to sheet";return}
+  let err="";for(const t of list){if(await pushToSheet(t.id,t))n++;else{const f=S.tx.find(x=>x.id===t.id);err=(f&&f.sheetMsg)||"";break}}
+  if(btn.isConnected){btn.disabled=false;btn.textContent="Send to sheet"}
+  toast(n&&!err?"Added "+n+" to your sheet":n?"Added "+n+", then stopped: "+(err||"couldn't reach your sheet"):(err||"Couldn't reach your sheet. Check Settings → Google Sheet sync"));
 }
 
 /* ---------- data ---------- */
