@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 30, 10:50 PM"</script>
+<script>window.PB_BUILD="Oct 30, 10:55 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2925,7 +2925,7 @@ function padOpen(kind,id){
   const src=kind==="income"?incomeFor(S.ym).find(x=>x.id===id):((findItem(groupsFor(S.ym),id)||{}).it);
   if(!src)return;
   const c=Math.round((+src.planned||0)*100);
-  PAD={kind,id,ym:S.ym,name:src.name,orig:c,cur:String(c),ops:[],fresh:true,calc:ls.get("pb.calc")==="1"};
+  PAD={kind,id,ym:S.ym,name:kind==="income"&&COMBINED&&incomeFor(S.ym).length===1?"Planned":src.name,orig:c,cur:String(c),ops:[],fresh:true,calc:ls.get("pb.calc")==="1"};
   document.body.classList.add("padopen");drawPad();render();
   requestAnimationFrame(()=>{const el=document.querySelector(kind==="item"?'[data-plan="'+CSS.escape(id)+'"]':'[data-iplan="'+CSS.escape(id)+'"]');
     if(el){const r=el.getBoundingClientRect(),pad=$(".pad"),top=pad?pad.getBoundingClientRect().top:innerHeight;
