@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 10:05 AM"</script>
+<script>window.PB_BUILD="Nov 1, 10:30 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -397,6 +397,13 @@ nav.tabs.hasind button{position:relative;z-index:1;transition:color .3s}nav.tabs
 .sheet .cchip:active{transform:scale(.94)}.sheet .cchip.on{background:#e6f4ea;border-color:#81c995;color:#137333}
 .padfillrow{display:flex;justify-content:flex-start;margin:-2px 0 10px}.padfill{border:0;border-radius:999px;padding:7px 13px;font:inherit;font-size:14px;font-weight:600;background:#e6f4ea;color:#137333}.padfill.neg{background:#fce8e6;color:#c5221f}
 .mlday{position:sticky;top:var(--mlsnap,420px);z-index:3;height:34px;box-sizing:border-box;display:flex;align-items:center;padding:0 !important;margin:0 -22px;padding-left:22px !important;background:#fff;border-bottom:1px solid var(--line)}
+.sheet .txpills{display:flex;flex-wrap:wrap;gap:7px;margin:2px 2px 10px}
+.sheet .txpill{display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;background:rgba(60,64,67,.08);color:var(--fg);border-radius:999px;padding:7px 12px 7px 10px;font:inherit;font-size:14px;font-weight:600;line-height:1.1;transition:background-color .2s,color .2s,border-color .2s,transform .16s}
+.sheet .txpill svg{width:16px;height:16px;flex:none}.sheet .txpill:active{transform:scale(.95)}
+.sheet .txpill.set{background:#e8f0fe;color:#1967d2}.sheet .txpill.open{border-color:#8ab4f8}
+.sheet .txpanel>.tcard,.sheet .txpanel>.rcard{margin-bottom:10px}
+.sheet .txpanel:not([hidden]){animation:txpin .22s ease-out}@keyframes txpin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.sheet .vhide{display:none!important}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -3314,6 +3321,48 @@ async function scanReceipt(file,sheet){
   finally{ov.classList.add("out");setTimeout(()=>ov.remove(),250)}
 }
 /* Quick actions: txSheet(null,{kind:"refund"}) / {venmo:true} / {scan:true} open the add sheet pre-set. */
+/* Add Transaction, layout A: amount → budget item (+ usual-items chips) → merchant (+ nearby) → pills for the extras.
+   The original rows are moved, not rebuilt, so every id and handler keeps working; each pill opens its row inline. */
+function txLayoutA(s,existing){try{
+  const q=x=>s.querySelector(x),body=q(".tbody"),dateRow=q("#f-date").closest(".trow"),firstCard=dateRow.closest(".tcard");
+  const merRow=q("#f-mer").closest(".trow"),msug=q("#f-msug"),vrow=q("#f-vrow"),prow=q("#f-prow"),locRow=q("#f-loc").closest(".trow"),lsug=q("#f-lsug"),near=q("#f-near");
+  const catCard=q(".crow").closest(".tcard"),chips=q("#f-cchips"),rcard=q("#f-rcard"),noteCard=q("#f-note").closest(".tcard");
+  // 1) budget item right under the amount, chips under it
+  firstCard.before(catCard);catCard.after(chips);
+  // 2) merchant card (merchant, suggestions, nearby places, Venmo person)
+  const mc=document.createElement("div");mc.className="tcard";mc.append(merRow,msug);if(near)mc.append(near);mc.append(prow,vrow);vrow.hidden=true;vrow.classList.add("vhide");
+  chips.after(mc);
+  // 3) pills + inline panels
+  const pills=document.createElement("div");pills.className="txpills";
+  const P=[["d","calendar"],["l","pin"],["v","venmo"],["r","back"],["n","note"]];
+  const ICON={calendar:'<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/>',pin:'<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="10" r="2.3"/>',venmo:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',back:'<path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-2"/>',note:'<path d="M5 4h10l4 4v12H5z"/><path d="M9 12h6M9 16h4"/>'};
+  pills.innerHTML=P.map(([k,ic])=>'<button type="button" class="txpill" data-px="'+k+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+ICON[ic]+'</svg><span></span></button>').join("");
+  mc.after(pills);
+  const panels=document.createElement("div");panels.className="txpanels";pills.after(panels);
+  const mk=(k,...nodes)=>{const d=document.createElement("div");d.className="txpanel";d.dataset.pp=k;d.hidden=true;const c=document.createElement("div");c.className="tcard";c.append(...nodes.filter(Boolean));d.append(c);panels.append(d);return d};
+  mk("d",dateRow);mk("l",locRow,lsug);
+  const pr=document.createElement("div");pr.className="txpanel";pr.dataset.pp="r";pr.hidden=true;if(rcard)pr.append(rcard);panels.append(pr);
+  const pn=document.createElement("div");pn.className="txpanel";pn.dataset.pp="n";pn.hidden=true;pn.append(noteCard);panels.append(pn);
+  firstCard.remove();
+  const rb=q("#f-rb"),ven=q("#f-venmo"),note=q("#f-note"),dIn=q("#f-date"),loc=q("#f-loc");
+  const short=d=>{const td=today();if(d===td)return"Today";const y=new Date(td+"T12:00:00");y.setDate(y.getDate()-1);const ys=y.getFullYear()+"-"+pad(y.getMonth()+1)+"-"+pad(y.getDate());if(d===ys)return"Yesterday";return new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})};
+  function refresh(){const lv=(loc.value||"").trim();
+    const L={d:short(dIn.value||today()),l:lv?lv.split(",")[0]:"Location",v:"Venmo",r:"Paid back",n:note.value.trim()?"Note ✓":"Note"};
+    pills.querySelectorAll("[data-px]").forEach(b=>{const k=b.dataset.px,pp=panels.querySelector('[data-pp="'+k+'"]');b.querySelector("span").textContent=L[k];
+      const set=k==="d"?true:k==="l"?!!lv:k==="v"?ven.checked:k==="r"?!!(rb&&rb.checked):!!note.value.trim();b.classList.toggle("set",set);b.classList.toggle("open",!!(pp&&!pp.hidden));
+      if(k==="r")b.hidden=!rcard||rcard.hidden})}
+  pills.addEventListener("click",e=>{const b=e.target.closest("[data-px]");if(!b)return;const k=b.dataset.px;try{haptic()}catch(_){}
+    if(k==="v"){ven.checked=!ven.checked;ven.dispatchEvent(new Event("change",{bubbles:true}));refresh();return}
+    const pp=panels.querySelector('[data-pp="'+k+'"]'),was=!pp.hidden;panels.querySelectorAll(".txpanel").forEach(p=>p.hidden=true);
+    if(k==="r"&&rb&&!rb.checked){rb.checked=true;rb.dispatchEvent(new Event("change",{bubbles:true}));pp.hidden=false}
+    else pp.hidden=was;
+    if(!pp.hidden){if(k==="n")setTimeout(()=>note.focus(),40);if(k==="l"&&!loc.value)setTimeout(()=>loc.focus(),40);requestAnimationFrame(()=>pp.scrollIntoView({block:"nearest",behavior:"smooth"}))}
+    refresh()});
+  s.addEventListener("input",refresh);s.addEventListener("change",refresh);s.addEventListener("click",()=>setTimeout(refresh,0));
+  const iv=setInterval(()=>{if(!s.isConnected){clearInterval(iv);return}refresh()},700);
+  // editing: open the panels that already have something in them? keep closed, the pills show the values
+  refresh();
+}catch(e){console.warn("layout A",e)}}
 function txSheet(existing,opts){txSheetCore(existing);if(!opts||existing)return;const sh=$("#sheetRoot .sheet");if(!sh)return;
   if(opts.kind==="refund"){const b=sh.querySelector('[data-k="refund"]');b&&b.click()}
   if(opts.venmo){const v=sh.querySelector("#f-venmo");if(v){v.checked=true;v.dispatchEvent(new Event("change",{bubbles:true}))}}
@@ -3365,7 +3414,7 @@ function txSheetCore(existing){
     '<div class="tpad" id="f-pad"></div>'+
     '<div class="tsave"><button class="btn" id="f-save2">'+(existing?"Save":"Done")+'</button></div>',
     s=>{
-      s.classList.add("txs");
+      s.classList.add("txs");txLayoutA(s,existing);
       const amtB=s.querySelector("#f-amt"),padEl=s.querySelector("#f-pad"),cat=s.querySelector("#f-cat"),ctxt=s.querySelector("#f-ctxt");
       const drawAmt=()=>{const v=tVal(T);amtB.textContent=(kind==="refund"?"+":"")+money(v/100);amtB.className="tamt num"+(kind==="refund"?" inc":"")+(v?"":" zero")+(s.classList.contains("kboff")?"":" on");try{updLeft()}catch(_){}};
       const drawKeys=()=>{const c=T.calc;
