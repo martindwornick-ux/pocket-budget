@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 12:10 PM"</script>
+<script>window.PB_BUILD="Nov 1, 12:25 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1936,8 +1936,23 @@ async function mbxSearch(q,near,limit){const tok=mbxToken();if(!tok)return null;
       const name=isPoi?p.name:"",street=isPoi?(p.address||""):(town?"":(p.address||p.name||""));
       const l={label:town?[p.name,st].filter(Boolean).join(", "):[name,street,place].filter(Boolean).join(", "),place:town?[p.name,st].filter(Boolean).join(", "):place,lat:+(+lat).toFixed(6),lng:+(+lng).toFixed(6),src:"search"};
       if(name)l.name=name;l.far=near?locDist(near,l):null;return l}).filter(Boolean)}catch(e){return null}}
+/* Google Places (New) Text Search when a key is saved in Settings. Capped in the app at pb.gplacesDaily per day (default 100),
+   on top of whatever quota you set in Google Cloud. Results are cached so retyping the same search costs nothing. */
+const gpKey=()=>ls.get("pb.gplacesKey")||"";
+function gpBudget(){const d=today(),c=JSON.parse(ls.get("pb.gplacesUse")||"{}");if(c.d!==d){c.d=d;c.n=0}const max=+(ls.get("pb.gplacesDaily")||100);return{ok:c.n<max,use(){c.n++;ls.set("pb.gplacesUse",JSON.stringify(c))}}}
+async function gpSearch(q,near,limit){const key=gpKey();if(!key)return null;const b=gpBudget();if(!b.ok)return null;b.use();
+  try{const body={textQuery:q,pageSize:limit||8,languageCode:"en",regionCode:"US"};if(near)body.locationBias={circle:{center:{latitude:near.lat,longitude:near.lng},radius:40000}};
+    const c=new AbortController();setTimeout(()=>c.abort(),7000);
+    const r=await fetch("https://places.googleapis.com/v1/places:searchText",{method:"POST",signal:c.signal,headers:{"Content-Type":"application/json","X-Goog-Api-Key":key,"X-Goog-FieldMask":"places.displayName,places.formattedAddress,places.location,places.types"},body:JSON.stringify(body)});
+    if(!r.ok)return null;const j=await r.json();
+    return(j.places||[]).map(p=>{if(!p.location)return null;const fa=String(p.formattedAddress||"").replace(/,\s*(USA|United States|Canada)$/,""),parts=fa.split(",").map(x=>x.trim());
+      const stz=parts.length>=2?parts[parts.length-1]:"",st=(stz.match(/^([A-Z]{2})\b/)||[])[1]||stz,city=parts.length>=3?parts[parts.length-2]:(parts.length===2?parts[0]:""),street=parts.length>=3?parts.slice(0,parts.length-2).join(", "):"";
+      const nm=p.displayName&&p.displayName.text||"",town=(p.types||[]).some(t=>/^(locality|administrative_area|political|postal_code|country)/.test(t))&&!street;
+      const place=[city,st].filter(Boolean).join(", ");const l={label:town?fa:[nm,street,place].filter(Boolean).join(", "),place:town?fa:place,lat:+p.location.latitude.toFixed(6),lng:+p.location.longitude.toFixed(6),src:"search"};
+      if(nm&&!town)l.name=nm;l.far=near?locDist(near,l):null;return l}).filter(Boolean)}catch(e){return null}}
 async function locSearch(q,near){
   q=q.trim();if(q.length<3)return[];const k=q.toLowerCase()+"|"+(near?near.lat.toFixed(2)+","+near.lng.toFixed(2):"");if(LOC.scache[k])return LOC.scache[k];
+  {const g=await gpSearch(q,near,8);if(g&&g.length)return LOC.scache[k]=g}
   {const m=await mbxSearch(q,near,8);if(m&&m.length)return LOC.scache[k]=m}
   const ST={"Michigan":"MI","Ohio":"OH","Indiana":"IN","Illinois":"IL","Wisconsin":"WI","Maryland":"MD","California":"CA","New York":"NY","Florida":"FL","Texas":"TX","Oregon":"OR","Washington":"WA","Minnesota":"MN","Pennsylvania":"PA","Colorado":"CO"};
   const tm=ms=>{const c=new AbortController();setTimeout(()=>c.abort(),ms);return c.signal};
@@ -2094,8 +2109,8 @@ function locField(s,o){
       const norm=x=>String(x||"").toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
       let hit=null;if(mk){const n=norm(mraw);hit=list.find(p=>p.d<300&&(norm(p.name).includes(n)||n.includes(norm(p.name))||norm(p.name).split(" ")[0]===n.split(" ")[0]))}
       else hit=list.find(p=>p.d<=Math.max(35,Math.min(70,f.acc||40)));
-      if(!hit&&mk&&mbxToken()){const key="mbx|"+mk+"|"+f.lat.toFixed(3)+","+f.lng.toFixed(3);const M=LOC.pcache[key];
-        if(!M){LOC.pcache[key]={};mbxSearch(mraw,f,3).then(r=>{LOC.pcache[key].v=r||[];if(s.isConnected)applyAuto()})}
+      if(!hit&&mk&&(gpKey()||mbxToken())&&mk.length>=3){const key="ext|"+mk+"|"+f.lat.toFixed(3)+","+f.lng.toFixed(3);const M=LOC.pcache[key];
+        if(!M){if(LOC._extK&&LOC.pcache[LOC._extK]&&!LOC.pcache[LOC._extK].v)delete LOC.pcache[LOC._extK];LOC._extK=key;LOC.pcache[key]={};clearTimeout(LOC._extT);LOC._extT=setTimeout(()=>{(gpKey()?gpSearch(mraw,f,3):mbxSearch(mraw,f,3)).then(r=>{LOC.pcache[key].v=r||[];if(s.isConnected)applyAuto()})},900)}
         else if(M.v){const m=M.v.find(x=>x.name&&x.far!=null&&x.far<400);if(m){l=Object.assign({},m,{acc:f.acc,src:"gps"})}}}
       if(!l&&hit){const ad=hit.addr||f.road;l={label:[hit.name,ad,f.place].filter(Boolean).join(", "),name:hit.name,place:f.place,lat:+hit.lat.toFixed(6),lng:+hit.lng.toFixed(6),acc:f.acc,src:"gps"}}}
     if(!l)l={label:[f.road,f.place].filter(Boolean).join(", "),place:f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"};

@@ -270,7 +270,10 @@ function openSettings(){
       '<div class="pbx-f"><label for="pbx-key">Script key</label><input id="pbx-key" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="From the KEY line in apps-script.gs" value="'+esc(cfg.key)+'"></div>'+
       '<p data-pbx-sstat class="pbx-note" style="margin:0 0 10px"></p>'+
       '<div class="pbx-row" style="margin-top:0"><button class="pbx-btn sec" id="pbx-test">Test</button><button class="pbx-btn" id="pbx-save">Save</button></div></section>'+
-    '<section class="pbx-sec"><h3>Place search <span class="pbx-pill '+(LS.get("pb.mapboxToken")?"on":"off")+'">'+(LS.get("pb.mapboxToken")?"Mapbox":"Basic")+'</span></h3><p>Paste a free Mapbox public token (starts with <b>pk.</b>) for much better business search. Stays on this phone.</p>'+
+    '<section class="pbx-sec"><h3>Place search <span class="pbx-pill '+(LS.get("pb.gplacesKey")||LS.get("pb.mapboxToken")?"on":"off")+'">'+(LS.get("pb.gplacesKey")?"Google":LS.get("pb.mapboxToken")?"Mapbox":"Basic")+'</span></h3><p>Paste a Google Places API key for Google Maps–quality business search. It stays on this phone. The app also stops itself at '+(LS.get("pb.gplacesDaily")||"100")+' searches a day.</p>'+
+      '<div class="pbx-f"><label for="pbx-gpk">Google Places key</label><input id="pbx-gpk" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AIza…" value="'+esc(LS.get("pb.gplacesKey")||"")+'"></div>'+
+      '<p data-pbx-gstat class="pbx-note" style="margin:0 0 10px"></p><div class="pbx-row" style="margin-top:0;margin-bottom:14px"><button class="pbx-btn" id="pbx-gsave">Save</button></div>'+
+      '<p style="margin:0 0 8px;font-size:14px;color:#5f6368">Or a free Mapbox public token (starts with <b>pk.</b>), used when there\'s no Google key.</p>'+
       '<div class="pbx-f"><label for="pbx-mbx">Mapbox token</label><input id="pbx-mbx" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="pk.eyJ1Ijoi…" value="'+esc(LS.get("pb.mapboxToken")||"")+'"></div>'+
       '<p data-pbx-mstat class="pbx-note" style="margin:0 0 10px"></p><div class="pbx-row" style="margin-top:0"><button class="pbx-btn" id="pbx-msave">Save</button></div></section>'+
     '<section class="pbx-sec"><h3>Backup</h3><p>Save a copy of everything, or bring in a backup file. Importing replaces records with the same month or ID and keeps the rest.</p>'+
@@ -289,6 +292,13 @@ function openSettings(){
   sc.querySelector("#pbx-test").onclick=async()=>{const v=val();if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(v.url)){say("Paste the Web app URL from Apps Script. It starts with https://script.google.com and ends in /exec.",false);return}
     say("Testing…");try{const j=await callScript({action:"ping"},v);say("Connected to "+(j.spreadsheet||"your sheet")+" · Transactions tab found.",true)}
     catch(x){say(x.code==="wrong_key"?"Wrong key. Copy the value in quotes on the KEY line of apps-script.gs.":x.code==="network"?"Couldn't reach the script. Check the URL and your connection.":x.message,false)}};
+  sc.querySelector("#pbx-gsave").onclick=async()=>{const k=sc.querySelector("#pbx-gpk").value.trim(),st=sc.querySelector("[data-pbx-gstat]");
+    if(!k){LS.set("pb.gplacesKey",null);st.className="pbx-note";st.textContent="Removed.";return}
+    st.className="pbx-note";st.textContent="Checking…";
+    try{const r=await fetch("https://places.googleapis.com/v1/places:searchText",{method:"POST",headers:{"Content-Type":"application/json","X-Goog-Api-Key":k,"X-Goog-FieldMask":"places.id"},body:JSON.stringify({textQuery:"coffee",pageSize:1})});
+      if(!r.ok){const j=await r.json().catch(()=>({}));st.className="pbx-err";st.textContent="Google refused the key: "+((j.error&&j.error.message)||r.status);return}
+      LS.set("pb.gplacesKey",k);st.className="pbx-ok";st.textContent="Saved. Place search now uses Google."}
+    catch(e){LS.set("pb.gplacesKey",k);st.className="pbx-note";st.textContent="Saved (couldn't test right now)."}};
   sc.querySelector("#pbx-msave").onclick=async()=>{const t=sc.querySelector("#pbx-mbx").value.trim(),st=sc.querySelector("[data-pbx-mstat]");
     if(!t){LS.set("pb.mapboxToken",null);st.className="pbx-note";st.textContent="Removed. Using basic search.";return}
     if(!/^pk\./.test(t)){st.className="pbx-err";st.textContent="Use the public token that starts with pk. (never an sk. secret token).";return}
