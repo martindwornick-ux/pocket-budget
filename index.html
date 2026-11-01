@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 9:00 PM"</script>
+<script>window.PB_BUILD="Oct 31, 9:15 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3575,19 +3575,25 @@ function plannedSheet(){
     const getF=f=>f==="carry"?V.carry:f==="adj"?V.adj:f==="tot"?total():f==="bank"?V.bankAmt:V.pays[+f.slice(1)].amt;
     const setF=(f,v)=>{if(f!=="tot"&&f!=="bank")totOverride=null;if(f==="carry")V.carry=v;else if(f==="adj")V.adj=v;else if(f==="bank")V.bankAmt=v;else if(f==="tot"){totOverride=null;V.adj=round2(v-sum())}else V.pays[+f.slice(1)].amt=v};
     const spentSoFar=()=>ym>ymOf(td)?0:round2(S.tx.filter(t=>ym===S.ym&&t.date<=td&&!venmoPending(t,td)).reduce((a,t)=>a+sAmt(t),0));
-    const venRecent=()=>ym!==S.ym?[]:S.tx.filter(t=>isVenmoTx(t)&&!isHist(t)&&t.date<=td&&(venmoPending(t,td)||td<addBizDays(t.date,7))).sort((a,b)=>b.date.localeCompare(a.date));
-    const drawVen=()=>{const all=venRecent(),pend=all.filter(t=>venmoPending(t,td)),amt=round2(pend.reduce((a,t)=>a+sAmt(t),0)),btn=sh.querySelector("#pl-ven"),lst=sh.querySelector("#pl-venl");
+    /* Venmo can sit in any month (e.g. Oct 31 Venmo while looking at November), so pull the last 2 weeks straight from the database. */
+    let VL=S.tx.filter(isVenmoTx);
+    const venRecent=()=>{const m=new Map();VL.forEach(t=>m.set(t.id,t));S.tx.forEach(t=>{if(isVenmoTx(t))m.set(t.id,t)});return [...m.values()].filter(t=>!isHist(t)&&t.date<=td&&(venmoPending(t,td)||td<addBizDays(t.date,7))).sort((a,b)=>b.date.localeCompare(a.date))};
+    /* pending Venmo from other months is already baked into the carryover, so add it back (the bank hasn't moved yet) */
+    const venOther=()=>round2(venRecent().filter(t=>venmoPending(t,td)&&!(ym===S.ym&&ymOf(t.date)===ym&&ym<=ymOf(td))).reduce((a,t)=>a+sAmt(t),0));
+    (async()=>{try{if(!S.db)return;const d=new Date(td+"T12:00:00");d.setDate(d.getDate()-14);const from=d.toISOString().slice(0,10);
+      const snap=await S.db.collection("tx").where("date",">=",from).where("date","<=",td).limit(500).get();VL=snap.docs.map(x=>Object.assign({id:x.id},x.data())).filter(isVenmoTx);if(sh.isConnected)refresh()}catch(_){}})();
+    const drawVen=()=>{const all=venRecent(),pend=all.filter(t=>venmoPending(t,td)),amt=round2(pend.reduce((a,t)=>a+(t.type==="expense"||!t.type?1:-1)*(+t.amount||0),0)),btn=sh.querySelector("#pl-ven"),lst=sh.querySelector("#pl-venl");
       if(!all.length){btn.hidden=true;lst.hidden=true;return}btn.hidden=false;
-      btn.innerHTML='<span>'+(pend.length?'Venmo pending <b class="num">'+money(Math.abs(amt))+'</b> · '+pend.length:'Recent Venmo all in MSUFCU ✓')+'</span>'+CHEV;btn.classList.toggle("ok",!pend.length);
+      btn.innerHTML='<span>'+(pend.length?'Venmo pending <b class="num">'+(amt<0?"+":"")+money(Math.abs(amt))+'</b> · '+pend.length:'Recent Venmo all in MSUFCU ✓')+'</span>'+CHEV;btn.classList.toggle("ok",!pend.length);
       lst.innerHTML=all.map(t=>{const p=venmoPending(t,td),back=t.type==="refund"||t.type==="income";return '<div class="pvr"><span class="pvn"><b>'+esc(String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"Venmo · "))+'</b><small>'+fmtD(t.date)+(p?' · lands by '+fmtD(addBizDays(t.date,3)):'')+'</small></span><span class="num pva"'+(back?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</span><button type="button" class="pvt'+(p?"":" in")+'" data-vc="'+esc(t.id)+'">'+(p?"Pending":"In MSUFCU ✓")+'</button></div>'}).join("")};
     sh.addEventListener("click",async e=>{if(e.target.closest("#pl-ven")){const l=sh.querySelector("#pl-venl");l.hidden=!l.hidden;sh.querySelector("#pl-ven").classList.toggle("open",!l.hidden);return}
-      const b=e.target.closest("[data-vc]");if(!b)return;const t=S.tx.find(x=>x.id===b.dataset.vc);if(!t)return;const nv=venmoPending(t,td);t.bankCleared=nv;try{haptic()}catch(_){}
+      const b=e.target.closest("[data-vc]");if(!b)return;const t=venRecent().find(x=>x.id===b.dataset.vc);if(!t)return;const nv=venmoPending(t,td);t.bankCleared=nv;[S.tx,VL].forEach(a=>a.forEach(x=>{if(x.id===t.id)x.bankCleared=nv}));try{haptic()}catch(_){}
       refresh();try{await S.db.doc("tx/"+t.id).update({bankCleared:nv})}catch(_){toast("Couldn't save that. Check your connection.")}});
     const refresh=()=>{drawVen();sh.querySelectorAll("[data-f]").forEach(b=>{const v=getF(b.dataset.f);b.innerHTML=v==null||(!v&&b.dataset.f!=="tot")?'<span class="ph">$0.00</span>':money(v)});
       sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total";
-      const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar());
+      const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar()+venOther());
       sh.querySelector("#pl-exp").textContent=money(exp);
-      sh.querySelector("#pl-expn").textContent=[V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(venRecent().some(t=>venmoPending(t,td))?" (Venmo pending left out)":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):"");
+      sh.querySelector("#pl-expn").textContent=[V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(venRecent().some(t=>venmoPending(t,td))?" · Venmo pending not counted yet":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):"");
       sh.querySelectorAll("[data-dt]").forEach(el=>{const d=V.pays[+el.dataset.dt].d;el.textContent=d?(d<=td?"received "+fmtD(d):"coming "+fmtD(d)):"add date"});
       const dv=sh.querySelector("#pl-diff"),fx=sh.querySelector("#pl-fix");if(V.bankAmt==null){dv.hidden=true;fx.hidden=true;return}
       const diff=round2(V.bankAmt-exp);dv.hidden=false;
