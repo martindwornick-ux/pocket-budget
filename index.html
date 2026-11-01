@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 11:00 PM"</script>
+<script>window.PB_BUILD="Oct 31, 11:10 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3621,7 +3621,7 @@ function plannedSheet(){
   const vb=(f,l,sub,cls)=>'<div class="plf'+(cls?" "+cls:"")+'"><label>'+l+(sub?'<small>'+sub+'</small>':'')+'</label><button type="button" class="plv num" data-f="'+f+'"></button></div>';
   const payRow=(p,i)=>vb("p"+i,"Paycheck "+(i+1),'<span class="plds"><span class="pldt" data-dt="'+i+'"></span><input type="date" class="pld" data-pd="'+i+'" value="'+esc(p.d)+'" aria-label="Paycheck '+(i+1)+' date"></span>');
   openSheet('<h3>Planned for '+MONTHS[m-1]+'</h3>'+(V.pays.length>=3?'<p class="plbadge">3 paychecks this month</p>':'')+(sched?'<p class="note" style="margin:-4px 0 6px">Paydays filled in from your every-2-weeks schedule.</p>':'')+
-    vb("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+V.pays.map(payRow).join("")+vb("rew","Credit card rewards","cash back")+
+    vb("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+V.pays.map(payRow).join("")+vb("rew","Credit card rewards","off your card payment")+
     vb("adj","Adjustment",'<span id="pl-adjn">difference to reach your total</span>',"pladj")+vb("tot","Planned total","","pltot")+
     (fresh&&total0?'<p class="note" style="margin:8px 0 0">Your current total is '+money(total0)+'. Enter your carryover and paychecks to build it up.</p>':'')+
     '<div class="plbal"><h4>Check against MSUFCU</h4><div class="plrow"><span>Should be in your account today</span><b class="num" id="pl-exp"></b></div><div class="plnote" id="pl-expn"></div><button type="button" class="plven" id="pl-ven" hidden></button><div class="pvl" id="pl-venl" hidden></div>'+
@@ -3646,9 +3646,9 @@ function plannedSheet(){
     sh.addEventListener("click",e=>{if(e.target.closest("#pl-ven")){const l=sh.querySelector("#pl-venl");l.hidden=!l.hidden;sh.querySelector("#pl-ven").classList.toggle("open",!l.hidden)}});
     const refresh=()=>{drawVen();sh.querySelectorAll("[data-f]").forEach(b=>{const v=getF(b.dataset.f);b.innerHTML=v==null||(!v&&b.dataset.f!=="tot")?'<span class="ph">$0.00</span>':money(v)});
       sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total";
-      const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.rew+V.adj-spentSoFar());
+      const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar());
       sh.querySelector("#pl-exp").textContent=money(exp);
-      sh.querySelector("#pl-expn").textContent=(x=>x.replace(/^\s*·\s*/,""))([V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.rew?"rewards":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):""));
+      sh.querySelector("#pl-expn").textContent=(x=>x.replace(/^\s*·\s*/,""))([V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):""));
       sh.querySelectorAll("[data-dt]").forEach(el=>{const d=V.pays[+el.dataset.dt].d;el.textContent=d?(d<=td?"received "+fmtD(d):"coming "+fmtD(d)):"add date"});
       const dv=sh.querySelector("#pl-diff"),fx=sh.querySelector("#pl-fix"),gs=sh.querySelector("#pl-guess");if(V.bankAmt==null){dv.hidden=true;fx.hidden=true;gs.hidden=true;return}
       const diff=round2(V.bankAmt-exp);dv.hidden=false;
