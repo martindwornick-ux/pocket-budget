@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 10:50 AM"</script>
+<script>window.PB_BUILD="Nov 1, 11:10 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1892,6 +1892,16 @@ const LOC={
       const city=a.city||a.town||a.village||a.hamlet||a.suburb||a.county||"",st=(a["ISO3166-2-lvl4"]||"").split("-")[1]||a.state||"";
       const poi=j.name&&j.name!==a.road&&!/^\d/.test(j.name)?j.name:"";
       return this.cache[k]={place:[city,st].filter(Boolean).join(", "),poi,road:[a.house_number,a.road].filter(Boolean).join(" ")}}catch(e){return null}},
+  /* Named businesses within ~150 m of a fix (OpenStreetMap via Overpass), closest first, with their street address */
+  pcache:{},
+  pois(v){const k=v.lat.toFixed(4)+","+v.lng.toFixed(4);if(this.pcache[k])return this.pcache[k];
+    const SKIP=/^(parking|parking_entrance|parking_space|bench|waste_basket|waste_disposal|toilets|bicycle_parking|post_box|drinking_water|shelter|telephone|vending_machine|fountain|recycling|clock|grit_bin|motorcycle_parking|loading_dock|hunting_stand|bbq|letter_box|atm)$/;
+    const qy='[out:json][timeout:8];nwr(around:150,'+v.lat+','+v.lng+')[name][~"^(shop|amenity|leisure|office|healthcare|craft|tourism|club)$"~"."];out center tags 60;';
+    return this.pcache[k]=(async()=>{try{const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),9000);
+      const r=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(qy),{signal:ctl.signal});clearTimeout(tm);if(!r.ok)return[];
+      const j=await r.json();return(j.elements||[]).map(e=>{const t=e.tags||{},lat=e.lat??(e.center&&e.center.lat),lng=e.lon??(e.center&&e.center.lon);if(lat==null||SKIP.test(t.amenity||""))return null;
+        return{name:t.name,lat:+lat,lng:+lng,d:locDist(v,{lat:+lat,lng:+lng}),addr:[t["addr:housenumber"],t["addr:street"]].filter(Boolean).join(" ")}}).filter(Boolean).sort((a,b)=>a.d-b.d)}
+      catch(e){return[]}})()},
   pack(v){const o={lat:v.lat,lng:v.lng,acc:v.acc||0,at:v.at||new Date().toISOString()};if(v.place)o.place=v.place;if(v.poi)o.poi=v.poi;if(v.road)o.road=v.road;return o},
   // past merchants logged within ~200 m, closest and most used first, plus the place you're standing in
   nearby(v){
@@ -2039,12 +2049,23 @@ function locField(s,o){
     if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();const n=list.length;hi=e.key==="ArrowDown"?(hi+1)%n:(hi<=0?n-1:hi-1);draw()}
     else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();hide()}});
   // fill in where you are (new transactions only, until you type or pick something yourself)
+  /* Smart spot for new transactions:
+     1) you've bought from this merchant near here before → that saved spot
+     2) a nearby business matches the merchant you typed → "Business, 123 Street, Town"
+     3) no merchant yet → the business you're standing in (closest, within ~60 m)
+     4) otherwise (online, bills, nothing close) → your street address, not just the town */
   const applyAuto=()=>{if(!auto||touched)return;const f=LOC.last;if(!f)return;if(!f.place){if(!clean(inp.value)){cur={label:"Current location",lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"};inp.value=cur.label}return}
-    const mk=merchKey(o.merchant());let l=null;
-    if(mk){const m=txPool().find(t=>t.loc&&t.loc.lat!=null&&merchKey(t.merchant)===mk&&locDist(f,t.loc)<400);
-      if(m)l={label:locText(m.loc),place:m.loc.place||f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"},m.loc.name&&(l.name=m.loc.name);
-      else if(f.poi&&mk.includes(f.poi.toLowerCase().split(" ")[0]))l={label:f.poi+", "+f.place,name:f.poi,place:f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"}}
-    if(!l)l={label:f.place,place:f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"};
+    const mraw=o.merchant(),mk=merchKey(mraw),venmo=/^\s*venmo\s*:/i.test(mraw||"");let l=null;
+    if(mk&&!venmo){const m=txPool().find(t=>t.loc&&t.loc.lat!=null&&merchKey(t.merchant)===mk&&locDist(f,t.loc)<400);
+      if(m)l={label:locText(m.loc),place:m.loc.place||f.place,lat:m.loc.lat,lng:m.loc.lng,acc:f.acc,src:"gps"},m.loc.name&&(l.name=m.loc.name)}
+    if(!l&&!venmo){const P=LOC.pcache[f.lat.toFixed(4)+","+f.lng.toFixed(4)];
+      if(!P||typeof P.then==="function"&&!P._v){LOC.pois(f).then(list=>{(LOC.pcache[f.lat.toFixed(4)+","+f.lng.toFixed(4)]||{})._v=list;if(s.isConnected)applyAuto()})}
+      const list=P&&P._v||[];
+      const norm=x=>String(x||"").toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+      let hit=null;if(mk){const n=norm(mraw);hit=list.find(p=>p.d<300&&(norm(p.name).includes(n)||n.includes(norm(p.name))||norm(p.name).split(" ")[0]===n.split(" ")[0]))}
+      else hit=list.find(p=>p.d<=Math.max(35,Math.min(70,f.acc||40)));
+      if(hit){const ad=hit.addr||f.road;l={label:[hit.name,ad,f.place].filter(Boolean).join(", "),name:hit.name,place:f.place,lat:+hit.lat.toFixed(6),lng:+hit.lng.toFixed(6),acc:f.acc,src:"gps"}}}
+    if(!l)l={label:[f.road,f.place].filter(Boolean).join(", "),place:f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"};
     if(cur&&cur.label===l.label)return;cur=l;if(document.activeElement!==inp)inp.value=l.label;row.classList.remove("auto");void row.offsetWidth;row.classList.add("auto")};
   const locate=open=>{if(!LOC.ok())return Promise.resolve(null);gpsB&&gpsB.classList.add("busy");
     pend=LOC.get().then(v=>LOC.place(v).then(pl=>{if(pl)Object.assign(v,pl);LOC.last=v;LOC.lastAt=Date.now();return v})).then(v=>{gpsB&&gpsB.classList.remove("busy");if(!s.isConnected)return v;
