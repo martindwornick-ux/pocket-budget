@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Nov 1, 12:40 AM"</script>
+<script>window.PB_BUILD="Nov 1, 1:00 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -371,6 +371,9 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .plmt{border:0;background:none;padding:0 0 4px;font:inherit;font-size:13px;color:#1a73e8}
 .plmath{border-left:2px solid var(--line);padding:2px 0 4px 10px;margin:0 0 6px;font-size:13px;color:var(--muted)}
 .plmr{display:flex;justify-content:space-between;gap:8px;padding:1px 0}.plmr.mu{font-size:12px;opacity:.8}
+.iamt{border:0;background:none;font:inherit;padding:4px 0 4px 8px;border-bottom:1.5px dashed transparent}.iamt:not(:has(input)){border-bottom-color:var(--line)}
+.iamtin{width:110px;text-align:right;font:inherit;font-weight:700;font-size:17px;border:1.5px solid #1a73e8;border-radius:10px;padding:6px 8px;background:#fff;outline:0}
+div.txrow{cursor:pointer}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -3519,11 +3522,13 @@ function itemSheet(id,preSub){
   if(isM&&list.length){const by={},cnt={};list.forEach(t=>{const k=subOf(t);by[k]=round2((by[k]||0)+sAmt(t));cnt[k]=(cnt[k]||0)+1});
     const ks=Object.keys(by).sort((a,b)=>(a===NOSUB)-(b===NOSUB)||by[b]-by[a]);const mx=Math.max(...ks.map(k=>by[k]),0.01);
     subsH='<div class="subs" role="group" aria-label="Spending by subcategory"><h4>By subcategory <span>· tap to filter</span></h4>'+ks.map(k=>'<button class="subr" data-subf="'+esc(k)+'" aria-pressed="false"><div class="irow"><span class="nm">'+esc(k)+' <span class="cnt">'+cnt[k]+'</span></span><span class="v num">'+money(by[k])+'</span></div><div class="track fill"><i style="width:'+Math.max(2,by[k]/mx*100).toFixed(1)+'%;background:'+subColor(k)+'"></i></div></button>').join("")+'</div>'}
-  let tx=list.map(t=>'<button class="txrow" data-tx="'+esc(t.id)+'"'+(isM?' data-sub="'+esc(subOf(t))+'"':'')+'><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(fmtDay(t.date))+(isM?' · '+esc(subOf(t)):'')+'</div></div><div class="a num"'+(t.type==="refund"||t.type==="income"?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</div></button>').join("");
+  /* rows are divs so the amount can be its own tap target: tap the amount to type a new one right there */
+  let tx=list.map(t=>'<div class="txrow" role="button" tabindex="0" data-tx="'+esc(t.id)+'"'+(isM?' data-sub="'+esc(subOf(t))+'"':'')+'><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(fmtDay(t.date))+(isM?' · '+esc(subOf(t)):'')+'</div></div>'+
+    (isHist(t)?'<div class="a num"'+(t.type==="refund"||t.type==="income"?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</div>':'<button type="button" class="a num iamt" data-amt="'+esc(t.id)+'"'+(t.type==="refund"||t.type==="income"?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</button>')+'</div>').join("");
   openSheet('<h3>'+esc(f.it.name)+'</h3>'+
     '<div class="two"><div class="field"><label for="i-name">Name</label><input id="i-name" value="'+esc(f.it.name)+'"></div><div class="field"><label for="i-plan">Planned</label><input id="i-plan" inputmode="decimal" value="'+(+f.it.planned||0).toFixed(2)+'"></div></div>'+
     '<div class="ltb" id="i-ltb"></div>'+
-    '<label class="chk"><input type="checkbox" id="i-fixed"'+(isFixed(f.it,f.g)?" checked":"")+'><span><b>Fixed cost</b><br><span class="note">Bills, mortgage, lease and the like. Left out of Avg Daily Spend.</span></span></label>'+
+
     '<p class="note num" style="margin:0 0 14px">'+money(spent)+' spent in '+MONTHS[+S.ym.slice(5)-1]+(back?' (after '+money(back)+' back)':'')+'. Planned amounts carry into new months until you change them.</p>'+
     '<div class="btnrow"><button class="btn" id="i-save">Save</button><button class="btn sec" id="i-add">Log purchase</button></div>'+
     (subsH?'<div style="margin-top:16px">'+subsH+'</div>':'')+
@@ -3540,9 +3545,16 @@ function itemSheet(id,preSub){
         const fb=ltb.querySelector("#i-fill");if(fb)fb.onclick=()=>{const c=parseAmt(planIn.value||"0");planIn.value=Math.max(0,round2((isNaN(c)?0:c)+left)).toFixed(2);upd()};
       };
       planIn.addEventListener("input",upd);upd();
-      s.querySelector("#i-save").onclick=async()=>{const p=parseAmt(s.querySelector("#i-plan").value);const n=s.querySelector("#i-name").value.trim();if(!n){toast("Give the item a name");return}if(isNaN(p)||p<0){toast("Planned must be $0 or more");return}f.it.name=n;f.it.planned=p;f.it.fixed=s.querySelector("#i-fixed").checked;if(await saveGroups(groups)){closeSheet();toast("Saved")}};
+      s.querySelector("#i-save").onclick=async()=>{const p=parseAmt(s.querySelector("#i-plan").value);const n=s.querySelector("#i-name").value.trim();if(!n){toast("Give the item a name");return}if(isNaN(p)||p<0){toast("Planned must be $0 or more");return}f.it.name=n;f.it.planned=p;if(await saveGroups(groups)){closeSheet();toast("Saved")}};
       s.querySelector("#i-add").onclick=()=>{ls.set("pb.lastItem",id);txSheet()};
-      s.querySelectorAll("[data-tx]").forEach(b=>b.onclick=()=>{const t=S.tx.find(x=>x.id===b.dataset.tx);if(t)isHist(t)?histSheet(t):txSheet(t)});
+      s.querySelectorAll("[data-tx]").forEach(b=>b.onclick=e=>{if(e.target.closest(".iamt,.iamtin"))return;const t=S.tx.find(x=>x.id===b.dataset.tx);if(t)isHist(t)?histSheet(t):txSheet(t)});
+      s.querySelectorAll("[data-amt]").forEach(b=>b.onclick=e=>{e.stopPropagation();const t=S.tx.find(x=>x.id===b.dataset.amt);if(!t||b.querySelector("input"))return;
+        const back=t.type==="refund"||t.type==="income";b.innerHTML='<input class="iamtin num" inputmode="decimal" enterkeyhint="done" value="'+(+t.amount).toFixed(2)+'" aria-label="Amount">';const inp=b.querySelector("input");inp.focus();inp.select();
+        let done=false;const fin=async ok=>{if(done)return;done=true;const v=parseAmt(inp.value);const show=a=>{b.innerHTML=(back?"+":"")+money(a)};
+          if(!ok||isNaN(v)||!(v>0)||Math.abs(v-(+t.amount))<.005){if(ok&&inp.value.trim()&&!(v>0))toast("Enter an amount above $0");show(+t.amount);return}
+          const old=+t.amount;t.amount=round2(v);show(t.amount);try{haptic()}catch(_){}render();
+          try{await S.db.doc("tx/"+t.id).update({amount:t.amount});toast(t.sheet==="synced"?"Updated. Fix the row in your Finance Tracker too.":"Updated to "+money(t.amount))}catch(_){t.amount=old;show(old);render();toast("Couldn't save that. Check your connection.")}};
+        inp.addEventListener("keydown",ev=>{if(ev.key==="Enter"){ev.preventDefault();inp.blur()}else if(ev.key==="Escape"){fin(false)}});inp.addEventListener("blur",()=>fin(true));inp.addEventListener("click",ev=>ev.stopPropagation())});
       s.querySelectorAll("[data-subf]").forEach(b=>b.onclick=()=>{const on=b.getAttribute("aria-pressed")!=="true",k=b.dataset.subf;
         s.querySelectorAll("[data-subf]").forEach(x=>x.setAttribute("aria-pressed",String(on&&x===b)));
         s.querySelectorAll("#i-txs [data-sub]").forEach(r=>r.hidden=on&&r.dataset.sub!==k);try{haptic()}catch(_){}});
