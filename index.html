@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 3:20 AM"</script>
+<script>window.PB_BUILD="Nov 1, 3:35 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3008,6 +3008,17 @@ function patchMain(m,html,key){
   const t=document.createElement("template");t.innerHTML=html;const nw=[...t.content.children],old=[...m.children];
   if(nw.length!==old.length){m.innerHTML=html;[...m.children].forEach(c=>c._h=c.outerHTML);return}
   nw.forEach((n,i)=>{const h=n.outerHTML,o=old[i];if(o._h===h)return;n._h=h;m.replaceChild(n,o)})}
+/* Soft press depth: a card tips a few degrees toward your finger while pressed, then eases back.
+   Cancels the moment the touch turns into a scroll or swipe. */
+(()=>{const M=$("#main");let card=null,x0=0,y0=0;
+  const reset=()=>{if(!card)return;const c=card;card=null;if(!c._tilt)return;c._tilt=false;c.style.transition="transform .45s cubic-bezier(.3,.8,.3,1)";c.style.transform="";setTimeout(()=>{if(!c._tilt)c.style.transition=""},480)};
+  M.addEventListener("touchstart",e=>{reset();if(e.touches.length!==1)return;const c=e.target.closest("#main > .card");if(!c||c.closest(".peek")||matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+    const t=e.touches[0],r=c.getBoundingClientRect();x0=t.clientX;y0=t.clientY;card=c;
+    const dx=((t.clientX-r.left)/r.width-.5)*2,dy=((t.clientY-r.top)/r.height-.5)*2,ang=Math.min(4,1600/Math.max(r.height,200));
+    c._tilt=true;c.style.transition="transform .14s ease-out";c.style.transform="perspective(900px) rotateX("+(-dy*ang).toFixed(2)+"deg) rotateY("+(dx*ang*.8).toFixed(2)+"deg) scale(.985)"},{passive:true});
+  M.addEventListener("touchmove",e=>{if(!card)return;const t=e.touches[0];if(Math.abs(t.clientX-x0)>6||Math.abs(t.clientY-y0)>6)reset()},{passive:true});
+  ["touchend","touchcancel"].forEach(ev=>M.addEventListener(ev,reset,{passive:true}));
+})();
 /* Sliding highlight behind the active tab: one pill that glides between tabs */
 let TABIND=null;
 function moveTabInd(){const nav=document.querySelector("nav.tabs");if(!nav)return;const b=nav.querySelector('button[aria-current="page"]');if(!b)return;
@@ -4003,7 +4014,7 @@ async function refreshNow(){
      Fast flings into the top or bottom ricochet too. Turn it down with BOUNCE.amp / BOUNCE.spread / BOUNCE.ms. */
   const BOUNCE={amp:1,spread:.11,ms:800,stagger:22,maxV:3.2};
   const cardEls=()=>[...main.children].filter(c=>c.offsetHeight>20).slice(0,14);
-  function spread(p){const cs=cardEls(),n=cs.length;cs.forEach((c,i)=>{const k=p>0?i:(n-1-i),o=p*BOUNCE.spread*k;c.style.transform=o?"translate3d(0,"+o.toFixed(2)+"px,0)":""})}
+  function spread(p){const cs=cardEls(),n=cs.length;cs.forEach((c,i)=>{const k=p>0?i:(n-1-i),o=p*BOUNCE.spread*k;c.style.transition="none";c._tilt=false;c.style.transform=o?"translate3d(0,"+o.toFixed(2)+"px,0)":""})}
   const promote=on=>{main.style.willChange=on?"transform":"";cardEls().forEach(c=>c.style.willChange=on?"transform":"")};
   let animEnd=0;
   /* Physics, no spring wobble (critically damped):
