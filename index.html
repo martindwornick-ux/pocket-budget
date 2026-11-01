@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 3:00 AM"</script>
+<script>window.PB_BUILD="Nov 1, 3:20 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -384,6 +384,9 @@ div.txrow{cursor:pointer}
 :where(.txrow,.irow,.item,.tapbar,.mfr,.pvr):active{background-color:rgba(60,64,67,.07)}
 :where(.plv,.iamt):active{transform:scale(.97)}
 :where(.key):active{transform:scale(.94)}
+.track.fill i.low{background:#f9ab00}
+nav.tabs.hasind{position:fixed}nav.tabs .tabind{position:absolute;left:0;top:0;border-radius:24px;background:var(--glass-strong);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 2px 10px rgba(0,0,0,.08);transition:transform .42s cubic-bezier(.3,.8,.25,1),width .42s cubic-bezier(.3,.8,.25,1);pointer-events:none;z-index:0}
+nav.tabs.hasind button{position:relative;z-index:1;transition:color .3s}nav.tabs.hasind button[aria-current="page"]{background:transparent;box-shadow:none}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1484,7 +1487,7 @@ function renderHeader(){
   const hs=$("#hisub");hs.hidden=S.tab!=="insights";hs.style.setProperty("--nsub",ISUBS.length);
   if(!hs.hidden){const want=ISUBS.map(([k,l])=>'<button data-isub="'+k+'" aria-pressed="'+(IS.sub===k)+'">'+l+'</button>').join("");if(hs.innerHTML!==want)hs.innerHTML=want}
   if(onTx){const i=$("#txq");i.placeholder="Search "+MONTHS[+S.ym.slice(5)-1]+" transactions";if(document.activeElement!==i&&i.value!==(S.q||""))i.value=S.q||"";$("#txqClear").hidden=!(S.q||"").trim()}
-  document.querySelectorAll("nav.tabs button").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  document.querySelectorAll("nav.tabs button").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});moveTabInd();
 }
 function totals(groups,sm){let p=0,s=0;allItems(groups).forEach(({it})=>{p+=+it.planned||0;s+=sm[it.id]||0});const known=new Set(allItems(groups).map(x=>x.it.id));S.tx.forEach(t=>{if(!known.has(t.itemId))s+=sAmt(t)});return{p:round2(p),s:round2(s),r:round2(p-s)}}
 function renderBanner(groups,sm){
@@ -1550,9 +1553,10 @@ function itemComboHTML(it,sm,solo){
   const segs=null;
   // bar shows what's LEFT (full = untouched); over budget shows red, sized by how far over
   const lp=planned>0?Math.max(0,Math.min(100,rem/planned*100)):0,op=over?(planned>0?Math.min(100,-rem/planned*100):100):0;
-  const bar=over?'<div class="track fill cb"><i class="ov" style="width:'+Math.max(4,op).toFixed(1)+'%;margin-left:0"></i></div>':'<div class="track fill cb"><i style="width:'+lp.toFixed(1)+'%"></i></div>';
+  const low=!over&&planned>0&&spent>0&&lp<=15;
+  const bar=over?'<div class="track fill cb"><i class="ov" style="width:'+Math.max(4,op).toFixed(1)+'%;margin-left:0"></i></div>':'<div class="track fill cb"><i'+(low?' class="low"':'')+' style="width:'+lp.toFixed(1)+'%"></i></div>';
   const ed=PAD&&PAD.kind==="item"&&PAD.id===it.id;
-  return '<div class="item citem"><button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm'+(solo?" solo":"")+'">'+(solo?(over?"Over":"Left"):esc(it.name))+'</span><span class="v num'+(over?" neg":"")+'">'+money(rem)+'</span></button><button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true">'+bar+'</button>'+
+  return '<div class="item citem"><button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm'+(solo?" solo":"")+'">'+(solo?(over?"Over":"Left"):esc(it.name))+'</span><span class="v num'+(over?" neg":"")+'"><span data-roll="it:'+esc(it.id)+'" data-v="'+rem+'">'+money(rem)+'</span></span></button><button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true">'+bar+'</button>'+
     '<div class="icap"><span class="num'+(over?" neg":"")+'">'+money(spent)+' spent</span><span>of</span><button class="capb num'+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Planned for '+esc(it.name)+', '+money(planned)+'. Tap to change">'+money(planned)+PENCIL+'</button></div></div>';
 }
 const PENCIL='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
@@ -1589,11 +1593,11 @@ function dateCardHTML(itot,t0){
   const side=isCur?"":past?"Month is over":"Starts "+MONTHS[m-1].slice(0,3)+" 1";
   const inc=incomeFor(S.ym),ed=PAD&&PAD.kind==="income"&&inc.length===1&&PAD.id===inc[0].id;
   const plan=inc.length===1?'<button class="eqpl num'+(ed?" editing":"")+'" data-iplan="'+esc(inc[0].id)+'" aria-label="Planned '+money(itot)+'. Tap to change">'+money(itot)+PENCIL+'</button>':inc.length?'<span class="eqpl num">'+money(itot)+'</span>':'<button class="eqpl" id="addIncome">Set amount'+PENCIL+'</button>';
-  const days=isCur?d:dim,pd=rem>0&&days?money(round2(rem/days)):money(0);
+  const days=isCur?d:dim,pdv=rem>0&&days?round2(rem/days):0,pd='<span data-roll="pd" data-v="'+pdv+'">'+money(pdv)+'</span>';
   return '<section class="card eqcard"><div class="chead"><h2>'+title+'</h2>'+(side?'<span class="lbl">'+side+'</span>':'')+'</div>'+
     '<div class="eql"><span>Planned</span>'+plan+'</div>'+
-    '<div class="eql"><span>Spent</span><span class="num"'+(t0.s<0?' style="color:var(--ok)">+ '+money(-t0.s):'>− '+money(t0.s))+'</span></div>'+
-    '<div class="eql eqt"><span>'+(over?"Over budget":past?"Left over":"Remaining")+'</span><b class="num'+(over?" neg":"")+'">'+money(Math.abs(rem))+'</b></div>'+
+    '<div class="eql"><span>Spent</span><span class="num"'+(t0.s<0?' style="color:var(--ok)">+ '+'<span data-roll="spent" data-v="'+(-t0.s)+'">'+money(-t0.s)+'</span>':'>− '+'<span data-roll="spent" data-v="'+t0.s+'">'+money(t0.s)+'</span>')+'</span></div>'+
+    '<div class="eql eqt"><span>'+(over?"Over budget":past?"Left over":"Remaining")+'</span><b class="num'+(over?" neg":"")+'"><span data-roll="rem" data-v="'+Math.abs(rem)+'">'+money(Math.abs(rem))+'</span></b></div>'+
     (past?'':'<div class="eqd"><span>'+(isCur?(d===1?"Last day of the month":d+" days left, today included"):"Across all "+dim+" days")+'</span><b class="num'+(over?" neg":"")+'">'+pd+' a day</b></div>')+'</section>';
 }
 function todayTileHTML(itot,t0){
@@ -3004,6 +3008,21 @@ function patchMain(m,html,key){
   const t=document.createElement("template");t.innerHTML=html;const nw=[...t.content.children],old=[...m.children];
   if(nw.length!==old.length){m.innerHTML=html;[...m.children].forEach(c=>c._h=c.outerHTML);return}
   nw.forEach((n,i)=>{const h=n.outerHTML,o=old[i];if(o._h===h)return;n._h=h;m.replaceChild(n,o)})}
+/* Sliding highlight behind the active tab: one pill that glides between tabs */
+let TABIND=null;
+function moveTabInd(){const nav=document.querySelector("nav.tabs");if(!nav)return;const b=nav.querySelector('button[aria-current="page"]');if(!b)return;
+  const first=!TABIND;if(first){TABIND=document.createElement("span");TABIND.className="tabind";TABIND.setAttribute("aria-hidden","true");nav.insertBefore(TABIND,nav.firstChild);nav.classList.add("hasind")}
+  const go=()=>{TABIND.style.width=b.offsetWidth+"px";TABIND.style.height=b.offsetHeight+"px";TABIND.style.transform="translate3d("+b.offsetLeft+"px,"+b.offsetTop+"px,0)"};
+  if(first){TABIND.style.transition="none";go();requestAnimationFrame(()=>{TABIND.style.transition=""})}else go()}
+addEventListener("resize",()=>moveTabInd());
+/* Numbers roll from their old value to the new one instead of snapping (amounts use fixed-width digits). */
+const ROLL={};
+function rollNumbers(root){const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  root.querySelectorAll("[data-roll]").forEach(el=>{const k=S.ym+":"+el.dataset.roll,v=+el.dataset.v,prev=ROLL[k];ROLL[k]=v;
+    if(reduce||prev==null||Math.abs(prev-v)<.005||el._rolling===v)return;el._rolling=v;
+    const t0=performance.now(),d=Math.min(900,420+Math.log10(1+Math.abs(v-prev))*120);el.textContent=money(prev);
+    const step=n=>{if(!el.isConnected||el._rolling!==v)return;const q=Math.min(1,(n-t0)/d),e=1-Math.pow(1-q,3);el.textContent=money(round2(prev+(v-prev)*e));if(q<1)requestAnimationFrame(step);else el._rolling=null};
+    requestAnimationFrame(step)})}
 function render(){if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.classList.remove("on");
   renderHeader();
   const groups=groupsFor(S.ym), sm=spentMap();
@@ -3011,7 +3030,7 @@ function render(){if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.c
   const m=$("#main");
   const ae=document.activeElement, keep=ae&&ae.id==="txq"?[ae.selectionStart,ae.selectionEnd]:null;
   const html=S.tab==="budget"?renderBudget(groups,sm):S.tab==="tx"?renderTx(groups):renderInsights(groups,sm);
-  patchMain(m,html,S.tab+"|"+S.ym);
+  patchMain(m,html,S.tab+"|"+S.ym);rollNumbers(m);
   const snap=S.tab==="insights"&&IS.sub==="map"&&!!m.querySelector(".mlrow");document.documentElement.classList.toggle("mlsnap",snap);if(snap)mlSnapVar();
   if(keep){const i=$("#txq");if(i){i.focus();try{i.setSelectionRange(keep[0],keep[1])}catch(e){}}}
 }
