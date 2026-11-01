@@ -270,6 +270,9 @@ function openSettings(){
       '<div class="pbx-f"><label for="pbx-key">Script key</label><input id="pbx-key" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="From the KEY line in apps-script.gs" value="'+esc(cfg.key)+'"></div>'+
       '<p data-pbx-sstat class="pbx-note" style="margin:0 0 10px"></p>'+
       '<div class="pbx-row" style="margin-top:0"><button class="pbx-btn sec" id="pbx-test">Test</button><button class="pbx-btn" id="pbx-save">Save</button></div></section>'+
+    '<section class="pbx-sec"><h3>Place search <span class="pbx-pill '+(LS.get("pb.mapboxToken")?"on":"off")+'">'+(LS.get("pb.mapboxToken")?"Mapbox":"Basic")+'</span></h3><p>Paste a free Mapbox public token (starts with <b>pk.</b>) for much better business search. Stays on this phone.</p>'+
+      '<div class="pbx-f"><label for="pbx-mbx">Mapbox token</label><input id="pbx-mbx" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="pk.eyJ1Ijoi…" value="'+esc(LS.get("pb.mapboxToken")||"")+'"></div>'+
+      '<p data-pbx-mstat class="pbx-note" style="margin:0 0 10px"></p><div class="pbx-row" style="margin-top:0"><button class="pbx-btn" id="pbx-msave">Save</button></div></section>'+
     '<section class="pbx-sec"><h3>Backup</h3><p>Save a copy of everything, or bring in a backup file. Importing replaces records with the same month or ID and keeps the rest.</p>'+
       '<button class="pbx-btn sec" id="pbx-exp">Save a backup</button><div style="height:10px"></div>'+importBlock+
       '<h3 style="margin-top:16px">Google Drive</h3><p>Every week a backup is saved automatically to the <b>Pocket Budget Backups</b> folder in your Google Drive. The last 8 are kept.</p><p data-pbx-dstat class="pbx-note" style="margin:0 0 10px">'+esc(driveStatus())+'</p>'+
@@ -286,6 +289,14 @@ function openSettings(){
   sc.querySelector("#pbx-test").onclick=async()=>{const v=val();if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(v.url)){say("Paste the Web app URL from Apps Script. It starts with https://script.google.com and ends in /exec.",false);return}
     say("Testing…");try{const j=await callScript({action:"ping"},v);say("Connected to "+(j.spreadsheet||"your sheet")+" · Transactions tab found.",true)}
     catch(x){say(x.code==="wrong_key"?"Wrong key. Copy the value in quotes on the KEY line of apps-script.gs.":x.code==="network"?"Couldn't reach the script. Check the URL and your connection.":x.message,false)}};
+  sc.querySelector("#pbx-msave").onclick=async()=>{const t=sc.querySelector("#pbx-mbx").value.trim(),st=sc.querySelector("[data-pbx-mstat]");
+    if(!t){LS.set("pb.mapboxToken",null);st.className="pbx-note";st.textContent="Removed. Using basic search.";return}
+    if(!/^pk\./.test(t)){st.className="pbx-err";st.textContent="Use the public token that starts with pk. (never an sk. secret token).";return}
+    st.className="pbx-note";st.textContent="Checking…";
+    try{const r=await fetch("https://api.mapbox.com/search/searchbox/v1/forward?q=coffee&limit=1&access_token="+encodeURIComponent(t));
+      if(r.status===401||r.status===403){st.className="pbx-err";st.textContent="Mapbox didn't accept that token. Check it, and its allowed URLs.";return}
+      LS.set("pb.mapboxToken",t);st.className="pbx-ok";st.textContent="Saved. Place search now uses Mapbox."}
+    catch(e){LS.set("pb.mapboxToken",t);st.className="pbx-note";st.textContent="Saved (couldn't test right now)."}};
   sc.querySelector("#pbx-save").onclick=()=>{const v=val();LS.set("pb.sheetUrl",v.url||null);LS.set("pb.sheetKey",v.key||null);closeSettings();toast(v.url&&v.key?"Sheet sync saved":"Sheet sync turned off")};
   sc.querySelector("#pbx-exp").onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent="Preparing…";try{await exportBackup()}catch(x){toast("Couldn't make a backup")}b.disabled=false;b.textContent="Save a backup"};
   sc.querySelector("#pbx-drive").onclick=async e=>{const b=e.currentTarget,ds=sc.querySelector("[data-pbx-dstat]");b.disabled=true;b.textContent="Backing up…";

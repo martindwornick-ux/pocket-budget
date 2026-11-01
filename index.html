@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 11:50 AM"</script>
+<script>window.PB_BUILD="Nov 1, 12:10 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1924,8 +1924,21 @@ const locKey=l=>locText(l).toLowerCase().replace(/\s+/g," ").trim();
    - Photon: type-ahead search ranked by distance from where you are / the map center
    - Overpass: any business within ~40 km whose name contains what you typed
    - Nominatim only as a last resort. Results are merged, de-duplicated and sorted by distance. */
+/* Mapbox Search Box (when a token is saved in Settings): businesses and addresses, ranked near you */
+const mbxToken=()=>ls.get("pb.mapboxToken")||"";
+async function mbxSearch(q,near,limit){const tok=mbxToken();if(!tok)return null;
+  try{let u="https://api.mapbox.com/search/searchbox/v1/forward?q="+encodeURIComponent(q)+"&limit="+(limit||8)+"&language=en&country=us,ca&access_token="+encodeURIComponent(tok);
+    if(near)u+="&proximity="+near.lng+","+near.lat;
+    const c=new AbortController();setTimeout(()=>c.abort(),6000);const r=await fetch(u,{signal:c.signal});if(!r.ok)return null;const j=await r.json();
+    return(j.features||[]).map(f=>{const p=f.properties||{},g=f.geometry&&f.geometry.coordinates,co=p.coordinates||{};const lat=co.latitude??(g&&g[1]),lng=co.longitude??(g&&g[0]);if(lat==null)return null;
+      const cx=p.context||{},city=(cx.place&&cx.place.name)||(cx.locality&&cx.locality.name)||"",st=(cx.region&&(cx.region.region_code||cx.region.name))||"";
+      const place=[city,st].filter(Boolean).join(", "),isPoi=p.feature_type==="poi",town=["place","locality","region","district","neighborhood"].includes(p.feature_type);
+      const name=isPoi?p.name:"",street=isPoi?(p.address||""):(town?"":(p.address||p.name||""));
+      const l={label:town?[p.name,st].filter(Boolean).join(", "):[name,street,place].filter(Boolean).join(", "),place:town?[p.name,st].filter(Boolean).join(", "):place,lat:+(+lat).toFixed(6),lng:+(+lng).toFixed(6),src:"search"};
+      if(name)l.name=name;l.far=near?locDist(near,l):null;return l}).filter(Boolean)}catch(e){return null}}
 async function locSearch(q,near){
   q=q.trim();if(q.length<3)return[];const k=q.toLowerCase()+"|"+(near?near.lat.toFixed(2)+","+near.lng.toFixed(2):"");if(LOC.scache[k])return LOC.scache[k];
+  {const m=await mbxSearch(q,near,8);if(m&&m.length)return LOC.scache[k]=m}
   const ST={"Michigan":"MI","Ohio":"OH","Indiana":"IN","Illinois":"IL","Wisconsin":"WI","Maryland":"MD","California":"CA","New York":"NY","Florida":"FL","Texas":"TX","Oregon":"OR","Washington":"WA","Minnesota":"MN","Pennsylvania":"PA","Colorado":"CO"};
   const tm=ms=>{const c=new AbortController();setTimeout(()=>c.abort(),ms);return c.signal};
   const mk=(name,street,city,st,lat,lng)=>{const place=[city,ST[st]||st].filter(Boolean).join(", ");const l={label:[name,street,place].filter(Boolean).join(", "),place,lat:+(+lat).toFixed(6),lng:+(+lng).toFixed(6),src:"search"};if(name)l.name=name;l.far=near?locDist(near,l):null;return l};
@@ -2081,7 +2094,10 @@ function locField(s,o){
       const norm=x=>String(x||"").toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
       let hit=null;if(mk){const n=norm(mraw);hit=list.find(p=>p.d<300&&(norm(p.name).includes(n)||n.includes(norm(p.name))||norm(p.name).split(" ")[0]===n.split(" ")[0]))}
       else hit=list.find(p=>p.d<=Math.max(35,Math.min(70,f.acc||40)));
-      if(hit){const ad=hit.addr||f.road;l={label:[hit.name,ad,f.place].filter(Boolean).join(", "),name:hit.name,place:f.place,lat:+hit.lat.toFixed(6),lng:+hit.lng.toFixed(6),acc:f.acc,src:"gps"}}}
+      if(!hit&&mk&&mbxToken()){const key="mbx|"+mk+"|"+f.lat.toFixed(3)+","+f.lng.toFixed(3);const M=LOC.pcache[key];
+        if(!M){LOC.pcache[key]={};mbxSearch(mraw,f,3).then(r=>{LOC.pcache[key].v=r||[];if(s.isConnected)applyAuto()})}
+        else if(M.v){const m=M.v.find(x=>x.name&&x.far!=null&&x.far<400);if(m){l=Object.assign({},m,{acc:f.acc,src:"gps"})}}}
+      if(!l&&hit){const ad=hit.addr||f.road;l={label:[hit.name,ad,f.place].filter(Boolean).join(", "),name:hit.name,place:f.place,lat:+hit.lat.toFixed(6),lng:+hit.lng.toFixed(6),acc:f.acc,src:"gps"}}}
     if(!l)l={label:[f.road,f.place].filter(Boolean).join(", "),place:f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"};
     if(cur&&cur.label===l.label)return;cur=l;if(document.activeElement!==inp)inp.value=l.label;row.classList.remove("auto");void row.offsetWidth;row.classList.add("auto")};
   const locate=open=>{if(!LOC.ok())return Promise.resolve(null);gpsB&&gpsB.classList.add("busy");
