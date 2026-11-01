@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 11:35 AM"</script>
+<script>window.PB_BUILD="Nov 1, 11:50 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1920,19 +1920,32 @@ const GPS_SVG='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.6 3.4a.
 const PIN_SVG='<svg class="pin" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
 const locDist=(a,b)=>{const R=6371e3,r=Math.PI/180,dl=(b.lat-a.lat)*r,dg=(b.lng-a.lng)*r,x=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(x))};
 const locKey=l=>locText(l).toLowerCase().replace(/\s+/g," ").trim();
-// search OpenStreetMap for businesses and towns, leaning toward a point you're likely near
+/* Place search, nearby first (closer to how Google Maps feels):
+   - Photon: type-ahead search ranked by distance from where you are / the map center
+   - Overpass: any business within ~40 km whose name contains what you typed
+   - Nominatim only as a last resort. Results are merged, de-duplicated and sorted by distance. */
 async function locSearch(q,near){
   q=q.trim();if(q.length<3)return[];const k=q.toLowerCase()+"|"+(near?near.lat.toFixed(2)+","+near.lng.toFixed(2):"");if(LOC.scache[k])return LOC.scache[k];
-  try{let u="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=us,ca&q="+encodeURIComponent(q);
-    if(near)u+="&viewbox="+(near.lng-0.5)+","+(near.lat+0.35)+","+(near.lng+0.5)+","+(near.lat-0.35);
-    const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),6000);const r=await fetch(u,{signal:ctl.signal,headers:{"Accept-Language":"en-US"}});clearTimeout(tm);if(!r.ok)return[];
-    const out=(await r.json()).map(j=>{const a=j.address||{},city=a.city||a.town||a.village||a.hamlet||a.suburb||a.county||"",st=(a["ISO3166-2-lvl4"]||"").split("-")[1]||a.state||"";
-      const isTown=["city","town","village","hamlet","administrative","suburb","municipality"].includes(j.addresstype||j.type);
-      const place=isTown?[j.name,st].filter(Boolean).join(", "):[city,st].filter(Boolean).join(", ");
-      const name=isTown?"":(j.name||"");const lat=+(+j.lat).toFixed(6),lng=+(+j.lon).toFixed(6);
-      const l={label:[name,place].filter(Boolean).join(", "),place,lat,lng,src:"search"};if(name)l.name=name;
-      l.far=near?locDist(near,l):null;return l}).filter(l=>l.label);
-    out.sort((a,b)=>(a.far??0)-(b.far??0));return LOC.scache[k]=out}catch(e){return[]}}
+  const ST={"Michigan":"MI","Ohio":"OH","Indiana":"IN","Illinois":"IL","Wisconsin":"WI","Maryland":"MD","California":"CA","New York":"NY","Florida":"FL","Texas":"TX","Oregon":"OR","Washington":"WA","Minnesota":"MN","Pennsylvania":"PA","Colorado":"CO"};
+  const tm=ms=>{const c=new AbortController();setTimeout(()=>c.abort(),ms);return c.signal};
+  const mk=(name,street,city,st,lat,lng)=>{const place=[city,ST[st]||st].filter(Boolean).join(", ");const l={label:[name,street,place].filter(Boolean).join(", "),place,lat:+(+lat).toFixed(6),lng:+(+lng).toFixed(6),src:"search"};if(name)l.name=name;l.far=near?locDist(near,l):null;return l};
+  const photon=(async()=>{try{let u="https://photon.komoot.io/api/?limit=10&lang=en&q="+encodeURIComponent(q);if(near)u+="&lat="+near.lat+"&lon="+near.lng+"&zoom=12&location_bias_scale=0.2";
+    const r=await fetch(u,{signal:tm(6000)});if(!r.ok)return[];const j=await r.json();
+    return(j.features||[]).map(f=>{const p=f.properties||{},c=f.geometry&&f.geometry.coordinates;if(!c)return null;const town=["city","town","village","district","county","state"].includes(p.type);
+      return mk(town?"":p.name,town?"":[p.housenumber,p.street].filter(Boolean).join(" "),town?p.name:(p.city||p.town||p.village||p.district||p.county||""),p.state,c[1],c[0])}).filter(Boolean)}catch(e){return[]}})();
+  const overpass=(async()=>{if(!near)return[];try{const rx=q.replace(/[^\w\s'&-]/g,"").replace(/\s+/g,".*");
+    const qy='[out:json][timeout:8];nwr(around:40000,'+near.lat+','+near.lng+')["name"~"'+rx+'",i][~"^(shop|amenity|leisure|office|healthcare|craft|tourism)$"~"."];out center tags 25;';
+    const r=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(qy),{signal:tm(9000)});if(!r.ok)return[];const j=await r.json();
+    return(j.elements||[]).map(e=>{const t=e.tags||{},lat=e.lat??(e.center&&e.center.lat),lng=e.lon??(e.center&&e.center.lon);if(lat==null)return null;
+      return mk(t.name,[t["addr:housenumber"],t["addr:street"]].filter(Boolean).join(" "),t["addr:city"]||"",t["addr:state"]||"",lat,lng)}).filter(Boolean)}catch(e){return[]}})();
+  let out=[].concat(await overpass,await photon);
+  if(!out.length){try{let u="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=us,ca&q="+encodeURIComponent(q);
+    if(near)u+="&viewbox="+(near.lng-0.6)+","+(near.lat+0.45)+","+(near.lng+0.6)+","+(near.lat-0.45)+"&bounded=1";
+    const r=await fetch(u,{signal:tm(6000),headers:{"Accept-Language":"en-US"}});if(r.ok)out=(await r.json()).map(j=>{const a=j.address||{};return mk(j.name,[a.house_number,a.road].filter(Boolean).join(" "),a.city||a.town||a.village||a.county||"",(a["ISO3166-2-lvl4"]||"").split("-")[1]||a.state||"",j.lat,j.lon)})}catch(e){}}
+  // fill in a missing town from the nearest result that has one
+  const res=[];out.sort((a,b)=>(a.far??0)-(b.far??0)).forEach(l=>{const n=(l.name||l.label).toLowerCase();if(res.some(x=>(x.name||x.label).toLowerCase()===n&&locDist(x,l)<200))return;res.push(l)});
+  const close=res.filter(l=>l.far==null||l.far<240000);const final=(close.length?close:res).slice(0,8);
+  return LOC.scache[k]=final}
 function locCandidates(merchant,date,selfId){
   const mk=merchKey(merchant),pool=txPool().filter(t=>t.loc&&t.id!==selfId&&locText(t.loc)),dnum=s=>Date.parse((s||"2000-01-01")+"T12:00:00")/864e5;
   const d0=dnum(date),out=[],seen=new Set(),add=(l,head)=>{const k=locKey(l);if(!k||seen.has(k))return;seen.add(k);out.push(Object.assign({},l,{head}))};
