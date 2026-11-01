@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Nov 1, 12:10 AM"</script>
+<script>window.PB_BUILD="Nov 1, 12:40 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -365,6 +365,12 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .plrefill{background:#fef7e0;color:#7a4f00;border-radius:12px;padding:10px 12px;margin:6px 0;font-size:14px;display:flex;flex-direction:column;gap:8px}.plrefill .btn{padding:8px;font-size:14px}
 .plcard label{flex:1;min-width:0}.plcard label small{white-space:normal}#pl-cardn{display:block}.plcard #pl-lim{display:inline-block;margin:5px 0 2px}
 .plpay{background:#fff;border-radius:12px;padding:8px 12px;margin:6px 0}.plpay .plrow b{font-size:18px}
+.plst{margin:4px 0 2px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.plgl{font-size:12px;color:var(--muted);margin:10px 0 0}
+.plcmp{background:#fff;border-radius:14px;padding:10px 12px;margin:10px 0 6px}.plcmp .plrow{margin-top:6px}.plcmp .plrow b{font-size:19px}
+.plmt{border:0;background:none;padding:0 0 4px;font:inherit;font-size:13px;color:#1a73e8}
+.plmath{border-left:2px solid var(--line);padding:2px 0 4px 10px;margin:0 0 6px;font-size:13px;color:var(--muted)}
+.plmr{display:flex;justify-content:space-between;gap:8px;padding:1px 0}.plmr.mu{font-size:12px;opacity:.8}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -3641,21 +3647,25 @@ function plannedSheet(){
   const vb=(f,l,sub,cls)=>'<div class="plf'+(cls?" "+cls:"")+'"><label>'+l+(sub?'<small>'+sub+'</small>':'')+'</label><button type="button" class="plv num" data-f="'+f+'"></button></div>';
   const payRow=(p,i)=>vb("p"+i,"Paycheck "+(i+1),'<span class="plds"><span class="pldt" data-dt="'+i+'"></span><input type="date" class="pld" data-pd="'+i+'" value="'+esc(p.d)+'" aria-label="Paycheck '+(i+1)+' date"></span>');
   openSheet('<h3>Planned for '+MONTHS[m-1]+'</h3>'+(V.pays.length>=3?'<p class="plbadge">3 paychecks this month</p>':'')+(sched?'<p class="note" style="margin:-4px 0 6px">Paydays filled in from your every-2-weeks schedule.</p>':'')+
-    vb("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+V.pays.map(payRow).join("")+vb("rew","Credit card rewards","off your card payment")+
-    '<div class="plrefill" id="pl-refill" hidden></div>'+
+    '<h4 class="plst">1 · Money to budget</h4><div class="plgl">Coming in</div>'+
+    vb("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+V.pays.map(payRow).join("")+vb("rew","Card rewards","off your card payment")+
+    '<div class="plgl">Held back</div><div class="plrefill" id="pl-refill" hidden></div>'+
     vb("cush","Cushion",'<span id="pl-cusn">set aside · not budgeted</span><button type="button" class="plsug" id="pl-use" hidden>Use cushion</button>',"plcush")+
     '<div class="pluses" id="pl-uses"></div>'+
     '<div class="plusebox" id="pl-usebox" hidden><b>Use cushion</b>'+vb("use","How much","")+
     '<div class="plf"><label>Covers</label><select class="plsel" id="pl-useit">'+groupsFor(ym).map(g=>'<optgroup label="'+esc(g.name)+'">'+g.items.map(it=>'<option value="'+esc(it.id)+'">'+esc(it.name)+'</option>').join("")+'</optgroup>').join("")+'</select></div>'+
     '<p class="note" id="pl-usen" style="margin:4px 0 8px"></p><div class="btnrow"><button type="button" class="btn sec" id="pl-usex">Cancel</button><button type="button" class="btn" id="pl-useok">Use</button></div></div>'+
-    vb("adj","Adjustment",'<span id="pl-adjn">difference to reach your total</span>',"pladj")+vb("tot","Planned total","","pltot")+
+    vb("adj","Adjustment",'<span id="pl-adjn">difference to reach your total</span>',"pladj")+vb("tot","To budget","","pltot")+
     (fresh&&total0?'<p class="note" style="margin:8px 0 0">Your current total is '+money(total0)+'. Enter your carryover and paychecks to build it up.</p>':'')+
-    '<div class="plbal"><h4>Check against MSUFCU</h4><div class="plrow"><span>Should end the month with</span><b class="num" id="pl-exp"></b></div><div class="plnote" id="pl-expn"></div><button type="button" class="plven" id="pl-ven" hidden></button><div class="pvl" id="pl-venl" hidden></div>'+
+    '<div class="plbal"><h4>2 · Does it match your accounts?</h4><div class="plgl">Enter today\'s numbers</div>'+
     vb("bank","MSUFCU balance",'<span id="pl-bankat">from your MSUFCU app</span>',"plbk")+
     vb("card","Card available",'<span id="pl-cardn"></span><button type="button" class="plsug" id="pl-lim">Edit limit</button>',"plbk plcard")+
-    '<div class="plpay" id="pl-pay" hidden><div class="plrow"><span>Projected balance</span><b class="num" id="pl-payv"></b></div><div class="plnote" id="pl-payn"></div></div>'+
     '<div id="pl-limbox" hidden>'+vb("lim","Credit limit","")+'</div>'+
-    '<div class="pldiff" id="pl-diff" hidden></div><div class="plguess" id="pl-guess" hidden></div><button class="plfix" id="pl-fix" hidden></button></div>'+
+    '<div class="plcmp"><div class="plgl" style="margin-top:0">At the end of '+MONTHS[m-1]+'…</div>'+
+      '<div class="plrow"><span>Your budget says you\'ll have</span><b class="num" id="pl-exp"></b></div><button type="button" class="plmt" data-mt="pl-expn">See the math ›</button><div class="plmath" id="pl-expn" hidden></div>'+
+      '<div class="plrow" id="pl-pay"><span>Your accounts say you\'ll have</span><b class="num" id="pl-payv"></b></div><button type="button" class="plmt" id="pl-paymt" data-mt="pl-payn">See the math ›</button><div class="plmath" id="pl-payn" hidden></div>'+
+      '<div class="pldiff" id="pl-diff" hidden></div><div class="plguess" id="pl-guess" hidden></div><button class="plfix" id="pl-fix" hidden></button></div>'+
+    '<button type="button" class="plven" id="pl-ven" hidden></button><div class="pvl" id="pl-venl" hidden></div></div>'+
     '<div class="btnrow" style="margin-top:16px"><button class="btn sec" id="pl-x">Cancel</button><button class="btn" id="pl-ok">Save</button></div><div class="plpad" id="pl-pad" hidden></div>',
   sh=>{const sum=()=>round2(V.carry+V.rew-cLeft()+V.pays.reduce((a,p)=>a+(+p.amt||0),0)),total=()=>totOverride!=null?totOverride:round2(sum()+V.adj);
     const getF=f=>f==="carry"?V.carry:f==="rew"?V.rew:f==="cush"?V.cush:f==="use"?V.useAmt:f==="adj"?V.adj:f==="tot"?total():f==="bank"?V.bankAmt:f==="card"?V.cardAmt:f==="lim"?V.lim:V.pays[+f.slice(1)].amt;
@@ -3689,6 +3699,7 @@ function plannedSheet(){
         if(!(a>0)){toast("Enter how much to use");return}if(a>cLeft()+.004){toast("That's more than your cushion");return}if(!f){toast("Pick a budget item");return}
         totOverride=null;V.cushUsed.push({amt:a,itemId:id,name:f.it.name});V.useAmt=0;sh.querySelector("#pl-usebox").hidden=true;try{haptic()}catch(_){}refresh();return}
       const ux=el.closest("[data-unuse]");if(ux){totOverride=null;V.cushUsed.splice(+ux.dataset.unuse,1);refresh();return}
+      const mt=el.closest("[data-mt]");if(mt){const d=sh.querySelector("#"+mt.dataset.mt);d.hidden=!d.hidden;mt.textContent=d.hidden?"See the math ›":"Hide the math ‹";return}
       if(el.closest("#pl-lim")){e.preventDefault();e.stopPropagation();sh.querySelector("#pl-limbox").hidden=false;openPad("lim");return}
       if(el.closest("#pl-rfok")){totOverride=null;V.cush=V.cushTarget;refresh();return}
       if(el.closest("#pl-rfno")){V.cushTarget=V.cush;refresh();return}});
@@ -3697,19 +3708,25 @@ function plannedSheet(){
       sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total";
       const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),useCard=V.cardAmt!=null,exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+(useCard?V.rew:0)+V.adj+V.cush-spentSoFar());
       /* Everything already on the books for the month: paychecks still coming and future-dated transactions. */
-      const pendSum=round2(pend.reduce((a,p)=>a+p.amt,0)),fut=round2(S.tx.filter(t=>ym===S.ym&&t.date>td).reduce((a,t)=>a+sAmt(t),0)),expEnd=round2(exp+pendSum-fut);
+      /* Month-end view. Budget side: to-budget + cushion still held (− rewards when there's no card to apply them to) − spent and upcoming.
+         Carryover is all the money you bring in, cushion included, so the cushion is only added back once. */
+      const pendSum=round2(pend.reduce((a,p)=>a+p.amt,0)),fut=round2(S.tx.filter(t=>ym===S.ym&&t.date>td).reduce((a,t)=>a+sAmt(t),0)),spAll=round2(spentSoFar()+fut),
+        held=cLeft(),expEnd=round2(total()+held-(useCard?0:V.rew)-spAll);
+      const mrow=(l,v,sg)=>'<div class="plmr"><span>'+(sg||"")+l+'</span><span class="num">'+money(Math.abs(v))+'</span></div>';
       sh.querySelector("#pl-exp").textContent=money(expEnd);
-      sh.querySelector("#pl-expn").textContent=(x=>x.replace(/^\s*·\s*/,""))([V.carry?"carryover":"",V.pays.some(p=>p.amt)?"paychecks":"",useCard&&V.rew?"rewards":"",V.adj?"adjustment":"",V.cush?money(V.cush)+" cushion":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent":"")+(fut?" − "+money(fut)+" upcoming":"")+" · if nothing else gets added");
+      sh.querySelector("#pl-expn").innerHTML=mrow("To budget",total())+(held?mrow("cushion you're holding",held,"+ "):"")+(!useCard&&V.rew?mrow("rewards (they go to your card)",V.rew,"− "):"")+(spAll?mrow(fut&&spentSoFar()?"spent and upcoming":fut?"upcoming transactions":"spent so far",spAll,"− "):"")+'<div class="plmr mu">if nothing else gets added</div>';
       sh.querySelectorAll("[data-dt]").forEach(el=>{const d=V.pays[+el.dataset.dt].d;el.textContent=d?(d<=td?"received "+fmtD(d):"coming "+fmtD(d)):"add date"});
       const owed=useCard?round2(V.lim-V.cardAmt):0,pay=sh.querySelector("#pl-pay");
       sh.querySelector("#pl-cardn").textContent=(useCard?"you owe "+money(owed)+" · ":"")+money(V.lim)+" limit";
       const have=V.bankAmt==null?null:round2(V.bankAmt-(useCard?owed-V.rew:0));
-      if(have!=null){pay.hidden=false;sh.querySelector("#pl-payv").textContent=money(round2(have+pendSum-fut));
-        sh.querySelector("#pl-payn").textContent="MSUFCU "+money(V.bankAmt)+(useCard?" − "+money(owed)+" card"+(V.rew?" + "+money(V.rew)+" rewards":""):"")+(pendSum?" + "+money(pendSum)+" paychecks coming":"")+(fut?" − "+money(fut)+" upcoming":"")}else pay.hidden=true;
+      const proj=have==null?null:round2(have+pendSum-fut);sh.querySelector("#pl-paymt").hidden=proj==null;
+      if(proj!=null){sh.querySelector("#pl-payv").textContent=money(proj);
+        sh.querySelector("#pl-payn").innerHTML=mrow("MSUFCU now",V.bankAmt)+(useCard?mrow("card you owe",owed,"− ")+(V.rew?mrow("card rewards",V.rew,"+ "):""):"")+(pendSum?mrow("paychecks coming",pendSum,"+ "):"")+(fut?mrow("upcoming transactions",fut,"− "):"")}
+      else{sh.querySelector("#pl-payv").innerHTML='<span class="ph" style="font-size:14px;font-weight:500">enter MSUFCU balance</span>';sh.querySelector("#pl-payn").hidden=true}
       const dv=sh.querySelector("#pl-diff"),fx=sh.querySelector("#pl-fix"),gs=sh.querySelector("#pl-guess");if(have==null){dv.hidden=true;fx.hidden=true;gs.hidden=true;return}
-      const diff=round2(have-exp);dv.hidden=false;
+      const diff=round2(proj-expEnd);dv.hidden=false;
       if(Math.abs(diff)<.005){dv.className="pldiff ok";dv.textContent="Matches. You're on track ✓";fx.hidden=true;gs.hidden=true;return}
-      dv.className="pldiff bad";dv.textContent="Projected "+money(Math.abs(diff))+(diff>0?" more":" less")+" than expected";
+      dv.className="pldiff bad";dv.textContent="Your accounts come out "+money(Math.abs(diff))+(diff>0?" ahead of":" behind")+" your budget";
       const cands=venCands(),hit=venMatch(cands,diff);gs.hidden=false;
       if(hit){gs.className="plguess ven";gs.innerHTML='<b>Likely Venmo still moving</b>'+hit.map(t=>'<span>'+vLine(t)+' · '+(venUnpaid(t)?"may not be paid yet":(venIn(t)?"paid ":"sent ")+fmtD(t.date))+'</span>').join("")+'<small>That adds up to the difference exactly. It should match once '+(hit.length>1?"they clear":"it clears")+', so nothing to fix.</small>'}
       else{gs.className="plguess other";gs.innerHTML='<b>Probably something else</b><small>'+(cands.length?"No mix of the Venmo that might still be moving adds up to "+money(Math.abs(diff))+". ":"No Venmo should still be moving right now. ")+'Look for a missed or mistyped transaction, or a charge that hasn\'t posted yet.</small>'}
@@ -3741,7 +3758,7 @@ function plannedSheet(){
     pad.addEventListener("click",e=>{if(e.target.closest("#pl-done"))sh.querySelector("#pl-limbox").hidden=true},true);
     refresh();
     txForMonth(prev).then(list=>{const pi=incomeTotal(incomeFor(prev)),left=round2(pi-list.reduce((a,t)=>a+sAmt(t),0)),b=sh.querySelector("#pl-sug");if(!b||!(pi>0))return;
-      b.hidden=false;b.textContent="Use "+money(left);b.onclick=e=>{e.preventDefault();e.stopPropagation();setF("carry",left);refresh();try{haptic()}catch(_){}}}).catch(()=>{});
+      const pc=prevPt&&prevPt.cush?round2(+prevPt.cush-cSum(prevPt.cushUsed)):0;const all=round2(left+pc);b.hidden=false;b.textContent="Use "+money(all);b.onclick=e=>{e.preventDefault();e.stopPropagation();setF("carry",all);refresh();try{haptic()}catch(_){}}}).catch(()=>{});
     sh.querySelector("#pl-x").onclick=closeSheet;
     sh.querySelector("#pl-ok").onclick=async()=>{closePad();const t=total();
       const nx=Object.assign({},x,{name:x.name||"Planned",planned:t,parts:{carry:round2(V.carry),rew:round2(V.rew),cardLimit:round2(V.lim),card:V.cardAmt!=null?{amt:round2(V.cardAmt),at:(V.card&&V.card.amt===V.cardAmt&&V.card.at)||today()}:null,cush:round2(V.cush),cushTarget:round2(V.cushTarget),cushUsed:V.cushUsed.map(u=>({amt:round2(u.amt),itemId:u.itemId,name:u.name||""})),adj:round2(totOverride!=null?round2(totOverride-sum()):V.adj),pays:V.pays.map(p=>({d:p.d||"",amt:round2(+p.amt||0)})),bank:V.bankAmt!=null?{amt:round2(V.bankAmt),at:(V.bank&&V.bank.amt===V.bankAmt&&V.bank.at)||today()}:null}});
