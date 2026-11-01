@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Nov 1, 1:25 AM"</script>
+<script>window.PB_BUILD="Nov 1, 1:40 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3949,13 +3949,41 @@ async function refreshNow(){
   const main=$("#main"),svg=el.firstChild,lines=[...el.querySelectorAll("line")],BASE=lines.map((_,i)=>0.22+0.78*i/7);
   const TH=66,REST=54,EASE="cubic-bezier(.22,1,.36,1)";
   // iOS-style rubber band: follows the finger at first, then resists more the farther you pull
-  const rubber=d=>{const dim=Math.max(320,innerHeight*.75);return(1-1/(d*.55/dim+1))*dim};
+  const rubber=d=>{const dim=Math.max(420,innerHeight*.95);return(1-1/(d*.75/dim+1))*dim};
+  /* BOUNCE: cards fan apart while you pull, then ricochet back with a few overshoots, staggered card by card.
+     Fast flings into the top or bottom ricochet too. Turn it down with BOUNCE.amp / BOUNCE.spread / BOUNCE.ms. */
+  const BOUNCE={amp:1,spread:.11,ms:1250,stagger:45,fling:150};
+  const cardEls=()=>[...main.children].filter(c=>c.offsetHeight>20).slice(0,14);
+  function spread(p){const cs=cardEls(),n=cs.length;cs.forEach((c,i)=>{const k=p>0?i:(n-1-i),o=p*BOUNCE.spread*k;c.style.transform=o?"translate3d(0,"+o.toFixed(2)+"px,0)":"";c.style.willChange=o?"transform":""})}
+  const WAVE=[1,-.46,.24,-.12,.05,0];
+  function ricochet(from,kick){ /* from: where main sits now; kick: extra launch for flings */
+    clearTimeout(settleT);if(raf){cancelAnimationFrame(raf);raf=0}
+    main.style.transition="";const a=BOUNCE.amp,ms=BOUNCE.ms;
+    const base=kick?[0,kick*a,-kick*.46*a,kick*.22*a,-kick*.09*a,0]:WAVE.map(w=>from*(w===1?1:w*a));
+    const offs=[0,.16,.36,.56,.76,1],ease="cubic-bezier(.3,.7,.4,1)";
+    main.style.transform="";
+    main.animate(base.map((y,i)=>({transform:"translate3d(0,"+y.toFixed(2)+"px,0) scaleY("+(1+Math.min(.06,Math.abs(y)/2400)*(i%2?-1:1)).toFixed(4)+")",offset:offs[i],easing:ease})),{duration:ms,easing:"linear"});
+    const cs=cardEls(),n=cs.length,dir=kick?Math.sign(kick):Math.sign(from)||1,mag=kick?Math.abs(kick)*.9:Math.abs(from);
+    cs.forEach((c,i)=>{const k=dir>0?i:(n-1-i),o=dir*mag*BOUNCE.spread*k,start=kick?0:o;c.style.transform="";c.style.willChange="";
+      if(!o&&!kick)return;const amp=kick?dir*mag*BOUNCE.spread*(k+1)*.8:o;
+      c.animate([{transform:"translate3d(0,"+start.toFixed(2)+"px,0)"},{transform:"translate3d(0,"+(kick?amp:-o*.55*a).toFixed(2)+"px,0)",offset:.22},{transform:"translate3d(0,"+((kick?-amp*.5:o*.3)*a).toFixed(2)+"px,0)",offset:.46},{transform:"translate3d(0,"+((kick?amp*.22:-o*.12)*a).toFixed(2)+"px,0)",offset:.7},{transform:"translate3d(0,0,0)"}],
+        {duration:ms*.9,delay:i*BOUNCE.stagger,easing:"cubic-bezier(.25,.8,.35,1)"})});
+    if(Math.abs(from)>30||Math.abs(kick||0)>40){try{haptic()}catch(_){}}
+    pull=0;el.style.transition="opacity 300ms ease";el.style.opacity="0";el.style.transform="";
+    settleT=setTimeout(()=>{main.style.willChange="";el.style.transition=""},ms+n*BOUNCE.stagger+60)}
+  /* fling into an edge: measure scroll speed; if it slams into the top/bottom, ricochet */
+  let touching=false,ly=window.scrollY,lt=performance.now(),vel=0,lastRic=0;
+  addEventListener("touchstart",()=>{touching=true},{passive:true});addEventListener("touchend",()=>{touching=false},{passive:true});
+  addEventListener("scroll",()=>{const now=performance.now(),y=window.scrollY,dt=Math.max(1,now-lt);vel=vel*.4+((y-ly)/dt)*.6;ly=y;lt=now;
+    if(touching||mode||busy||now-lastRic<700||$("#sheetRoot").firstChild)return;
+    const top=y<=0&&vel<-.45,bot=atBottom()&&vel>.45&&y>0;if(!top&&!bot)return;
+    lastRic=now;const k=Math.min(BOUNCE.fling,Math.abs(vel)*70)*(top?1:-1);main.style.willChange="transform";ricochet(0,k)},{passive:true});
   const atTop=()=>window.scrollY<=0;
   const atBottom=()=>window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
   const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest("input,textarea,select,.pscrub,svg.di,.imap,.mlzs"));
   let y0=null,x0=0,startY=0,mode=0,busy=false,armed=false,pull=0,raf=0,want=0,settleT=0;
   function paint(p){
-    main.style.transform=p?"translate3d(0,"+p.toFixed(2)+"px,0)":"";
+    main.style.transform=p?"translate3d(0,"+p.toFixed(2)+"px,0)":"";spread(p);
     const top=Math.max(0,p);
     el.style.transform="translate3d(0,"+Math.max(0,top/2-14).toFixed(2)+"px,0)";
     if(busy){el.style.opacity="1";return}
@@ -3986,11 +4014,11 @@ async function refreshNow(){
       if(p>=TH&&!armed){armed=true;try{haptic()}catch(_){}}else if(p<TH-8)armed=false;live(p)}
     else live(-rubber(Math.max(0,-d)))},{passive:false});
   const end=async()=>{const m=mode;mode=0;y0=null;if(GEST==="pull")GEST=null;if(!m)return;
-    if(m===-1||pull<TH){settle(0,480,true);return}
+    if(m===-1||pull<TH){ricochet(pull);return}
     busy=true;el.classList.add("spin");lines.forEach((l,i)=>l.style.opacity=BASE[i]);svg.style.transform="";settle(REST,380);
     const t0=Date.now();
     try{await refreshNow()}catch(e){toast("Couldn't refresh. Check your connection.")}
-    setTimeout(()=>{busy=false;settle(0,520,true);setTimeout(()=>el.classList.remove("spin"),520)},Math.max(0,750-(Date.now()-t0)))};
+    setTimeout(()=>{busy=false;el.classList.remove("spin");ricochet(REST)},Math.max(0,750-(Date.now()-t0)))};
   document.addEventListener("touchend",end);document.addEventListener("touchcancel",end);
 })();
 /* ---------- swipe left / right between tabs (pages sit side by side like cards) ---------- */
