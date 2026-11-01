@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 9:55 AM"</script>
+<script>window.PB_BUILD="Nov 1, 10:05 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -397,7 +397,6 @@ nav.tabs.hasind button{position:relative;z-index:1;transition:color .3s}nav.tabs
 .sheet .cchip:active{transform:scale(.94)}.sheet .cchip.on{background:#e6f4ea;border-color:#81c995;color:#137333}
 .padfillrow{display:flex;justify-content:flex-start;margin:-2px 0 10px}.padfill{border:0;border-radius:999px;padding:7px 13px;font:inherit;font-size:14px;font-weight:600;background:#e6f4ea;color:#137333}.padfill.neg{background:#fce8e6;color:#c5221f}
 .mlday{position:sticky;top:var(--mlsnap,420px);z-index:3;height:34px;box-sizing:border-box;display:flex;align-items:center;padding:0 !important;margin:0 -22px;padding-left:22px !important;background:#fff;border-bottom:1px solid var(--line)}
-html.mlsnap .mlrow{scroll-margin-top:calc(var(--mlsnap,420px) + 34px)}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -793,7 +792,7 @@ main.peek>*{flex-shrink:0}
 .mlcap:active{transform:scale(.98)}
 
 html.mlsnap{scroll-snap-type:y mandatory}
-html.mlsnap .mlrow{scroll-snap-align:start;scroll-margin-top:var(--mlsnap,420px)}
+html.mlsnap .mlrow{scroll-snap-align:start;scroll-margin-top:calc(var(--mlsnap,420px) + 34px)}
 html.mlsnap .mltop{scroll-snap-align:start;scroll-margin-top:var(--hh,120px)}
 
 .mlzs{position:absolute;right:30px;top:16px;bottom:78px;z-index:950;width:34px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;border-radius:17px;background:rgba(255,255,255,.88);box-shadow:0 2px 10px rgba(0,0,0,.18);touch-action:none;-webkit-user-select:none;user-select:none;cursor:ns-resize}
