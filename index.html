@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 9:15 PM"</script>
+<script>window.PB_BUILD="Oct 31, 9:20 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3593,7 +3593,7 @@ function plannedSheet(){
       sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total";
       const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar()+venOther());
       sh.querySelector("#pl-exp").textContent=money(exp);
-      sh.querySelector("#pl-expn").textContent=[V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(venRecent().some(t=>venmoPending(t,td))?" · Venmo pending not counted yet":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):"");
+      sh.querySelector("#pl-expn").textContent=(x=>x.replace(/^\s*·\s*/,""))([V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(venRecent().some(t=>venmoPending(t,td))?" · Venmo pending not counted yet":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):""));
       sh.querySelectorAll("[data-dt]").forEach(el=>{const d=V.pays[+el.dataset.dt].d;el.textContent=d?(d<=td?"received "+fmtD(d):"coming "+fmtD(d)):"add date"});
       const dv=sh.querySelector("#pl-diff"),fx=sh.querySelector("#pl-fix");if(V.bankAmt==null){dv.hidden=true;fx.hidden=true;return}
       const diff=round2(V.bankAmt-exp);dv.hidden=false;
