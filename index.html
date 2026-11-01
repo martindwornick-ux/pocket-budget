@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 10:45 PM"</script>
+<script>window.PB_BUILD="Oct 31, 11:00 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3614,23 +3614,23 @@ function venCardHTML(){const td=today(),open=venAll().filter(t=>venmoPending(t,t
 function plannedSheet(){
   const ym=S.ym,[y,m]=ym.split("-").map(Number),prev=ymAdd(ym,-1),inc=JSON.parse(JSON.stringify(incomeFor(ym)));
   const x=inc[0]||{id:uid(),name:"Planned",planned:0},total0=round2(incomeTotal(inc)),pt=x.parts||null,saved=partsPays(pt),sched=saved&&saved.length?null:scheduledPays(ym);
-  const V={carry:pt?+pt.carry||0:0,adj:pt?+pt.adj||0:0,pays:saved&&saved.length?saved:(sched||[{d:"",amt:0},{d:"",amt:0}]),bank:pt&&pt.bank||null};
+  const V={carry:pt?+pt.carry||0:0,rew:pt?+pt.rew||0:0,adj:pt?+pt.adj||0:0,pays:saved&&saved.length?saved:(sched||[{d:"",amt:0},{d:"",amt:0}]),bank:pt&&pt.bank||null};
   V.bankAmt=V.bank&&V.bank.amt!=null?+V.bank.amt:null;
   const fresh=!pt&&!sched;let totOverride=fresh&&total0?total0:null;
   const td=today(),fmtD=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
   const vb=(f,l,sub,cls)=>'<div class="plf'+(cls?" "+cls:"")+'"><label>'+l+(sub?'<small>'+sub+'</small>':'')+'</label><button type="button" class="plv num" data-f="'+f+'"></button></div>';
   const payRow=(p,i)=>vb("p"+i,"Paycheck "+(i+1),'<span class="plds"><span class="pldt" data-dt="'+i+'"></span><input type="date" class="pld" data-pd="'+i+'" value="'+esc(p.d)+'" aria-label="Paycheck '+(i+1)+' date"></span>');
   openSheet('<h3>Planned for '+MONTHS[m-1]+'</h3>'+(V.pays.length>=3?'<p class="plbadge">3 paychecks this month</p>':'')+(sched?'<p class="note" style="margin:-4px 0 6px">Paydays filled in from your every-2-weeks schedule.</p>':'')+
-    vb("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+V.pays.map(payRow).join("")+
+    vb("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+V.pays.map(payRow).join("")+vb("rew","Credit card rewards","cash back")+
     vb("adj","Adjustment",'<span id="pl-adjn">difference to reach your total</span>',"pladj")+vb("tot","Planned total","","pltot")+
     (fresh&&total0?'<p class="note" style="margin:8px 0 0">Your current total is '+money(total0)+'. Enter your carryover and paychecks to build it up.</p>':'')+
     '<div class="plbal"><h4>Check against MSUFCU</h4><div class="plrow"><span>Should be in your account today</span><b class="num" id="pl-exp"></b></div><div class="plnote" id="pl-expn"></div><button type="button" class="plven" id="pl-ven" hidden></button><div class="pvl" id="pl-venl" hidden></div>'+
     vb("bank","MSUFCU balance",'<span id="pl-bankat">from your MSUFCU app</span>',"plbk")+
     '<div class="pldiff" id="pl-diff" hidden></div><div class="plguess" id="pl-guess" hidden></div><button class="plfix" id="pl-fix" hidden></button></div>'+
     '<div class="btnrow" style="margin-top:16px"><button class="btn sec" id="pl-x">Cancel</button><button class="btn" id="pl-ok">Save</button></div><div class="plpad" id="pl-pad" hidden></div>',
-  sh=>{const sum=()=>round2(V.carry+V.pays.reduce((a,p)=>a+(+p.amt||0),0)),total=()=>totOverride!=null?totOverride:round2(sum()+V.adj);
-    const getF=f=>f==="carry"?V.carry:f==="adj"?V.adj:f==="tot"?total():f==="bank"?V.bankAmt:V.pays[+f.slice(1)].amt;
-    const setF=(f,v)=>{if(f!=="tot"&&f!=="bank")totOverride=null;if(f==="carry")V.carry=v;else if(f==="adj")V.adj=v;else if(f==="bank")V.bankAmt=v;else if(f==="tot"){totOverride=null;V.adj=round2(v-sum())}else V.pays[+f.slice(1)].amt=v};
+  sh=>{const sum=()=>round2(V.carry+V.rew+V.pays.reduce((a,p)=>a+(+p.amt||0),0)),total=()=>totOverride!=null?totOverride:round2(sum()+V.adj);
+    const getF=f=>f==="carry"?V.carry:f==="rew"?V.rew:f==="adj"?V.adj:f==="tot"?total():f==="bank"?V.bankAmt:V.pays[+f.slice(1)].amt;
+    const setF=(f,v)=>{if(f!=="tot"&&f!=="bank")totOverride=null;if(f==="carry")V.carry=v;else if(f==="rew")V.rew=v;else if(f==="adj")V.adj=v;else if(f==="bank")V.bankAmt=v;else if(f==="tot"){totOverride=null;V.adj=round2(v-sum())}else V.pays[+f.slice(1)].amt=v};
     const spentSoFar=()=>ym>ymOf(td)?0:round2(S.tx.filter(t=>ym===S.ym&&t.date<=td).reduce((a,t)=>a+sAmt(t),0));
     /* Venmo can sit in any month (e.g. Oct 31 Venmo while looking at November), so pull the last 2 weeks straight from the database. */
     let VL=[];
@@ -3646,9 +3646,9 @@ function plannedSheet(){
     sh.addEventListener("click",e=>{if(e.target.closest("#pl-ven")){const l=sh.querySelector("#pl-venl");l.hidden=!l.hidden;sh.querySelector("#pl-ven").classList.toggle("open",!l.hidden)}});
     const refresh=()=>{drawVen();sh.querySelectorAll("[data-f]").forEach(b=>{const v=getF(b.dataset.f);b.innerHTML=v==null||(!v&&b.dataset.f!=="tot")?'<span class="ph">$0.00</span>':money(v)});
       sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total";
-      const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar());
+      const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.rew+V.adj-spentSoFar());
       sh.querySelector("#pl-exp").textContent=money(exp);
-      sh.querySelector("#pl-expn").textContent=(x=>x.replace(/^\s*·\s*/,""))([V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):""));
+      sh.querySelector("#pl-expn").textContent=(x=>x.replace(/^\s*·\s*/,""))([V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.rew?"rewards":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):""));
       sh.querySelectorAll("[data-dt]").forEach(el=>{const d=V.pays[+el.dataset.dt].d;el.textContent=d?(d<=td?"received "+fmtD(d):"coming "+fmtD(d)):"add date"});
       const dv=sh.querySelector("#pl-diff"),fx=sh.querySelector("#pl-fix"),gs=sh.querySelector("#pl-guess");if(V.bankAmt==null){dv.hidden=true;fx.hidden=true;gs.hidden=true;return}
       const diff=round2(V.bankAmt-exp);dv.hidden=false;
@@ -3686,7 +3686,7 @@ function plannedSheet(){
       b.hidden=false;b.textContent="Use "+money(left);b.onclick=e=>{e.preventDefault();e.stopPropagation();setF("carry",left);refresh();try{haptic()}catch(_){}}}).catch(()=>{});
     sh.querySelector("#pl-x").onclick=closeSheet;
     sh.querySelector("#pl-ok").onclick=async()=>{closePad();const t=total();
-      const nx=Object.assign({},x,{name:x.name||"Planned",planned:t,parts:{carry:round2(V.carry),adj:round2(totOverride!=null?round2(totOverride-sum()):V.adj),pays:V.pays.map(p=>({d:p.d||"",amt:round2(+p.amt||0)})),bank:V.bankAmt!=null?{amt:round2(V.bankAmt),at:(V.bank&&V.bank.amt===V.bankAmt&&V.bank.at)||today()}:null}});
+      const nx=Object.assign({},x,{name:x.name||"Planned",planned:t,parts:{carry:round2(V.carry),rew:round2(V.rew),adj:round2(totOverride!=null?round2(totOverride-sum()):V.adj),pays:V.pays.map(p=>({d:p.d||"",amt:round2(+p.amt||0)})),bank:V.bankAmt!=null?{amt:round2(V.bankAmt),at:(V.bank&&V.bank.amt===V.bankAmt&&V.bank.at)||today()}:null}});
       const newInc=[nx].concat(inc.slice(1).map(o=>Object.assign({},o,{planned:0})));
       if(await saveGroups(JSON.parse(JSON.stringify(groupsFor(ym))),newInc)){S.budgets[ym]=Object.assign({},S.budgets[ym]||{},{groups:groupsFor(ym),income:newInc});closeSheet();toast("Planned "+money(t));render()}};
   });
