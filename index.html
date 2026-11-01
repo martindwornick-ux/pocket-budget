@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 10:00 PM"</script>
+<script>window.PB_BUILD="Oct 31, 10:15 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3476,7 +3476,7 @@ function txSheet(existing){
           let rref=null,rbodyDoc=null;
           if(ref&&rOn){const from=s.querySelector("#f-rfrom").value.trim(),nm=body.merchant.replace(VP,"");
             rbodyDoc=Object.assign({},body,{person:undefined,amount:rAmt,type:"refund",merchant:rMeth+": "+(from?from+" reimbursement":"Reimbursement for "+nm),reimbMethod:rMeth,date:rdate.value||date,note:"For "+nm+(rAmt<a-.004?" ("+money(rAmt)+" of "+money(a)+")":"")+(body.note?" · "+body.note:""),
-              pair:ref.id,reimbFrom:from,person:from||undefined,createdAt:new Date(Date.now()+1).toISOString(),sheet:"sending",sheetMsg:""});delete rbodyDoc.loc;
+              pair:ref.id,reimbFrom:from,person:from||undefined,createdAt:new Date(Date.now()+1).toISOString(),sheet:"sending",sheetMsg:""});delete rbodyDoc.loc;delete rbodyDoc.vpaid;delete rbodyDoc.vdone;if(isVenmoTx(rbodyDoc))rbodyDoc.vstate="req";else delete rbodyDoc.vstate;
             if(!rbodyDoc.person)delete rbodyDoc.person;try{rref=await S.db.collection("tx").add(rbodyDoc);await S.db.doc("tx/"+ref.id).update({pair:rref.id})}catch(_){toast("Saved the purchase, but not the reimbursement. Add it as income.")}}
           if(ref){pushToSheet(ref.id,body).then(ok=>{if(rref)return pushToSheet(rref.id,rbodyDoc).then(ok2=>{if(ok&&ok2)toast("Added both to your sheet")});if(ok)toast("Added "+money(a)+" to your sheet")})}
           // a fix that was still on its way when you tapped Done lands a moment later
