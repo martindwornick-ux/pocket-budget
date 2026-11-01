@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 9:35 AM"</script>
+<script>window.PB_BUILD="Nov 1, 9:45 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -804,7 +804,9 @@ html.mlsnap .mltop{scroll-snap-align:start;scroll-margin-top:var(--hh,120px)}
 .mlzs.on .mlzb{transform:scale(1.2)}
 
 .mlcard{padding-bottom:6px}
-.mlmap{position:sticky;top:calc(var(--hh,120px) - 3px);z-index:4;margin:0 -22px;padding:11px 22px 10px;background:#fff;box-shadow:0 -80px 0 #fff}
+.mlmap{position:sticky;top:calc(var(--hh,120px) - 3px);z-index:4;margin:0 -22px;padding:11px 22px 10px;background:#fff}
+html.mlstuck .mlmap{box-shadow:0 -80px 0 #fff}
+.mlmiss{border:0;background:none;padding:0;font:inherit;color:var(--link);font-weight:600}
 main .mlmap{background:#fff}
 .mlmap .imap{height:min(38vh,320px);margin:0;background:#f2f3f5}
 .mlmap .imap .leaflet-tile-pane{filter:grayscale(1) brightness(1.06) contrast(.88)}
@@ -2732,8 +2734,8 @@ function mapCard(fh,months,pending){
   h+='<div class="mlmap"><div class="imap" id="imap"><div class="hmload">Loading map…</div></div>'+
     '<div class="mlzs" role="slider" aria-label="Zoom" aria-valuemin="3" aria-valuemax="18" tabindex="0"><span class="mlzp">+</span><div class="mlzt"><i class="mlzf"></i><b class="mlzb"></b></div><span class="mlzp">−</span></div>'+
     '<div class="mlcap" id="mlcap"></div></div>';
-  const miss=D.all.length-pts.length;
-  h+='<p class="mlnote">'+pts.length+' purchase'+(pts.length===1?'':'s')+' on the map'+(miss>0?' · '+miss+' without a spot':'')+'. Scroll the list to visit each one; slide the bar on the right to zoom.</p>';
+  const onMap=new Set(pts.map(t=>t.id)),missL=D.all.filter(t=>!onMap.has(t.id));IS.mapMiss=missL;const miss=missL.length;
+  h+='<p class="mlnote">'+pts.length+' purchase'+(pts.length===1?'':'s')+' on the map'+(miss>0?' · <button type="button" class="mlmiss" data-mlmiss="1">'+miss+' without a spot ›</button>':'')+'</p>';
   let lastDay="";
   h+='<div class="mllist">'+pts.map((t,i)=>{const day=t.date!==lastDay?(i?'</div>':'')+'<div class="mlgrp"><div class="mlday">'+esc(fmtDay(t.date))+'</div>':'';lastDay=t.date;
     return day+'<button class="mlrow'+(i===IS.mapActive?' on':'')+'" data-mi="'+i+'"><i class="mldot"></i><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+PIN_SVG+esc(locSub(t))+'</div></div><div class="a num">'+(t.type==="refund"?"+":"")+money(+t.amount||0)+'</div></button>'}).join("")+(pts.length?'</div>':'')+'<div class="mlpad"></div></div>';
@@ -2846,6 +2848,13 @@ function mlGo(i){const r=document.querySelector('#main .mlrow[data-mi="'+i+'"]')
   document.querySelectorAll("#main .mlrow").forEach(x=>x.classList.toggle("on",x===r));
   r.scrollIntoView({block:"start",behavior:"smooth"});clearTimeout(ML.settle);ML.settle=setTimeout(()=>{if(IS.mapActive!==i)mlSetActive(i)},450);
   r.classList.remove("flash");void r.offsetWidth;r.classList.add("flash")}
+/* Only cover what's behind the glass header once the map is actually pinned (otherwise it would hide the card title) */
+function mlStuck(){const m=document.querySelector("#main .mlmap");const on=!!m&&m.getBoundingClientRect().top<=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120)-2;document.documentElement.classList.toggle("mlstuck",on)}
+addEventListener("scroll",()=>{if(S.tab==="insights"&&IS.sub==="map")mlStuck();else document.documentElement.classList.remove("mlstuck")},{passive:true});
+/* "N without a spot": one opens that transaction to add a location; several open a short list */
+function mlMissing(){const L=IS.mapMiss||[];if(!L.length)return;const open=t=>isHist(t)?histSheet(t):txSheet(t);if(L.length===1){open(L[0]);return}
+  openSheet('<h3>Without a map spot</h3><p class="note" style="margin:-4px 0 10px">Open one and tap 🗺 next to Location to place it.</p>'+L.map(t=>'<button class="txrow" data-mt="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(fmtDay(t.date))+'</div></div><div class="a num">'+money(+t.amount||0)+'</div></button>').join(""),
+    sh=>sh.querySelectorAll("[data-mt]").forEach(b=>b.onclick=()=>{const t=L.find(x=>x.id===b.dataset.mt);if(t)open(t)}))}
 function mlLine(){const m=document.querySelector("#main .mlmap");return m?m.getBoundingClientRect().bottom+28+ML_DAYH:0}
 const ML_DAYH=34;
 function mlOverview(force){
@@ -3071,7 +3080,7 @@ function render(){if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.c
   const ae=document.activeElement, keep=ae&&ae.id==="txq"?[ae.selectionStart,ae.selectionEnd]:null;
   const html=S.tab==="budget"?renderBudget(groups,sm):S.tab==="tx"?renderTx(groups):renderInsights(groups,sm);
   patchMain(m,html,S.tab+"|"+S.ym);rollNumbers(m);
-  const snap=S.tab==="insights"&&IS.sub==="map"&&!!m.querySelector(".mlrow");document.documentElement.classList.toggle("mlsnap",snap);if(snap)mlSnapVar();
+  const snap=S.tab==="insights"&&IS.sub==="map"&&!!m.querySelector(".mlrow");document.documentElement.classList.toggle("mlsnap",snap);if(snap)mlSnapVar();mlStuck();
   if(keep){const i=$("#txq");if(i){i.focus();try{i.setSelectionRange(keep[0],keep[1])}catch(e){}}}
 }
 
@@ -3980,6 +3989,7 @@ $("#main").addEventListener("click",e=>{
   const pv=e.target.closest("[data-plan],[data-iplan]");if(pv){if(pv.dataset.iplan&&COMBINED&&pv.closest(".eqcard")){plannedSheet();return}pv.dataset.plan?padOpen("item",pv.dataset.plan):padOpen("income",pv.dataset.iplan);return}
   if(COMBINED&&e.target.closest(".eqcard #addIncome")){plannedSheet();return}
   if(e.target.closest("[data-plannext]")){planNextSheet();return}
+  if(e.target.closest("[data-mlmiss]")){mlMissing();return}
   const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#exportCsv,#syncAll");if(!t)return;
   if(t.dataset.income)incomeSheet(t.dataset.income);
   else if(t.id==="addIncome")incomeSheet(null);
