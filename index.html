@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 3:35 AM"</script>
+<script>window.PB_BUILD="Nov 1, 8:45 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -387,6 +387,14 @@ div.txrow{cursor:pointer}
 .track.fill i.low{background:#f9ab00}
 nav.tabs.hasind{position:fixed}nav.tabs .tabind{position:absolute;left:0;top:0;border-radius:24px;background:var(--glass-strong);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 2px 10px rgba(0,0,0,.08);transition:transform .42s cubic-bezier(.3,.8,.25,1),width .42s cubic-bezier(.3,.8,.25,1);pointer-events:none;z-index:0}
 nav.tabs.hasind button{position:relative;z-index:1;transition:color .3s}nav.tabs.hasind button[aria-current="page"]{background:transparent;box-shadow:none}
+.qa{position:fixed;inset:0;z-index:30;background:rgba(5,15,10,0);transition:background .25s}.qa.on{background:rgba(5,15,10,.28)}
+.qai{position:fixed;display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:999px;background:var(--card);color:var(--fg);font:inherit;font-size:15px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.18);border:0;white-space:nowrap;opacity:0;transform:translate(0,0) scale(.35);transform-origin:right bottom;transition:transform .38s cubic-bezier(.3,1.35,.5,1),opacity .2s}
+.qa.on .qai{opacity:1;transform:translate(var(--x),var(--y)) scale(1)}.qai svg{width:18px;height:18px}
+.fab{transition:transform .3s cubic-bezier(.3,1.4,.5,1)}.fab.qaon{transform:rotate(45deg) scale(.92);z-index:31}
+.zconf{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}.zconf i{position:absolute;border-radius:2px}
+.sheet .cchips{display:flex;gap:8px;margin-top:2px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.sheet .cchips::-webkit-scrollbar{display:none}
+.sheet .cchip{flex:none;scroll-snap-align:start;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;line-height:1.2;font:inherit;font-size:14px;font-weight:600;color:var(--fg);white-space:nowrap;transition:background-color .2s,color .2s,border-color .2s,transform .16s}
+.sheet .cchip:active{transform:scale(.94)}.sheet .cchip.on{background:#e6f4ea;border-color:#81c995;color:#137333}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1490,6 +1498,15 @@ function renderHeader(){
   document.querySelectorAll("nav.tabs button").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});moveTabInd();
 }
 function totals(groups,sm){let p=0,s=0;allItems(groups).forEach(({it})=>{p+=+it.planned||0;s+=sm[it.id]||0});const known=new Set(allItems(groups).map(x=>x.it.id));S.tx.forEach(t=>{if(!known.has(t.itemId))s+=sAmt(t)});return{p:round2(p),s:round2(s),r:round2(p-s)}}
+/* The moment every dollar has a job: confetti from the banner, a little pop, a haptic. Only on the change, never on load. */
+const ZB={};
+function zeroParty(b){if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;try{haptic()}catch(_){}
+  b.animate([{transform:"scale(1)"},{transform:"scale(1.06)"},{transform:"scale(1)"}],{duration:520,easing:"cubic-bezier(.3,1.5,.5,1)"});
+  const r=b.getBoundingClientRect(),cols=["#34a853","#1a73e8","#fbbc04","#ea4335","#a142f4"],box=document.createElement("div");box.className="zconf";document.body.appendChild(box);
+  for(let i=0;i<36;i++){const c=document.createElement("i"),x=r.left+r.width*(.15+Math.random()*.7),dx=(Math.random()-.5)*220,up=60+Math.random()*90,fall=260+Math.random()*260,rot=(Math.random()-.5)*900;
+    c.style.cssText="left:"+x+"px;top:"+(r.top+r.height/2)+"px;background:"+cols[i%5]+";width:"+(5+Math.random()*4)+"px;height:"+(8+Math.random()*6)+"px";box.appendChild(c);
+    c.animate([{transform:"translate(0,0) rotate(0)",opacity:1},{transform:"translate("+dx*.6+"px,"+(-up)+"px) rotate("+rot*.4+"deg)",opacity:1,offset:.3},{transform:"translate("+dx+"px,"+fall+"px) rotate("+rot+"deg)",opacity:0}],{duration:1300+Math.random()*700,easing:"cubic-bezier(.2,.6,.4,1)",delay:Math.random()*120})}
+  setTimeout(()=>box.remove(),2300)}
 function renderBanner(groups,sm){
   if(PAD){const P=PAD;PAD=null;try{renderBanner(groupsFor(S.ym),sm)}finally{PAD=P}return}
   const b=$("#banner");
@@ -1500,6 +1517,7 @@ function renderBanner(groups,sm){
   if(inc.length){
     const left=round2(incomeTotal(inc)-t.p);
     b.className="banner"+(left<0?" over":"");
+    const zb=ZB[S.ym];ZB[S.ym]=left;if(left===0&&zb!=null&&zb!==0)setTimeout(()=>zeroParty(b),60);
     if(left===0){b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg><span>It\'s a zero-based budget! 🎉</span>';return}
     b.innerHTML=left>0?'<span><b class="num" style="font-weight:700">'+money(left)+'</b> <span style="color:var(--fg);font-weight:500">left to budget</span></span>':'<span><b class="num" style="font-weight:700">'+money(-left)+'</b> <span style="color:var(--fg);font-weight:500">over your income</span></span>';return;
   }
@@ -3008,6 +3026,25 @@ function patchMain(m,html,key){
   const t=document.createElement("template");t.innerHTML=html;const nw=[...t.content.children],old=[...m.children];
   if(nw.length!==old.length){m.innerHTML=html;[...m.children].forEach(c=>c._h=c.outerHTML);return}
   nw.forEach((n,i)=>{const h=n.outerHTML,o=old[i];if(o._h===h)return;n._h=h;m.replaceChild(n,o)})}
+/* Gentle shake + haptic when something's missing */
+function shake(el){if(!el||matchMedia("(prefers-reduced-motion:reduce)").matches)return;try{haptic()}catch(_){}
+  el.animate([{transform:"translateX(0)"},{transform:"translateX(-8px)"},{transform:"translateX(7px)"},{transform:"translateX(-5px)"},{transform:"translateX(3px)"},{transform:"translateX(0)"}],{duration:420,easing:"ease-out"})}
+/* Hold the + button: four quick actions fan out (Expense, Income, Venmo, Scan receipt). A tap still opens the add sheet. */
+const QA={skip:false,el:null};
+(()=>{const fab=$("#fab");let t=0,x0=0,y0=0;
+  const ACTS=[["Expense","expense",'<path d="M5 12h14"/>',{}],["Income","income",'<path d="M12 5v14M5 12h14"/>',{kind:"refund"}],["Venmo","venmo",'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',{venmo:true}],["Scan receipt","scan",'<path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.2" r="3.4"/>',{scan:true}]];
+  const POS=[[-86,-4],[-74,-62],[-34,-112],[14,-152]];
+  function close(){const o=QA.el;if(!o)return;QA.el=null;fab.classList.remove("qaon");o.classList.remove("on");o.querySelectorAll(".qai").forEach((b,i)=>b.style.transitionDelay=((3-i)*25)+"ms");setTimeout(()=>o.remove(),300)}
+  function open(){if(QA.el)return;try{haptic()}catch(_){}
+    const r=fab.getBoundingClientRect(),o=document.createElement("div");o.className="qa";
+    o.innerHTML=ACTS.map((a,i)=>'<button type="button" class="qai" data-qa="'+i+'" style="--x:'+POS[i][0]+'px;--y:'+POS[i][1]+'px;right:'+(innerWidth-r.right+6)+'px;bottom:'+(innerHeight-r.bottom+8)+'px;transition-delay:'+(i*35)+'ms"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+a[2]+'</svg>'+a[0]+'</button>').join("");
+    document.body.appendChild(o);QA.el=o;fab.classList.add("qaon");requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add("on")));
+    o.addEventListener("click",e=>{const b=e.target.closest("[data-qa]");const a=b&&ACTS[+b.dataset.qa];close();if(a)txSheet(null,a[3])})}
+  fab.addEventListener("touchstart",e=>{if(QA.el){QA.skip=true;close();return}const p=e.touches[0];x0=p.clientX;y0=p.clientY;clearTimeout(t);t=setTimeout(()=>{QA.skip=true;open()},380)},{passive:true});
+  fab.addEventListener("touchmove",e=>{const p=e.touches[0];if(Math.abs(p.clientX-x0)>10||Math.abs(p.clientY-y0)>10)clearTimeout(t)},{passive:true});
+  ["touchend","touchcancel"].forEach(ev=>fab.addEventListener(ev,()=>clearTimeout(t),{passive:true}));
+  fab.addEventListener("contextmenu",e=>e.preventDefault());
+})();
 /* Soft press depth: a card tips a few degrees toward your finger while pressed, then eases back.
    Cancels the moment the touch turns into a scroll or swipe. */
 (()=>{const M=$("#main");let card=null,x0=0,y0=0;
@@ -3272,7 +3309,12 @@ async function scanReceipt(file,sheet){
   catch(e){toast(e&&e.message==="load"?"Couldn't load the receipt reader. Check your connection":"Couldn't read that photo");return null}
   finally{ov.classList.add("out");setTimeout(()=>ov.remove(),250)}
 }
-function txSheet(existing){
+/* Quick actions: txSheet(null,{kind:"refund"}) / {venmo:true} / {scan:true} open the add sheet pre-set. */
+function txSheet(existing,opts){txSheetCore(existing);if(!opts||existing)return;const sh=$("#sheetRoot .sheet");if(!sh)return;
+  if(opts.kind==="refund"){const b=sh.querySelector('[data-k="refund"]');b&&b.click()}
+  if(opts.venmo){const v=sh.querySelector("#f-venmo");if(v){v.checked=true;v.dispatchEvent(new Event("change",{bubbles:true}))}}
+  if(opts.scan){const c=sh.querySelector("#f-cam");c&&c.click()}}
+function txSheetCore(existing){
   const d=existing?existing.date:(S.ym===ymOf(today())?today():S.ym+"-01");
   const groups=groupsFor(ymOf(d));
   if(!allItems(groups).length){openSheet('<h3>Add a category first</h3><p class="note">Transactions go into budget items like Groceries or Auto Gas &amp; Oil. Add a group and an item on the Budget tab, then log purchases here.</p><div class="btnrow" style="margin-top:14px"><button class="btn" id="okc">Got it</button></div>',s=>s.querySelector("#okc").onclick=closeSheet);return}
@@ -3300,7 +3342,7 @@ function txSheet(existing){
         '<div class="msug lsug" id="f-lsug" role="listbox" aria-label="Location suggestions" hidden></div>'+
         (existing?'':'<div class="near" id="f-near" hidden></div>')+
       '</div>'+
-      '<div class="tcard"><div class="trow crow"><span id="f-clab">'+(kind==="refund"?"Add to":"Budget Item")+'</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel,ymOf(d))+'</select></span></div>'+
+      '<div class="cchips" id="f-cchips" aria-label="Your usual budget items"></div><div class="tcard"><div class="trow crow"><span id="f-clab">'+(kind==="refund"?"Add to":"Budget Item")+'</span><input class="tin" id="f-cq" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-csug" aria-expanded="false" placeholder="Type or pick" aria-label="Budget item"><span class="cauto" title="Suggested from past merchants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg></span><span class="cbrowse" id="f-ctxt" aria-hidden="true">'+CHEV+'<select class="ovl" id="f-cat" aria-label="Browse budget items"><option value="">Select</option>'+categoryOptions(groups,sel,ymOf(d))+'</select></span></div>'+
         '<div class="msug csug" id="f-csug" role="listbox" aria-label="Budget item suggestions" hidden></div><div class="cplace" id="f-cplace" hidden></div><div class="trow" id="f-subrow" hidden><span>Subcategory</span><span class="tv" id="f-stxt"></span><select class="ovl" id="f-sub" aria-label="Misc subcategory"><option value="">Select</option>'+SUB.list.map(x=>'<option'+(existing&&existing.sub===x?" selected":"")+'>'+esc(x)+'</option>').join("")+'<option value="__new">+ New subcategory…</option></select></div><div class="trow" id="f-newsub" hidden><input class="tin" id="f-newsubin" autocomplete="off" maxlength="40" enterkeyhint="done" placeholder="New subcategory name" aria-label="New subcategory name" style="text-align:left"><button class="addlink" id="f-newsubok" style="padding:0 0 0 8px">Add</button></div><div class="cleft" id="f-cleft" hidden></div></div>'+
       (existing?''
         :'<div class="tcard rcard" id="f-rcard"><label class="trow"><span>Reimbursed</span><label class="tgl tglsm"><input type="checkbox" id="f-rb" role="switch" aria-label="Getting money back"><span class="sw"></span></label></label>'+
@@ -3332,7 +3374,16 @@ function txSheet(existing){
       const autoSub=()=>{if(subTouched||cat.value!==MISC_ID)return;const g=suggestSub((s.querySelector("#f-venmo").checked?"Venmo: ":"")+merIn.value);if(g&&SUB.list.includes(g))subSel.value=g;drawSub()};
       const cq=s.querySelector("#f-cq");
       const catLabel=()=>{if(!cat.value)return"";const o=cat.options[cat.selectedIndex];const nm=o?o.textContent:"";return cat.value===MISC_ID&&subSel.value&&subSel.value!=="__new"?subSel.value:nm};
-      const drawCat=()=>{drawSub();autoSub();if(document.activeElement!==cq)cq.value=catLabel();try{updLeft()}catch(_){}};
+      const drawCat=()=>{drawSub();autoSub();if(document.activeElement!==cq)cq.value=catLabel();try{updLeft()}catch(_){}try{drawChips()}catch(_){}};
+      /* Swipeable chips of the items you use most (recent use counts more); tap one to pick it */
+      function drawChips(){const box=s.querySelector("#f-cchips");if(!box)return;const opts=[...cat.options].filter(o=>o.value),ids=new Set(opts.map(o=>o.value));
+        const sc={},pool=txPool().filter(t=>t.itemId&&ids.has(t.itemId)).sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,150);
+        pool.forEach((t,i)=>{sc[t.itemId]=(sc[t.itemId]||0)+1+Math.max(0,(40-i))/40});
+        let list=opts.map((o,i)=>({id:o.value,nm:o.textContent.trim(),sc:(sc[o.value]||0)-i/1000})).sort((a,b)=>b.sc-a.sc).slice(0,10);
+        if(cat.value&&!list.some(x=>x.id===cat.value)){const o=opts.find(x=>x.value===cat.value);if(o)list.unshift({id:o.value,nm:o.textContent.trim()})}
+        const html=list.map(x=>'<button type="button" class="cchip'+(x.id===cat.value?" on":"")+'" data-cc="'+esc(x.id)+'">'+esc(x.nm)+'</button>').join("");
+        if(box._h!==html){box._h=html;box.innerHTML=html}}
+      s.querySelector("#f-cchips").addEventListener("click",e=>{const b=e.target.closest("[data-cc]");if(!b)return;if(selectItem(b.dataset.cc)){try{finishPick()}catch(_){}drawChips()}});drawChips();
       // live "left in this item" line under Budget Item
       function updLeft(){const el=s.querySelector("#f-cleft");if(!el)return;const id=cat.value,dv=(s.querySelector("#f-date")||{}).value||d,ym=ymOf(dv);
         const f=id&&findItem(groupsFor(ym),id);if(!f){el.hidden=true;return}
@@ -3483,7 +3534,7 @@ function txSheet(existing){
       s.querySelectorAll(".tin,.tnote").forEach(i=>{i.addEventListener("focus",()=>showPad(false));i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();i.blur();showPad(true)}})});
       s.querySelector("#f-x").onclick=closeSheet;
       s.querySelector("#f-save2").onclick=()=>save();
-      s.querySelector("#f-kind").onclick=e=>{const b=e.target.closest("button");if(!b)return;kind=b.dataset.k;s.querySelectorAll("#f-kind button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.k===kind)));const cl=s.querySelector("#f-clab");if(cl)cl.textContent=kind==="refund"?"Add to":"Budget Item";drawAmt()};
+      s.querySelector("#f-kind").onclick=e=>{const b=e.target.closest("button");if(!b)return;kind=b.dataset.k;setTimeout(()=>{try{drawChips()}catch(_){}},0);s.querySelectorAll("#f-kind button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.k===kind)));const cl=s.querySelector("#f-clab");if(cl)cl.textContent=kind==="refund"?"Add to":"Budget Item";drawAmt()};
       const dIn=s.querySelector("#f-date");let dYm=ymOf(d);
       {const cam=s.querySelector("#f-cam"),cin=s.querySelector("#f-camin");if(cam&&cin){cam.onclick=()=>cin.click();cin.onchange=async()=>{const f=cin.files&&cin.files[0];cin.value="";if(!f)return;
         const r=await scanReceipt(f,s);if(!r)return;let n=0;
@@ -3538,8 +3589,8 @@ function txSheet(existing){
       async function save(){
         if(busy)return;
         const a=round2(tVal(T)/100);
-        if(!(a>0)){toast("Enter an amount above $0");showPad(true);return}
-        const itemId=cat.value;if(!itemId){toast("Pick a budget item");return}
+        if(!(a>0)){toast("Enter an amount above $0");showPad(true);shake(amtB);return}
+        const itemId=cat.value;if(!itemId){toast("Pick a budget item");shake(s.querySelector(".crow"));return}
         const date=dIn.value||today();
         const g2=groupsFor(ymOf(date)); const f=findItem(g2,itemId)||findItem(groups,itemId);
         const incSrc=incomeFor(ymOf(date)).find(x=>x.id===itemId)||incomeFor(S.ym).find(x=>x.id===itemId);
@@ -3617,7 +3668,7 @@ function itemSheet(id,preSub){
         const fb=ltb.querySelector("#i-fill");if(fb)fb.onclick=()=>{const c=parseAmt(planIn.value||"0");planIn.value=Math.max(0,round2((isNaN(c)?0:c)+left)).toFixed(2);upd()};
       };
       planIn.addEventListener("input",upd);upd();
-      s.querySelector("#i-save").onclick=async()=>{const p=parseAmt(s.querySelector("#i-plan").value);const n=s.querySelector("#i-name").value.trim();if(!n){toast("Give the item a name");return}if(isNaN(p)||p<0){toast("Planned must be $0 or more");return}f.it.name=n;f.it.planned=p;if(await saveGroups(groups)){closeSheet();toast("Saved")}};
+      s.querySelector("#i-save").onclick=async()=>{const p=parseAmt(s.querySelector("#i-plan").value);const n=s.querySelector("#i-name").value.trim();if(!n){toast("Give the item a name");shake(s.querySelector("#i-name"));return}if(isNaN(p)||p<0){toast("Planned must be $0 or more");shake(s.querySelector("#i-plan"));return}f.it.name=n;f.it.planned=p;if(await saveGroups(groups)){closeSheet();toast("Saved")}};
       s.querySelector("#i-add").onclick=()=>{ls.set("pb.lastItem",id);txSheet()};
       s.querySelectorAll("[data-tx]").forEach(b=>b.onclick=e=>{if(e.target.closest(".iamt"))return;const t=S.tx.find(x=>x.id===b.dataset.tx);if(t)isHist(t)?histSheet(t):txSheet(t)});
       const gp=sheetPad(s);
@@ -3779,7 +3830,7 @@ function plannedSheet(){
       if(el.closest("#pl-use")){e.preventDefault();e.stopPropagation();V.useAmt=0;sh.querySelector("#pl-usebox").hidden=false;refresh();openPad("use");return}
       if(el.closest("#pl-usex")){closePad();sh.querySelector("#pl-usebox").hidden=true;V.useAmt=0;refresh();return}
       if(el.closest("#pl-useok")){closePad();const a=round2(V.useAmt),id=sh.querySelector("#pl-useit").value,f=findItem(groupsFor(ym),id);
-        if(!(a>0)){toast("Enter how much to use");return}if(a>cLeft()+.004){toast("That's more than your cushion");return}if(!f){toast("Pick a budget item");return}
+        if(!(a>0)){toast("Enter how much to use");shake(sh.querySelector('[data-f="use"]'));return}if(a>cLeft()+.004){toast("That's more than your cushion");shake(sh.querySelector('[data-f="use"]'));return}if(!f){toast("Pick a budget item");return}
         totOverride=null;V.cushUsed.push({amt:a,itemId:id,name:f.it.name});V.useAmt=0;sh.querySelector("#pl-usebox").hidden=true;try{haptic()}catch(_){}refresh();return}
       const ux=el.closest("[data-unuse]");if(ux){totOverride=null;V.cushUsed.splice(+ux.dataset.unuse,1);refresh();return}
       const mt=el.closest("[data-mt]");if(mt){const d=sh.querySelector("#"+mt.dataset.mt);d.hidden=!d.hidden;mt.textContent=d.hidden?"See the math ›":"Hide the math ‹";return}
@@ -3901,7 +3952,7 @@ const haptic=(()=>{let lab=null;return()=>{try{if(navigator.vibrate&&navigator.v
 document.addEventListener("click",e=>{const b=e.target.closest("#seg button,[data-isub],#f-kind button");if(b&&b.getAttribute("aria-pressed")!=="true")haptic()},true);
 document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(S.tab!==b.dataset.tab)haptic();S.tab=b.dataset.tab;S.upcoming=false;render();window.scrollTo(0,0)});
 $("#monthBtn").onclick=monthSheet;
-$("#addBtnTop").onclick=()=>txSheet();$("#fab").onclick=()=>txSheet();
+$("#addBtnTop").onclick=()=>txSheet();$("#fab").onclick=()=>{if(QA.skip){QA.skip=false;return}txSheet()};
 $("#main").addEventListener("change",e=>{const id=e.target.id;
   if(id==="i-range"){IS.sel=null;IS.rot=0;IS.range=+e.target.value;IS.ranges=IS.ranges||{};IS.ranges[IS.sub]=IS.range;ls.set("pb.irange."+IS.sub,String(IS.range));render()}
   else if(id==="i-group"){IS.group=e.target.value;IS.item="";IS.sel=null;IS.rot=0;IS.bmSel=null;IS.wdSel=null;IS.calSel=null;render()}
