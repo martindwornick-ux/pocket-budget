@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 9:00 AM"</script>
+<script>window.PB_BUILD="Nov 1, 9:15 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -396,6 +396,8 @@ nav.tabs.hasind button{position:relative;z-index:1;transition:color .3s}nav.tabs
 .sheet .cchip{flex:none;scroll-snap-align:start;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;line-height:1.2;font:inherit;font-size:14px;font-weight:600;color:var(--fg);white-space:nowrap;transition:background-color .2s,color .2s,border-color .2s,transform .16s}
 .sheet .cchip:active{transform:scale(.94)}.sheet .cchip.on{background:#e6f4ea;border-color:#81c995;color:#137333}
 .padfillrow{display:flex;justify-content:flex-start;margin:-2px 0 10px}.padfill{border:0;border-radius:999px;padding:7px 13px;font:inherit;font-size:14px;font-weight:600;background:#e6f4ea;color:#137333}.padfill.neg{background:#fce8e6;color:#c5221f}
+.mlday{position:sticky;top:var(--mlsnap,420px);z-index:3;height:34px;box-sizing:border-box;display:flex;align-items:center;padding:0 !important;margin:0 -22px;padding-left:22px !important;background:#fff;border-bottom:1px solid var(--line)}
+html.mlsnap .mlrow{scroll-margin-top:calc(var(--mlsnap,420px) + 34px)}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -2733,8 +2735,8 @@ function mapCard(fh,months,pending){
   const miss=D.all.length-pts.length;
   h+='<p class="mlnote">'+pts.length+' purchase'+(pts.length===1?'':'s')+' on the map'+(miss>0?' · '+miss+' without a spot':'')+'. Scroll the list to visit each one; slide the bar on the right to zoom.</p>';
   let lastDay="";
-  h+='<div class="mllist">'+pts.map((t,i)=>{const day=t.date!==lastDay?'<div class="mlday">'+esc(fmtDay(t.date))+'</div>':'';lastDay=t.date;
-    return day+'<button class="mlrow'+(i===IS.mapActive?' on':'')+'" data-mi="'+i+'"><i class="mldot"></i><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+PIN_SVG+esc(locSub(t))+'</div></div><div class="a num">'+(t.type==="refund"?"+":"")+money(+t.amount||0)+'</div></button>'}).join("")+'<div class="mlpad"></div></div>';
+  h+='<div class="mllist">'+pts.map((t,i)=>{const day=t.date!==lastDay?(i?'</div>':'')+'<div class="mlgrp"><div class="mlday">'+esc(fmtDay(t.date))+'</div>':'';lastDay=t.date;
+    return day+'<button class="mlrow'+(i===IS.mapActive?' on':'')+'" data-mi="'+i+'"><i class="mldot"></i><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+PIN_SVG+esc(locSub(t))+'</div></div><div class="a num">'+(t.type==="refund"?"+":"")+money(+t.amount||0)+'</div></button>'}).join("")+(pts.length?'</div>':'')+'<div class="mlpad"></div></div>';
   setTimeout(initMapList,0);
   return h+'</section>';
 }
@@ -2844,7 +2846,8 @@ function mlGo(i){const r=document.querySelector('#main .mlrow[data-mi="'+i+'"]')
   document.querySelectorAll("#main .mlrow").forEach(x=>x.classList.toggle("on",x===r));
   r.scrollIntoView({block:"start",behavior:"smooth"});clearTimeout(ML.settle);ML.settle=setTimeout(()=>{if(IS.mapActive!==i)mlSetActive(i)},450);
   r.classList.remove("flash");void r.offsetWidth;r.classList.add("flash")}
-function mlLine(){const m=document.querySelector("#main .mlmap");return m?m.getBoundingClientRect().bottom+28:0}
+function mlLine(){const m=document.querySelector("#main .mlmap");return m?m.getBoundingClientRect().bottom+28+ML_DAYH:0}
+const ML_DAYH=34;
 function mlOverview(force){
   const pts=IS.mapPts||[],changed=IS.mapActive!==-1;IS.mapActive=-1;if(changed&&IS.mapActive!==-2)IS.mapZoom=null; // back at the top: next dive starts at street level
   document.querySelectorAll("#main .mlrow").forEach(r=>r.classList.remove("on"));
