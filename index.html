@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 12:45 PM"</script>
+<script>window.PB_BUILD="Nov 1, 1:00 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2032,7 +2032,7 @@ function mapPicker(start,onPick,preQ){
     if(e.target.closest("[data-mx]")){close();return}
     const b=e.target.closest("[data-mp]");if(b&&picked){choose(picked[+b.dataset.mp]);return}
     const r=e.target.closest("[data-mr]");if(r&&ov._res){const l=ov._res[+r.dataset.mr];ov.querySelector(".mpk-res").hidden=true;ov.querySelector(".mpk-q").blur();
-      if(map){hold=l;map.setView([l.lat,l.lng],17,{animate:true});look++;showSpot({lat:l.lat,lng:l.lng},{name:l.name,place:l.place,road:""})}return}
+      const o={label:l.label,lat:l.lat,lng:l.lng,src:"search"};if(l.name)o.name=l.name;if(l.place)o.place=l.place;choose(o);return}
     if(e.target.closest(".mpk-me")){const me=ov.querySelector(".mpk-me");me.classList.add("busy");
       LOC.get().then(v=>{LOC.last=Object.assign(LOC.last||{},v);LOC.lastAt=Date.now();me.classList.remove("busy");map&&map.setView([v.lat,v.lng],17,{animate:true})}).catch(()=>{me.classList.remove("busy");toast("Couldn't find your location")})}
   });
@@ -2134,7 +2134,7 @@ function locField(s,o){
   mapB.addEventListener("click",e=>{e.preventDefault();inp.blur();hide();
     let st=null;if(cur&&cur.lat!=null)st={lat:cur.lat,lng:cur.lng,zoom:17};else if(LOC.last&&Date.now()-LOC.lastAt<30*60e3)st={lat:LOC.last.lat,lng:LOC.last.lng,zoom:17};
     else{const c=locCandidates(o.merchant(),o.date(),o.selfId).find(x=>x.lat!=null);st=c?{lat:c.lat,lng:c.lng,zoom:15}:{lat:42.9634,lng:-85.6681,zoom:11}}
-    mapPicker(st,l=>{cur=l;inp.value=l.label;touched=true;auto=false;row.classList.remove("auto");o.onDone&&o.onDone()},String(o.merchant()||"").replace(/^\s*venmo\s*:\s*/i,""))});
+    mapPicker(st,l=>{cur=l;inp.value=l.label;touched=true;auto=false;row.classList.remove("auto");if(l.name&&o.setMerchant)o.setMerchant(l.name);o.onDone&&o.onDone()},String(o.merchant()||"").replace(/^\s*venmo\s*:\s*/i,""))});
   // new transactions assume you're where you are now: use a fresh fix right away, then refine
   if(o.auto&&LOC.ok()){
     if(LOC.last&&Date.now()-LOC.lastAt<5*60e3){applyAuto();o.onFix&&setTimeout(()=>o.onFix(LOC.last),0)}
@@ -3440,7 +3440,9 @@ function txLayoutA(s,existing){try{
     else pp.hidden=was;
     if(!pp.hidden){if(k==="n")setTimeout(()=>note.focus(),40);if(k==="l"&&!loc.value)setTimeout(()=>loc.focus(),40);requestAnimationFrame(()=>pp.scrollIntoView({block:"nearest",behavior:"smooth"}))}
     refresh()});
-  s.addEventListener("input",refresh);s.addEventListener("change",refresh);s.addEventListener("click",()=>setTimeout(refresh,0));
+  s.addEventListener("input",refresh);s.addEventListener("change",refresh);
+  loc.addEventListener("change",()=>{const v=loc.value.trim(),fx=LOC.last;if(/^\d+\s+\S/.test(v)&&fx&&Date.now()-LOC.lastAt<15*60e3&&(fx.acc||0)<200&&(dIn.value||today())===today())LOC.learn(v,fx)});
+  loc.addEventListener("blur",()=>loc.dispatchEvent(new Event("change")));s.addEventListener("click",()=>setTimeout(refresh,0));
   const iv=setInterval(()=>{if(!s.isConnected){clearInterval(iv);return}refresh()},700);
   // editing: open the panels that already have something in them? keep closed, the pills show the values
   refresh();
@@ -3602,7 +3604,8 @@ function txSheetCore(existing){
       const nearEl=s.querySelector("#f-near");
       const LF=locField(s,{input:s.querySelector("#f-loc"),sug:s.querySelector("#f-lsug"),gps:s.querySelector("#f-gps"),
         merchant:()=>(s.querySelector("#f-venmo").checked?"Venmo: ":"")+merIn.value,date:()=>s.querySelector("#f-date").value||today(),selfId:existing&&existing.id,
-        initial:existing?existing.loc:null,auto:!existing,onFix:()=>drawNear(),onFocus:()=>showPad(false),onDone:()=>showPad(true)});
+        initial:existing?existing.loc:null,auto:!existing,onFix:()=>drawNear(),
+        setMerchant:n=>{if(s.querySelector("#f-venmo").checked)return;merIn.value=n;merIn.dispatchEvent(new Event("input",{bubbles:true}));merIn.dispatchEvent(new Event("change",{bubbles:true}))},onFocus:()=>showPad(false),onDone:()=>showPad(true)});
       const drawNear=()=>{if(!nearEl)return;const v=LOC.last;const names=v?LOC.nearby(v):[];if(!names.length||merIn.value.trim()){nearEl.hidden=true;return}
         nearEl.innerHTML='<span>Nearby</span>'+names.map(n=>'<button type="button" data-near="'+esc(n.name)+'">'+(n.poi?'📍 ':'')+esc(n.name)+'</button>').join("");nearEl.hidden=false};
       if(nearEl)nearEl.addEventListener("click",e=>{const b=e.target.closest("[data-near]");if(!b)return;merIn.value=b.dataset.near;nearEl.hidden=true;
