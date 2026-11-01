@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 10:30 AM"</script>
+<script>window.PB_BUILD="Nov 1, 10:40 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -404,6 +404,7 @@ nav.tabs.hasind button{position:relative;z-index:1;transition:color .3s}nav.tabs
 .sheet .txpanel>.tcard,.sheet .txpanel>.rcard{margin-bottom:10px}
 .sheet .txpanel:not([hidden]){animation:txpin .22s ease-out}@keyframes txpin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .sheet .vhide{display:none!important}
+.sheet #f-cchips,.sheet #f-near{display:none!important}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -3354,7 +3355,8 @@ function txLayoutA(s,existing){try{
   pills.addEventListener("click",e=>{const b=e.target.closest("[data-px]");if(!b)return;const k=b.dataset.px;try{haptic()}catch(_){}
     if(k==="v"){ven.checked=!ven.checked;ven.dispatchEvent(new Event("change",{bubbles:true}));refresh();return}
     const pp=panels.querySelector('[data-pp="'+k+'"]'),was=!pp.hidden;panels.querySelectorAll(".txpanel").forEach(p=>p.hidden=true);
-    if(k==="r"&&rb&&!rb.checked){rb.checked=true;rb.dispatchEvent(new Event("change",{bubbles:true}));pp.hidden=false}
+    if(k==="r"&&rb){if(!rb.checked){rb.checked=true;rb.dispatchEvent(new Event("change",{bubbles:true}));pp.hidden=false}
+      else if(was){rb.checked=false;rb.dispatchEvent(new Event("change",{bubbles:true}));pp.hidden=true}else pp.hidden=false}
     else pp.hidden=was;
     if(!pp.hidden){if(k==="n")setTimeout(()=>note.focus(),40);if(k==="l"&&!loc.value)setTimeout(()=>loc.focus(),40);requestAnimationFrame(()=>pp.scrollIntoView({block:"nearest",behavior:"smooth"}))}
     refresh()});
