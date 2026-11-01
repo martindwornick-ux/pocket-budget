@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 8:45 AM"</script>
+<script>window.PB_BUILD="Nov 1, 9:00 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -395,6 +395,7 @@ nav.tabs.hasind button{position:relative;z-index:1;transition:color .3s}nav.tabs
 .sheet .cchips{display:flex;gap:8px;margin-top:2px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.sheet .cchips::-webkit-scrollbar{display:none}
 .sheet .cchip{flex:none;scroll-snap-align:start;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;line-height:1.2;font:inherit;font-size:14px;font-weight:600;color:var(--fg);white-space:nowrap;transition:background-color .2s,color .2s,border-color .2s,transform .16s}
 .sheet .cchip:active{transform:scale(.94)}.sheet .cchip.on{background:#e6f4ea;border-color:#81c995;color:#137333}
+.padfillrow{display:flex;justify-content:flex-start;margin:-2px 0 10px}.padfill{border:0;border-radius:999px;padding:7px 13px;font:inherit;font-size:14px;font-weight:600;background:#e6f4ea;color:#137333}.padfill.neg{background:#fce8e6;color:#c5221f}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1242,7 +1243,7 @@ function bgWrite(p){Promise.resolve(p).catch(saveFail)}
 async function saveGroups(groups,income){
   if(!S.db||S.readOnly){toast("Saving isn't available here");return false}
   const body={groups,income:income||incomeFor(S.ym),updatedAt:new Date().toISOString()};
-  S.budgets[S.ym]=Object.assign({},S.budgets[S.ym]||{},body);
+  S.budgets[S.ym]=Object.assign({},S.budgets[S.ym]||{},body);setTimeout(render,0);
   try{bgWrite(S.db.doc("budgets/"+S.ym).set(body));return true}catch(e){saveFail(e);return false}
 }
 function allItems(groups){const out=[];groups.forEach(g=>g.items.forEach(it=>out.push({g,it})));return out}
@@ -3029,22 +3030,6 @@ function patchMain(m,html,key){
 /* Gentle shake + haptic when something's missing */
 function shake(el){if(!el||matchMedia("(prefers-reduced-motion:reduce)").matches)return;try{haptic()}catch(_){}
   el.animate([{transform:"translateX(0)"},{transform:"translateX(-8px)"},{transform:"translateX(7px)"},{transform:"translateX(-5px)"},{transform:"translateX(3px)"},{transform:"translateX(0)"}],{duration:420,easing:"ease-out"})}
-/* Hold the + button: four quick actions fan out (Expense, Income, Venmo, Scan receipt). A tap still opens the add sheet. */
-const QA={skip:false,el:null};
-(()=>{const fab=$("#fab");let t=0,x0=0,y0=0;
-  const ACTS=[["Expense","expense",'<path d="M5 12h14"/>',{}],["Income","income",'<path d="M12 5v14M5 12h14"/>',{kind:"refund"}],["Venmo","venmo",'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',{venmo:true}],["Scan receipt","scan",'<path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.2" r="3.4"/>',{scan:true}]];
-  const POS=[[-86,-4],[-74,-62],[-34,-112],[14,-152]];
-  function close(){const o=QA.el;if(!o)return;QA.el=null;fab.classList.remove("qaon");o.classList.remove("on");o.querySelectorAll(".qai").forEach((b,i)=>b.style.transitionDelay=((3-i)*25)+"ms");setTimeout(()=>o.remove(),300)}
-  function open(){if(QA.el)return;try{haptic()}catch(_){}
-    const r=fab.getBoundingClientRect(),o=document.createElement("div");o.className="qa";
-    o.innerHTML=ACTS.map((a,i)=>'<button type="button" class="qai" data-qa="'+i+'" style="--x:'+POS[i][0]+'px;--y:'+POS[i][1]+'px;right:'+(innerWidth-r.right+6)+'px;bottom:'+(innerHeight-r.bottom+8)+'px;transition-delay:'+(i*35)+'ms"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+a[2]+'</svg>'+a[0]+'</button>').join("");
-    document.body.appendChild(o);QA.el=o;fab.classList.add("qaon");requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add("on")));
-    o.addEventListener("click",e=>{const b=e.target.closest("[data-qa]");const a=b&&ACTS[+b.dataset.qa];close();if(a)txSheet(null,a[3])})}
-  fab.addEventListener("touchstart",e=>{if(QA.el){QA.skip=true;close();return}const p=e.touches[0];x0=p.clientX;y0=p.clientY;clearTimeout(t);t=setTimeout(()=>{QA.skip=true;open()},380)},{passive:true});
-  fab.addEventListener("touchmove",e=>{const p=e.touches[0];if(Math.abs(p.clientX-x0)>10||Math.abs(p.clientY-y0)>10)clearTimeout(t)},{passive:true});
-  ["touchend","touchcancel"].forEach(ev=>fab.addEventListener(ev,()=>clearTimeout(t),{passive:true}));
-  fab.addEventListener("contextmenu",e=>e.preventDefault());
-})();
 /* Soft press depth: a card tips a few degrees toward your finger while pressed, then eases back.
    Cancels the moment the touch turns into a scroll or swipe. */
 (()=>{const M=$("#main");let card=null,x0=0,y0=0;
@@ -3193,14 +3178,18 @@ function drawPad(){
   const c=PAD.calc;
   const keys=c?["1","2","3","÷","4","5","6","×","7","8","9","−","C","0","⌫","+"]:["1","2","3","4","5","6","7","8","9","","0","⌫"];
   const expr=c&&PAD.ops.length?PAD.ops.map(([v,o])=>money(v/100)+" "+o).join(" ")+(PAD.cur!==""?" "+money(curCents()/100):"")+" = "+money(padValue()/100):money(padValue()/100);
-  const inner='<div><div class="padhead"><span class="nm">'+esc(PAD.name)+'</span><span class="pexpr num" aria-live="polite">'+esc(expr)+'</span></div>'+
+  /* "Assign the rest" / "Take off": snap this item to whatever makes the budget zero-based */
+  let fill="";if(PAD.kind==="item"&&incomeFor(S.ym).length){const left=Math.round((incomeTotal(incomeFor(S.ym))-totals(groupsFor(S.ym),spentMap()).p)*100);
+    if(left>0)fill='<button class="padfill" id="padFill" data-to="'+(padValue()+left)+'">Assign the rest · +'+money(left/100)+'</button>';
+    else if(left<0){const to=Math.max(0,padValue()+left);fill='<button class="padfill neg" id="padFill" data-to="'+to+'">Take off '+money((padValue()-to)/100)+(to+left<0?" · still over":"")+'</button>'}}
+  const inner='<div><div class="padhead"><span class="nm">'+esc(PAD.name)+'</span><span class="pexpr num" aria-live="polite">'+esc(expr)+'</span></div>'+(fill?'<div class="padfillrow">'+fill+'</div>':'')+
     '<div class="keys'+(c?" calc":"")+'">'+keys.map(k=>k?'<button class="key'+(OPS[k]?" op":"")+'" data-k="'+k+'"'+(KEY_LABEL[k]?' aria-label="'+KEY_LABEL[k]+'"':'')+'>'+(k==="⌫"?BACK_SVG:k)+'</button>':'<span></span>').join("")+'</div>'+
     '<div class="padfoot"><label class="tgl"><input type="checkbox" id="padCalc" role="switch"'+(c?" checked":"")+'><span class="sw"></span><b>Calculator</b></label>'+(c?'<button class="btn sec padEq" data-k="=" aria-label="Equals">=</button>':'')+'<button class="btn padDone" id="padDone">Done</button></div></div>';
   const ex=r.querySelector(".pad");
   if(ex){ex.innerHTML=inner;return}
   r.innerHTML='<div class="pad" role="dialog" aria-label="Change planned amount">'+inner+'</div>';
 }
-$("#padRoot").addEventListener("click",e=>{const k=e.target.closest("[data-k]");if(k){padKey(k.dataset.k);return}if(e.target.closest("#padDone"))commitPad()});
+$("#padRoot").addEventListener("click",e=>{const f=e.target.closest("#padFill");if(f&&PAD){PAD.ops=[];PAD.cur=String(+f.dataset.to);PAD.fresh=false;try{haptic()}catch(_){}drawPad();render();return}const k=e.target.closest("[data-k]");if(k){padKey(k.dataset.k);return}if(e.target.closest("#padDone"))commitPad()});
 $("#padRoot").addEventListener("change",e=>{if(e.target.id==="padCalc"&&PAD){PAD.calc=e.target.checked;ls.set("pb.calc",PAD.calc?"1":"0");if(!PAD.calc&&PAD.ops.length){const v=padValue();PAD.ops=[];PAD.cur=v?String(v):""}drawPad()}});
 document.addEventListener("click",e=>{if(PAD&&!e.target.closest("#padRoot,[data-plan],[data-iplan]")){e.preventDefault();e.stopPropagation();commitPad()}},true);
 document.addEventListener("keydown",e=>{if(!PAD||e.target.closest&&e.target.closest("input,select,textarea"))return;
@@ -3952,7 +3941,7 @@ const haptic=(()=>{let lab=null;return()=>{try{if(navigator.vibrate&&navigator.v
 document.addEventListener("click",e=>{const b=e.target.closest("#seg button,[data-isub],#f-kind button");if(b&&b.getAttribute("aria-pressed")!=="true")haptic()},true);
 document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(S.tab!==b.dataset.tab)haptic();S.tab=b.dataset.tab;S.upcoming=false;render();window.scrollTo(0,0)});
 $("#monthBtn").onclick=monthSheet;
-$("#addBtnTop").onclick=()=>txSheet();$("#fab").onclick=()=>{if(QA.skip){QA.skip=false;return}txSheet()};
+$("#addBtnTop").onclick=()=>txSheet();$("#fab").onclick=()=>txSheet();
 $("#main").addEventListener("change",e=>{const id=e.target.id;
   if(id==="i-range"){IS.sel=null;IS.rot=0;IS.range=+e.target.value;IS.ranges=IS.ranges||{};IS.ranges[IS.sub]=IS.range;ls.set("pb.irange."+IS.sub,String(IS.range));render()}
   else if(id==="i-group"){IS.group=e.target.value;IS.item="";IS.sel=null;IS.rot=0;IS.bmSel=null;IS.wdSel=null;IS.calSel=null;render()}
