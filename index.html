@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 9:15 AM"</script>
+<script>window.PB_BUILD="Nov 1, 9:25 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -804,8 +804,8 @@ html.mlsnap .mltop{scroll-snap-align:start;scroll-margin-top:var(--hh,120px)}
 .mlzs.on .mlzb{transform:scale(1.2)}
 
 .mlcard{padding-bottom:6px}
-.mlmap{position:sticky;top:calc(var(--hh,120px) + 4px);z-index:4;margin:0 -22px;padding:4px 22px 10px;background:linear-gradient(var(--card) 88%,transparent)}
-main .mlmap{background:linear-gradient(rgba(255,255,255,.97) 88%,rgba(255,255,255,0))}
+.mlmap{position:sticky;top:calc(var(--hh,120px) - 3px);z-index:4;margin:0 -22px;padding:11px 22px 10px;background:#fff;box-shadow:0 -80px 0 #fff}
+main .mlmap{background:#fff}
 .mlmap .imap{height:min(38vh,320px);margin:0;background:#f2f3f5}
 .mlmap .imap .leaflet-tile-pane{filter:grayscale(1) brightness(1.06) contrast(.88)}
 .mlmap .imap.zooming .leaflet-overlay-pane,.mlmap .imap.zooming .leaflet-marker-pane{visibility:hidden}
@@ -2889,7 +2889,7 @@ function mlSetActive(i,force){
 /* The list snaps one purchase at a time into the slot right under the map (CSS scroll snapping),
    and the map moves once the scroll comes to rest on it. Top of the list = overview. */
 function mlSnapVar(){const m=document.querySelector("#main .mlmap");if(!m)return;const hh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120;
-  document.documentElement.style.setProperty("--mlsnap",(hh+4+m.offsetHeight)+"px")}
+  document.documentElement.style.setProperty("--mlsnap",(hh-3+m.offsetHeight-1)+"px")}
 function mlPick(){const rows=document.querySelectorAll("#main .mlrow");if(!rows.length)return null;const line=mlLine()-28;
   if(rows[0].getBoundingClientRect().top>line+24)return -1;
   let best=-1,bd=1e9;for(const r of rows){const d=Math.abs(r.getBoundingClientRect().top-line);if(d<bd){bd=d;best=+r.dataset.mi}else if(d>bd)break}
