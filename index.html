@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 12:25 PM"</script>
+<script>window.PB_BUILD="Nov 1, 12:45 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1902,6 +1902,12 @@ const LOC={
       const j=await r.json();return(j.elements||[]).map(e=>{const t=e.tags||{},lat=e.lat??(e.center&&e.center.lat),lng=e.lon??(e.center&&e.center.lon);if(lat==null||SKIP.test(t.amenity||""))return null;
         return{name:t.name,lat:+lat,lng:+lng,d:locDist(v,{lat:+lat,lng:+lng}),addr:[t["addr:housenumber"],t["addr:street"]].filter(Boolean).join(" ")}}).filter(Boolean).sort((a,b)=>a.d-b.d)}
       catch(e){return[]}})()},
+  /* Places you've corrected by hand (e.g. your real home address). Kept only on this phone. When you're back within
+     ~80 m, that address is used instead of the map's nearest-house guess. */
+  spots(){try{return JSON.parse(ls.get("pb.mySpots")||"[]")}catch(e){return[]}},
+  learn(label,fix){if(!label||!fix||fix.lat==null)return;const L=this.spots().filter(x=>locDist(x,fix)>60&&x.label!==label);
+    L.unshift({label,lat:+fix.lat.toFixed(6),lng:+fix.lng.toFixed(6),at:today()});ls.set("pb.mySpots",JSON.stringify(L.slice(0,40)))},
+  mySpot(fix){const r=Math.max(80,Math.min(150,(fix.acc||0)+40));let best=null;this.spots().forEach(x=>{const d=locDist(x,fix);if(d<=r&&(!best||d<best.d))best={d,x}});return best&&best.x},
   pack(v){const o={lat:v.lat,lng:v.lng,acc:v.acc||0,at:v.at||new Date().toISOString()};if(v.place)o.place=v.place;if(v.poi)o.poi=v.poi;if(v.road)o.road=v.road;return o},
   // past merchants logged within ~200 m, closest and most used first, plus the place you're standing in
   nearby(v){
@@ -2108,11 +2114,13 @@ function locField(s,o){
       const list=P&&P._v||[];
       const norm=x=>String(x||"").toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
       let hit=null;if(mk){const n=norm(mraw);hit=list.find(p=>p.d<300&&(norm(p.name).includes(n)||n.includes(norm(p.name))||norm(p.name).split(" ")[0]===n.split(" ")[0]))}
+      else if(LOC.mySpot(f)){const m=LOC.mySpot(f);l={label:m.label,lat:m.lat,lng:m.lng,acc:f.acc,src:"gps"}}
       else hit=list.find(p=>p.d<=Math.max(35,Math.min(70,f.acc||40)));
       if(!hit&&mk&&(gpKey()||mbxToken())&&mk.length>=3){const key="ext|"+mk+"|"+f.lat.toFixed(3)+","+f.lng.toFixed(3);const M=LOC.pcache[key];
         if(!M){if(LOC._extK&&LOC.pcache[LOC._extK]&&!LOC.pcache[LOC._extK].v)delete LOC.pcache[LOC._extK];LOC._extK=key;LOC.pcache[key]={};clearTimeout(LOC._extT);LOC._extT=setTimeout(()=>{(gpKey()?gpSearch(mraw,f,3):mbxSearch(mraw,f,3)).then(r=>{LOC.pcache[key].v=r||[];if(s.isConnected)applyAuto()})},900)}
         else if(M.v){const m=M.v.find(x=>x.name&&x.far!=null&&x.far<400);if(m){l=Object.assign({},m,{acc:f.acc,src:"gps"})}}}
       if(!l&&hit){const ad=hit.addr||f.road;l={label:[hit.name,ad,f.place].filter(Boolean).join(", "),name:hit.name,place:f.place,lat:+hit.lat.toFixed(6),lng:+hit.lng.toFixed(6),acc:f.acc,src:"gps"}}}
+    if(!l&&LOC.mySpot(f)){const m=LOC.mySpot(f);l={label:m.label,lat:m.lat,lng:m.lng,acc:f.acc,src:"gps"}}
     if(!l)l={label:[f.road,f.place].filter(Boolean).join(", "),place:f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"};
     if(cur&&cur.label===l.label)return;cur=l;if(document.activeElement!==inp)inp.value=l.label;row.classList.remove("auto");void row.offsetWidth;row.classList.add("auto")};
   const locate=open=>{if(!LOC.ok())return Promise.resolve(null);gpsB&&gpsB.classList.add("busy");
@@ -3725,6 +3733,8 @@ function txSheetCore(existing){
         const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim()||catLabel()||(incSrc?incSrc.name:(f?f.it.name:""));return s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
         if(!body.merchant.replace(VP,"").trim()){const nm=itemId===MISC_ID&&body.sub?body.sub:(body.itemName||"");if(nm)body.merchant=(s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?"Venmo: ":"")+nm}
         if(locNow)body.loc=locNow;
+        /* you typed or picked a different spot while standing there: remember it for next time (only spots without a business name) */
+        try{const fx=LOC.last;if(locNow&&locNow.src!=="gps"&&!locNow.name&&fx&&Date.now()-LOC.lastAt<15*60e3&&(fx.acc||0)<200&&date===today())LOC.learn(locNow.label,fx)}catch(_){}
         {const who=s.querySelector("#f-person").value.trim();if(s.querySelector("#f-venmo").checked&&who)body.person=who}
         const rOn=!existing&&rb&&rb.checked&&body.type==="expense",rAmt=rOn?rVal():0;
         if(rOn&&!(rAmt>0)){toast("Enter how much you're getting back");ramt.focus();return}
