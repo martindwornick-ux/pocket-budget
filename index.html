@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Nov 1, 1:00 AM"</script>
+<script>window.PB_BUILD="Nov 1, 1:10 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3550,7 +3550,13 @@ function itemSheet(id,preSub){
       s.querySelectorAll("[data-tx]").forEach(b=>b.onclick=e=>{if(e.target.closest(".iamt,.iamtin"))return;const t=S.tx.find(x=>x.id===b.dataset.tx);if(t)isHist(t)?histSheet(t):txSheet(t)});
       s.querySelectorAll("[data-amt]").forEach(b=>b.onclick=e=>{e.stopPropagation();const t=S.tx.find(x=>x.id===b.dataset.amt);if(!t||b.querySelector("input"))return;
         const back=t.type==="refund"||t.type==="income";b.innerHTML='<input class="iamtin num" inputmode="decimal" enterkeyhint="done" value="'+(+t.amount).toFixed(2)+'" aria-label="Amount">';const inp=b.querySelector("input");inp.focus();inp.select();
-        let done=false;const fin=async ok=>{if(done)return;done=true;const v=parseAmt(inp.value);const show=a=>{b.innerHTML=(back?"+":"")+money(a)};
+        /* iOS keyboard covers the bottom of the sheet: pad the sheet by the keyboard's height and scroll the box above it */
+        const shEl=b.closest(".sheet"),pad0=shEl.style.paddingBottom;
+        const lift=()=>{const vv=window.visualViewport,kb=vv?Math.max(0,innerHeight-vv.height-vv.offsetTop):0,lim=(vv?vv.height+vv.offsetTop:innerHeight)-24;
+          shEl.style.paddingBottom=(kb+120)+"px";const r=b.getBoundingClientRect();if(r.bottom>lim)shEl.scrollTop+=r.bottom-lim+40;else if(r.top<80)shEl.scrollTop-=80-r.top};
+        [60,320,650].forEach(ms=>setTimeout(()=>{if(document.activeElement===inp)lift()},ms));if(window.visualViewport)visualViewport.addEventListener("resize",lift);
+        const unlift=()=>{shEl.style.paddingBottom=pad0;if(window.visualViewport)visualViewport.removeEventListener("resize",lift)};
+        let done=false;const fin=async ok=>{if(done)return;done=true;unlift();const v=parseAmt(inp.value);const show=a=>{b.innerHTML=(back?"+":"")+money(a)};
           if(!ok||isNaN(v)||!(v>0)||Math.abs(v-(+t.amount))<.005){if(ok&&inp.value.trim()&&!(v>0))toast("Enter an amount above $0");show(+t.amount);return}
           const old=+t.amount;t.amount=round2(v);show(t.amount);try{haptic()}catch(_){}render();
           try{await S.db.doc("tx/"+t.id).update({amount:t.amount});toast(t.sheet==="synced"?"Updated. Fix the row in your Finance Tracker too.":"Updated to "+money(t.amount))}catch(_){t.amount=old;show(old);render();toast("Couldn't save that. Check your connection.")}};
