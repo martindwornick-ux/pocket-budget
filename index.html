@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 9:20 PM"</script>
+<script>window.PB_BUILD="Oct 31, 9:45 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -336,6 +336,21 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .pva{font-weight:700;font-size:14px}
 .pvt{flex:none;border:0;border-radius:999px;padding:5px 10px;font:inherit;font-size:12px;font-weight:700;background:#fef7e0;color:#8a5a00}
 .pvt.in{background:#e6f4ea;color:#188038}
+.vcard{padding:14px 18px}
+.vhd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}.vhd b{font-size:18px;font-weight:700}.vhd>span{font-size:13px;color:var(--muted)}
+.vsec{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}.vsec.red{color:var(--over)}
+.vr{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}.vsec+.vr{border-top:0}
+.vr.red{background:#fdecea;margin:0 -18px;padding:9px 18px;border-top:0}.vr.red+.vr.red{border-top:1px solid #f6c6c1}
+.vn{flex:1;min-width:0}.vn b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vn small{display:block;font-size:12px;color:var(--muted)}
+.vr.red b,.vr.red small,.vr.red .va{color:#b3261e}
+.vdots{display:flex;gap:3px;margin-top:5px}.vdots i{width:16px;height:4px;border-radius:2px;background:var(--line)}.vdots i.on{background:var(--brand,#1a73e8)}
+.va{font-weight:700;font-size:15px}.va.in{color:var(--ok)}
+.vbt{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 11px;font:inherit;font-size:13px;font-weight:700;color:#1a73e8}
+.vr.red .vbt{border-color:#f0a59d;color:#b3261e}
+.vseg{display:flex;gap:4px;background:rgba(0,0,0,.06);border-radius:10px;padding:3px}
+.vseg button{border:0;background:none;border-radius:8px;padding:5px 8px;font:inherit;font-size:13px;font-weight:600;color:var(--muted)}
+.vseg button[aria-pressed="true"]{background:#fff;color:var(--ink,#111);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.pvr.red .pvn b,.pvr.red .pvn small{color:#b3261e}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -1660,7 +1675,7 @@ function renderBudget(groups,sm){
   const frac=itot>0?Math.max(0,Math.min(1,(v==="planned"?t0.p:v==="spent"?t0.s:itot-t0.s)/itot)):0;
   const arcCol=v==="spent"?"var(--ok)":v==="remaining"?"var(--bar)":(round2(itot-t0.p)===0&&inc.length?"var(--ok)":"var(--bar)");
   const C=2*Math.PI*26;
-  if(COMBINED)h+=dateCardHTML(itot,t0);else{h+='<section class="card pinc"><div class="ring"><svg class="arc" viewBox="0 0 62 62"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--line)" stroke-width="7"/>'+(frac>0?'<circle cx="31" cy="31" r="26" fill="none" stroke="'+arcCol+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+(C*frac).toFixed(1)+' '+C.toFixed(1)+'"/>':'')+'</svg><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5h.01M17.5 14.5h.01"/></svg></div><div><small>'+sumLabel+'</small><b class="num'+(sumVal<0?" neg":"")+'"'+(sumVal<0?' style="color:var(--over)"':'')+'>'+money(sumVal)+'</b>'+(COMBINED?'<span class="pcap num">'+money(t0.s)+' spent of '+money(itot)+'</span>':'')+'</div>'+(COMBINED?'</section><section class="card ptiles">':'')+perDayHTML(sumVal)+avgDailyHTML(groups)+(COMBINED?todayTileHTML(itot,t0):upcomingHTML())+'</section>';}
+  if(COMBINED)h+=dateCardHTML(itot,t0)+venCardHTML();else{h+='<section class="card pinc"><div class="ring"><svg class="arc" viewBox="0 0 62 62"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--line)" stroke-width="7"/>'+(frac>0?'<circle cx="31" cy="31" r="26" fill="none" stroke="'+arcCol+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+(C*frac).toFixed(1)+' '+C.toFixed(1)+'"/>':'')+'</svg><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5h.01M17.5 14.5h.01"/></svg></div><div><small>'+sumLabel+'</small><b class="num'+(sumVal<0?" neg":"")+'"'+(sumVal<0?' style="color:var(--over)"':'')+'>'+money(sumVal)+'</b>'+(COMBINED?'<span class="pcap num">'+money(t0.s)+' spent of '+money(itot)+'</span>':'')+'</div>'+(COMBINED?'</section><section class="card ptiles">':'')+perDayHTML(sumVal)+avgDailyHTML(groups)+(COMBINED?todayTileHTML(itot,t0):upcomingHTML())+'</section>';}
   if(!COMBINED||inc.length>1){h+='<section class="card"><div class="chead"><h2>Income</h2><span class="lbl">'+(COMBINED?(inc.length>1?money(itot):""):v==="planned"?"Planned":v==="spent"?"Received":"Remaining")+'</span></div>';
   if(!inc.length)h+='<p class="note" style="margin:6px 0 0">Add your paychecks so you can see how much is left to budget.</p>';
   inc.forEach(x=>{const pl=+x.planned||0, rc=round2(rm[x.id]||0), left=round2(pl-rc);
@@ -1721,7 +1736,7 @@ function txDays(list,groups){
     const ref=t.type==="refund"||t.type==="income";
     const sw=!isHist(t);
     if(sw)h+='<div class="swr"><button class="swdel" data-del="'+esc(t.id)+'" tabindex="-1" aria-label="Delete '+esc(t.merchant||"Purchase")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>Delete</button>';
-    h+='<button class="txrow'+(S.flash===t.id?' flash':'')+'" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
+    h+='<button class="txrow'+(S.flash===t.id?' flash':'')+'" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(venmoPending(t,today())?(venLate(t,today())?' · <span style="color:var(--over)">check MSUFCU</span>':' · <span style="color:#a06a00">'+(vst(t)==="req"?"requested":"moving")+'</span>'):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
   });
   if(open)h+="</section>";
   return h;
@@ -3185,6 +3200,7 @@ function txSheet(existing){
         '<div class="msug" id="f-msug" role="listbox" aria-label="Past merchants" hidden></div>'+
         '<label class="trow" id="f-vrow"><span>Venmo</span><input type="checkbox" class="tchk" id="f-venmo"'+(venmo0?" checked":"")+'></label>'+
         '<label class="trow" id="f-prow"'+(venmo0?'':' hidden')+'><span id="f-plbl">'+(kind==="expense"?"Paid to":"From")+'</span><input class="tin" id="f-person" autocomplete="off" autocapitalize="words" enterkeyhint="done" list="f-pl" placeholder="Name" value="'+esc(existing&&existing.person||"")+'" aria-label="Person"><datalist id="f-pl">'+venmoPeople().map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist></label>'+
+        '<div class="trow" id="f-vsrow"'+(venmo0?'':' hidden')+'><span>Status</span><span class="vseg" id="f-vseg"><button type="button" data-vs="req">Requested</button><button type="button" data-vs="xfer">Moving</button><button type="button" data-vs="done">In MSUFCU</button></span></div>'+
         '<div class="trow lrow"><span>Location</span><input class="tin" id="f-loc" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-lsug" aria-expanded="false" placeholder="Business, city" value="'+esc(locText(existing&&existing.loc))+'">'+
           (LOC.ok()?'<button type="button" class="lgps" id="f-gps" aria-label="Use my current location">'+GPS_SVG+'</button>':'')+'</div>'+
         '<div class="msug lsug" id="f-lsug" role="listbox" aria-label="Location suggestions" hidden></div>'+
@@ -3420,7 +3436,10 @@ function txSheet(existing){
       syncKind();s.querySelector("#f-kind").addEventListener("click",()=>setTimeout(syncKind,0));
       // Venmo transactions get a person: who you paid, or who paid you
       const prow=s.querySelector("#f-prow"),venB=s.querySelector("#f-venmo"),plbl=s.querySelector("#f-plbl");
-      const syncPerson=()=>{prow.hidden=!venB.checked;plbl.textContent=kind==="expense"?"Paid to":"From"};
+      let vs=existing&&isVenmoTx(existing)?vst(existing):"xfer";const vsrow=s.querySelector("#f-vsrow");
+      const drawVs=()=>{if(kind==="expense"&&vs==="req")vs="xfer";vsrow.querySelector('[data-vs="req"]').hidden=kind==="expense";vsrow.querySelectorAll("[data-vs]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.vs===vs))};
+      vsrow.addEventListener("click",e=>{const b=e.target.closest("[data-vs]");if(!b)return;vs=b.dataset.vs;drawVs()});
+      const syncPerson=()=>{prow.hidden=!venB.checked;vsrow.hidden=!venB.checked;plbl.textContent=kind==="expense"?"Paid to":"From";drawVs()};drawVs();
       venB.addEventListener("change",()=>{syncPerson();if(venB.checked&&!s.querySelector("#f-person").value)setTimeout(()=>s.querySelector("#f-person").focus(),50)});
       s.querySelector("#f-kind").addEventListener("click",()=>setTimeout(syncPerson,0));
       s.querySelector("#f-person").addEventListener("focus",()=>showPad(false));
@@ -3438,6 +3457,9 @@ function txSheet(existing){
         if(!body.merchant.replace(VP,"").trim()){const nm=itemId===MISC_ID&&body.sub?body.sub:(body.itemName||"");if(nm)body.merchant=(s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?"Venmo: ":"")+nm}
         if(locNow)body.loc=locNow;
         {const who=s.querySelector("#f-person").value.trim();if(s.querySelector("#f-venmo").checked&&who)body.person=who}
+        if(isVenmoTx(body)){const was=existing&&isVenmoTx(existing)?vst(existing):null;body.vstate=vs;
+          if(existing&&existing.vpaid&&vs!=="req")body.vpaid=existing.vpaid;else if(vs==="xfer"&&was==="req")body.vpaid=today();
+          if(vs==="done")body.vdone=existing&&existing.vdone||today()}
         const rOn=!existing&&rb&&rb.checked&&body.type==="expense",rAmt=rOn?rVal():0;
         if(rOn&&!(rAmt>0)){toast("Enter how much you're getting back");ramt.focus();return}
         if(rOn&&rAmt>a+.004){toast("The amount back is more than the purchase");ramt.focus();return}
@@ -3553,7 +3575,36 @@ function scheduledPays(ym){
    "pending" (not yet in the MSUFCU balance) until 3 business days pass, unless marked: bankCleared true/false. */
 const isVenmoTx=t=>/^\s*venmo\s*:/i.test(t.merchant||"");
 function addBizDays(iso,n){const d=new Date(iso+"T12:00:00");while(n>0){d.setDate(d.getDate()+1);const w=d.getDay();if(w!==0&&w!==6)n--}return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
-function venmoPending(t,td){if(!isVenmoTx(t)||isHist(t)||t.date>td)return false;if(t.bankCleared===true)return false;if(t.bankCleared===false)return true;return td<addBizDays(t.date,3)}
+/* Venmo tracker. vstate: "req" (requested, waiting on the person) → "xfer" (moving, up to 3 business days) → "done" (checked off as in MSUFCU).
+   Nothing clears on its own: past the window it turns red until it's checked off. Venmo older than VEN_START counts as done. */
+const VEN_START="2026-10-24",VEN={list:[],unsub:null};
+function vst(t){if(t.vstate==="req"||t.vstate==="xfer"||t.vstate==="done")return t.vstate;if(t.bankCleared===true)return "done";if(t.date<VEN_START)return "done";return "xfer"}
+const venIn=t=>t.type==="refund"||t.type==="income";
+function addDaysISO(iso,n){const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+const venStart=t=>t.vpaid||t.date,venDue=t=>vst(t)==="req"?addDaysISO(t.date,7):addBizDays(venStart(t),3),venLate=(t,td)=>td>venDue(t);
+function venmoPending(t,td){return isVenmoTx(t)&&!isHist(t)&&t.date<=td&&vst(t)!=="done"}
+function venWatch(){if(VEN.unsub||!S.db)return;const from=addDaysISO(today(),-75);
+  VEN.unsub=S.db.collection("tx").where("date",">=",from).limit(1000).onSnapshot(snap=>{VEN.list=snap.docs.map(x=>Object.assign({id:x.id},x.data())).filter(isVenmoTx);render()},()=>{})}
+function venAll(){const m=new Map();VEN.list.forEach(t=>m.set(t.id,t));S.tx.forEach(t=>{if(isVenmoTx(t)&&!isHist(t))m.set(t.id,t)});return [...m.values()]}
+async function venSet(id,state){const td=today(),src=venAll().find(x=>x.id===id);if(!src)return;const patch={vstate:state};
+  if(state==="xfer"&&vst(src)==="req")patch.vpaid=td;if(state==="done")patch.vdone=td;
+  [S.tx,VEN.list].forEach(a=>a.forEach(x=>{if(x.id===id)Object.assign(x,patch)}));try{haptic()}catch(_){}render();
+  try{await S.db.doc("tx/"+id).update(patch)}catch(_){toast("Couldn't save that. Check your connection.")}}
+const daysAgo=d=>{const n=Math.round((new Date(today()+"T12:00:00")-new Date(d+"T12:00:00"))/864e5);return n<=0?"today":n===1?"yesterday":n+" days ago"};
+const venD=d=>MONTHS[+d.slice(5,7)-1].slice(0,3)+" "+(+d.slice(8,10));
+function venCap(t,td){const st=vst(t),inn=venIn(t),late=venLate(t,td),who=t.person||String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"");
+  if(st==="req")return "Requested "+venD(t.date)+" · "+(late?daysAgo(t.date)+", follow up":daysAgo(t.date));
+  if(late)return (inn?"Should have landed":"Should have left MSUFCU")+" by "+venD(venDue(t));
+  return (inn?"Paid ":"Sent ")+venD(venStart(t))+" · "+(inn?"lands":"leaves")+" by "+venD(venDue(t))}
+function venCardHTML(){const td=today(),open=venAll().filter(t=>venmoPending(t,td));if(!open.length)return "";
+  const late=open.filter(t=>venLate(t,td)),req=open.filter(t=>!venLate(t,td)&&vst(t)==="req"),xf=open.filter(t=>!venLate(t,td)&&vst(t)==="xfer");
+  const by=(a,b)=>a.date.localeCompare(b.date),net=round2(open.reduce((a,t)=>a+(venIn(t)?1:-1)*(+t.amount||0),0));
+  const row=(t,red)=>{const st=vst(t),inn=venIn(t),nm=t.person||String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"")||"Venmo";
+    return '<div class="vr'+(red?' red':'')+'"><div class="vn"><b>'+esc(nm)+'</b><small>'+esc(venCap(t,td))+'</small>'+(red?'':'<span class="vdots"><i class="on"></i><i'+(st==="xfer"?' class="on"':'')+'></i><i></i></span>')+'</div>'+
+      '<span class="num va'+(inn?' in':'')+'">'+(inn?"+":"−")+money(+t.amount||0)+'</span><button type="button" class="vbt" data-vact="'+(st==="req"?"xfer":"done")+'" data-vid="'+esc(t.id)+'">'+(st==="req"?"They paid":"In MSUFCU")+'</button></div>'};
+  const sec=(lbl,list,red)=>list.length?'<div class="vsec'+(red?' red':'')+'">'+lbl+' · '+list.length+'</div>'+list.sort(by).map(t=>row(t,red)).join(""):"";
+  return '<section class="card vcard"><div class="vhd"><b>Venmo</b><span>'+open.length+' open · <span class="num" style="color:'+(net>=0?'var(--ok)':'inherit')+'">'+(net>=0?"+":"−")+money(Math.abs(net))+'</span> net</span></div>'+
+    sec("Needs a check",late,true)+sec("Waiting on payment",req)+sec("Transferring",xf)+'</section>'}
 function plannedSheet(){
   const ym=S.ym,[y,m]=ym.split("-").map(Number),prev=ymAdd(ym,-1),inc=JSON.parse(JSON.stringify(incomeFor(ym)));
   const x=inc[0]||{id:uid(),name:"Planned",planned:0},total0=round2(incomeTotal(inc)),pt=x.parts||null,saved=partsPays(pt),sched=saved&&saved.length?null:scheduledPays(ym);
@@ -3576,8 +3627,8 @@ function plannedSheet(){
     const setF=(f,v)=>{if(f!=="tot"&&f!=="bank")totOverride=null;if(f==="carry")V.carry=v;else if(f==="adj")V.adj=v;else if(f==="bank")V.bankAmt=v;else if(f==="tot"){totOverride=null;V.adj=round2(v-sum())}else V.pays[+f.slice(1)].amt=v};
     const spentSoFar=()=>ym>ymOf(td)?0:round2(S.tx.filter(t=>ym===S.ym&&t.date<=td&&!venmoPending(t,td)).reduce((a,t)=>a+sAmt(t),0));
     /* Venmo can sit in any month (e.g. Oct 31 Venmo while looking at November), so pull the last 2 weeks straight from the database. */
-    let VL=S.tx.filter(isVenmoTx);
-    const venRecent=()=>{const m=new Map();VL.forEach(t=>m.set(t.id,t));S.tx.forEach(t=>{if(isVenmoTx(t))m.set(t.id,t)});return [...m.values()].filter(t=>!isHist(t)&&t.date<=td&&(venmoPending(t,td)||td<addBizDays(t.date,7))).sort((a,b)=>b.date.localeCompare(a.date))};
+    let VL=[];
+    const venRecent=()=>{const m=new Map();VL.forEach(t=>m.set(t.id,t));venAll().forEach(t=>m.set(t.id,t));return [...m.values()].filter(t=>!isHist(t)&&t.date<=td&&(venmoPending(t,td)||td<addDaysISO(t.vdone||t.date,7))).sort((a,b)=>b.date.localeCompare(a.date))};
     /* pending Venmo from other months is already baked into the carryover, so add it back (the bank hasn't moved yet) */
     const venOther=()=>round2(venRecent().filter(t=>venmoPending(t,td)&&!(ym===S.ym&&ymOf(t.date)===ym&&ym<=ymOf(td))).reduce((a,t)=>a+sAmt(t),0));
     (async()=>{try{if(!S.db)return;const d=new Date(td+"T12:00:00");d.setDate(d.getDate()-14);const from=d.toISOString().slice(0,10);
@@ -3585,10 +3636,9 @@ function plannedSheet(){
     const drawVen=()=>{const all=venRecent(),pend=all.filter(t=>venmoPending(t,td)),amt=round2(pend.reduce((a,t)=>a+(t.type==="expense"||!t.type?1:-1)*(+t.amount||0),0)),btn=sh.querySelector("#pl-ven"),lst=sh.querySelector("#pl-venl");
       if(!all.length){btn.hidden=true;lst.hidden=true;return}btn.hidden=false;
       btn.innerHTML='<span>'+(pend.length?'Venmo pending <b class="num">'+(amt<0?"+":"")+money(Math.abs(amt))+'</b> · '+pend.length:'Recent Venmo all in MSUFCU ✓')+'</span>'+CHEV;btn.classList.toggle("ok",!pend.length);
-      lst.innerHTML=all.map(t=>{const p=venmoPending(t,td),back=t.type==="refund"||t.type==="income";return '<div class="pvr"><span class="pvn"><b>'+esc(String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"Venmo · "))+'</b><small>'+fmtD(t.date)+(p?' · lands by '+fmtD(addBizDays(t.date,3)):'')+'</small></span><span class="num pva"'+(back?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</span><button type="button" class="pvt'+(p?"":" in")+'" data-vc="'+esc(t.id)+'">'+(p?"Pending":"In MSUFCU ✓")+'</button></div>'}).join("")};
+      lst.innerHTML=all.map(t=>{const p=venmoPending(t,td),back=t.type==="refund"||t.type==="income",red=p&&venLate(t,td);return '<div class="pvr'+(red?' red':'')+'"><span class="pvn"><b>'+esc(String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"Venmo · "))+'</b><small>'+(p?esc(venCap(t,td)):fmtD(t.date))+'</small></span><span class="num pva"'+(back?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</span><button type="button" class="pvt'+(p?"":" in")+'" data-vc="'+esc(t.id)+'">'+(p?(vst(t)==="req"?"Requested":"Pending"):"In MSUFCU ✓")+'</button></div>'}).join("")};
     sh.addEventListener("click",async e=>{if(e.target.closest("#pl-ven")){const l=sh.querySelector("#pl-venl");l.hidden=!l.hidden;sh.querySelector("#pl-ven").classList.toggle("open",!l.hidden);return}
-      const b=e.target.closest("[data-vc]");if(!b)return;const t=venRecent().find(x=>x.id===b.dataset.vc);if(!t)return;const nv=venmoPending(t,td);t.bankCleared=nv;[S.tx,VL].forEach(a=>a.forEach(x=>{if(x.id===t.id)x.bankCleared=nv}));try{haptic()}catch(_){}
-      refresh();try{await S.db.doc("tx/"+t.id).update({bankCleared:nv})}catch(_){toast("Couldn't save that. Check your connection.")}});
+      const b=e.target.closest("[data-vc]");if(!b)return;const t=venRecent().find(x=>x.id===b.dataset.vc);if(!t)return;const nv=venmoPending(t,td)?"done":"xfer";VL.forEach(x=>{if(x.id===t.id)x.vstate=nv});await venSet(t.id,nv);refresh()});
     const refresh=()=>{drawVen();sh.querySelectorAll("[data-f]").forEach(b=>{const v=getF(b.dataset.f);b.innerHTML=v==null||(!v&&b.dataset.f!=="tot")?'<span class="ph">$0.00</span>':money(v)});
       sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total";
       const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar()+venOther());
@@ -3714,6 +3764,7 @@ $("#main").addEventListener("click",e=>{
   const pv=e.target.closest("[data-plan],[data-iplan]");if(pv){if(pv.dataset.iplan&&COMBINED&&pv.closest(".eqcard")){plannedSheet();return}pv.dataset.plan?padOpen("item",pv.dataset.plan):padOpen("income",pv.dataset.iplan);return}
   if(COMBINED&&e.target.closest(".eqcard #addIncome")){plannedSheet();return}
   if(e.target.closest("[data-plannext]")){planNextSheet();return}
+  {const vb=e.target.closest("[data-vact]");if(vb){venSet(vb.dataset.vid,vb.dataset.vact);return}}
   const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#exportCsv,#syncAll");if(!t)return;
   if(t.dataset.income)incomeSheet(t.dataset.income);
   else if(t.id==="addIncome")incomeSheet(null);
@@ -3739,7 +3790,7 @@ async function syncAll(btn){
 /* ---------- data ---------- */
 let histUnsub=null;
 function subscribeTx(){
-  if(!S.db)return;txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;S.txLoaded=false;S.tx=[];
+  if(!S.db)return;venWatch();txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;S.txLoaded=false;S.tx=[];
   const ym=S.ym;let live=[],past=[],gotLive=false,gotPast=ym>=HIST_BEFORE;
   const merge=()=>{if(ym!==S.ym)return;S.tx=live.concat(past);S.txLoaded=gotLive&&gotPast;render();if(S.txLoaded)setTimeout(reconcileSheet,800)};
   txUnsub=S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).onSnapshot(snap=>{
