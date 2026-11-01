@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Nov 1, 2:05 AM"</script>
+<script>window.PB_BUILD="Nov 1, 2:20 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3952,35 +3952,37 @@ async function refreshNow(){
   const rubber=d=>{const dim=Math.max(420,innerHeight*.95);return(1-1/(d*.75/dim+1))*dim};
   /* BOUNCE: cards fan apart while you pull, then ricochet back with a few overshoots, staggered card by card.
      Fast flings into the top or bottom ricochet too. Turn it down with BOUNCE.amp / BOUNCE.spread / BOUNCE.ms. */
-  const BOUNCE={amp:1,spread:.11,ms:720,stagger:28,fling:130};
+  const BOUNCE={amp:1,spread:.11,ms:800,stagger:22,maxV:3.2};
   const cardEls=()=>[...main.children].filter(c=>c.offsetHeight>20).slice(0,14);
   function spread(p){const cs=cardEls(),n=cs.length;cs.forEach((c,i)=>{const k=p>0?i:(n-1-i),o=p*BOUNCE.spread*k;c.style.transform=o?"translate3d(0,"+o.toFixed(2)+"px,0)":""})}
   const promote=on=>{main.style.willChange=on?"transform":"";cardEls().forEach(c=>c.style.willChange=on?"transform":"")};
   let animEnd=0;
-  /* Smooth curves, sampled into keyframes (linear between samples) so speed never jumps.
-     settleC: glides home from where you let go with one soft dip past it, no wobble.
-     bumpC: for flings, rises and eases back once (no spring). */
-  const settleC=t=>Math.exp(-5.2*t)*Math.cos(Math.PI*1.15*t)*(1-t*t*t);
-  const bumpC=t=>{const u=t/.2;return u*Math.exp(1-u)*(1-t*t*t)};
-  const frames=(fn,scale,N)=>{const f=[];for(let i=0;i<=N;i++){const t=i/N;f.push({transform:"translate3d(0,"+(fn(t)*scale).toFixed(2)+"px,0)",offset:t})}f[N].transform="translate3d(0,0,0)";return f};
-  function ricochet(from,kick){ /* from: where the page sits when you let go; kick: launch size for flings */
+  /* Physics, no spring wobble (critically damped):
+     release: glides home from where you let go, y = p(1+wt)e^(-wt)
+     fling:   keeps the speed it hit the edge with, coasts out and eases back, y = v t e^(-wt)
+     Sampled once per frame into keyframes so there are no jumps. */
+  const W=1/105;
+  const curveRel=(p,t)=>p*(1+W*t)*Math.exp(-W*t);
+  const curveFling=(v,t)=>v*t*Math.exp(-W*t);
+  const framesOf=(fn,ms,scale)=>{const N=Math.max(8,Math.round(ms/16.7)),f=[];for(let i=0;i<=N;i++){const t=i/N*ms;f.push({transform:"translate3d(0,"+(fn(t)*scale).toFixed(2)+"px,0)",offset:i/N})}f[N].transform="translate3d(0,0,0)";return f};
+  function ricochet(from,vel0){ /* from: page offset at release (px); vel0: edge-hit speed for flings (px/ms) */
     clearTimeout(settleT);if(raf){cancelAnimationFrame(raf);raf=0}
-    main.style.transition="";const a=BOUNCE.amp,ms=BOUNCE.ms,fn=kick?bumpC:settleC,size=kick?kick*a:from;
-    main.style.transform="";main.animate(frames(fn,size,30),{duration:ms,easing:"linear"});
-    const cs=cardEls(),n=cs.length,dir=Math.sign(size)||1;
-    promote(true);
-    cs.forEach((c,i)=>{const k=dir>0?i:(n-1-i),o=size*BOUNCE.spread*k;c.style.transform="";if(Math.abs(o)<.5)return;
-      c.animate(frames(fn,o,24),{duration:ms,delay:k*BOUNCE.stagger,easing:"linear",fill:"backwards"})});
+    main.style.transition="";const a=BOUNCE.amp,ms=BOUNCE.ms;
+    const fn=vel0?(t=>curveFling(vel0*a,t)):(t=>curveRel(from,t)),dir=Math.sign(vel0||from)||1;
+    promote(true);main.style.transform="";main.animate(framesOf(fn,ms,1),{duration:ms,easing:"linear"});
+    const cs=cardEls(),n=cs.length;
+    cs.forEach((c,i)=>{const k=dir>0?i:(n-1-i);c.style.transform="";if(!k)return;
+      c.animate(framesOf(fn,ms,BOUNCE.spread*k),{duration:ms,delay:k*BOUNCE.stagger,easing:"linear",fill:"backwards"})});
     animEnd=performance.now()+ms+n*BOUNCE.stagger;
     pull=0;el.style.transition="opacity 260ms ease";el.style.opacity="0";el.style.transform="";
     settleT=setTimeout(()=>{promote(false);el.style.transition=""},ms+n*BOUNCE.stagger+60)}
   /* fling into an edge: measure scroll speed; if it slams into the top/bottom, ricochet */
   let touching=false,ly=window.scrollY,lt=performance.now(),vel=0,lastRic=0;
-  addEventListener("touchstart",()=>{touching=true},{passive:true});addEventListener("touchend",()=>{touching=false},{passive:true});
-  addEventListener("scroll",()=>{const now=performance.now(),y=window.scrollY,dt=Math.max(1,now-lt);vel=vel*.4+((y-ly)/dt)*.6;ly=y;lt=now;
-    if(touching||mode||busy||now<animEnd+150||now-lastRic<900||$("#sheetRoot").firstChild)return;
-    const top=y<=0&&vel<-.45,bot=atBottom()&&vel>.45&&y>0;if(!top&&!bot)return;
-    lastRic=now;const k=Math.min(BOUNCE.fling,Math.abs(vel)*55)*(top?1:-1);ricochet(0,k)},{passive:true});
+  addEventListener("touchstart",()=>{touching=true},{passive:true});addEventListener("touchend",()=>{touching=false;lt=performance.now();ly=window.scrollY},{passive:true});
+  addEventListener("scroll",()=>{const now=performance.now(),y=window.scrollY,dt=now-lt;if(dt>0&&dt<100){const v=(y-ly)/dt;if(Math.abs(v)>Math.abs(vel)*.5||Math.sign(v)!==Math.sign(vel))vel=vel*.3+v*.7}else vel=0;ly=y;lt=now;
+    if(touching||mode||busy||now<animEnd+120||now-lastRic<900||$("#sheetRoot").firstChild)return;
+    const top=y<=0&&vel<-.35,bot=y>0&&atBottom()&&vel>.35;if(!top&&!bot)return;
+    lastRic=now;const v=Math.min(BOUNCE.maxV,Math.abs(vel))*(top?1:-1);vel=0;ricochet(0,v)},{passive:true});
   const atTop=()=>window.scrollY<=0;
   const atBottom=()=>window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
   const blocked=t=>PAD||$("#sheetRoot").firstChild||document.querySelector(".pbx-scrim,.pbx-gate,.cel,.alrt")||(t.closest&&t.closest("input,textarea,select,.pscrub,svg.di,.imap,.mlzs"));
