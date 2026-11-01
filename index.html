@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 8:30 PM"</script>
+<script>window.PB_BUILD="Oct 31, 8:45 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -318,6 +318,15 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .pldiff{font-size:14px;font-weight:600;margin:2px 0 8px}.pldiff.ok{color:var(--ok)}.pldiff.bad{color:var(--over)}
 .plfix{display:block;width:100%;margin:0 0 8px;border:0;border-radius:12px;padding:9px;background:var(--card);color:var(--link);font:inherit;font-weight:700}
 .plbadge{display:inline-block;margin:-4px 0 8px;padding:3px 10px;border-radius:999px;background:#e6f4ea;color:#188038;font-size:13px;font-weight:700}
+.plv{min-width:150px;text-align:right;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--bg);font:inherit;font-size:17px;font-weight:600;color:var(--fg);font-variant-numeric:tabular-nums;transition:border-color .2s,box-shadow .2s}
+.plv .ph{color:var(--muted);font-weight:500}
+.plv.on{border-color:var(--link);box-shadow:0 0 0 3px var(--sel)}
+.pltot .plv{font-size:20px;font-weight:800;color:var(--link)}
+.plbk .plv,.plbal .plv{background:var(--card)}
+.plpad{position:sticky;bottom:calc(-22px - env(safe-area-inset-bottom,0px));margin:14px -20px calc(-22px - env(safe-area-inset-bottom,0px));padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--card);border-radius:22px 22px 0 0;box-shadow:0 -6px 22px rgba(5,20,12,.10);z-index:3}
+.plpad .keys{gap:6px}.plpad .key{height:48px}
+.plpad .padfoot{gap:10px;margin-top:10px}.plpad .tgl{flex:none;min-width:0}.plpad .tgl b{font-size:15px}.plpad .padEq{flex:0 0 56px;position:static}
+.plpad .texpr{min-height:18px;text-align:right;font-size:13px;color:var(--muted);margin:0 4px 6px}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -3535,45 +3544,62 @@ function plannedSheet(){
   const ym=S.ym,[y,m]=ym.split("-").map(Number),prev=ymAdd(ym,-1),inc=JSON.parse(JSON.stringify(incomeFor(ym)));
   const x=inc[0]||{id:uid(),name:"Planned",planned:0},total0=round2(incomeTotal(inc)),pt=x.parts||null,saved=partsPays(pt),sched=saved&&saved.length?null:scheduledPays(ym);
   const V={carry:pt?+pt.carry||0:0,adj:pt?+pt.adj||0:0,pays:saved&&saved.length?saved:(sched||[{d:"",amt:0},{d:"",amt:0}]),bank:pt&&pt.bank||null};
-  const fresh=!pt&&!sched;
-  const f2=v=>(Math.round(v*100)/100).toFixed(2),td=today(),fmtD=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
-  const fld=(k,l,sub)=>'<div class="plf"><label for="pl-'+k+'">'+l+(sub?'<small>'+sub+'</small>':'')+'</label><div class="plin"><span>$</span><input id="pl-'+k+'" inputmode="decimal" data-k="'+k+'" value="'+(V[k]?f2(V[k]):"")+'" placeholder="0.00"></div></div>';
-  const payRow=(p,i)=>'<div class="plf" data-pi="'+i+'"><label for="pl-p'+i+'">Paycheck '+(i+1)+'<small><span class="plds"><span class="pldt" data-dt="'+i+'"></span><input type="date" class="pld" data-pd="'+i+'" value="'+esc(p.d)+'" aria-label="Paycheck '+(i+1)+' date"></span></small></label><div class="plin"><span>$</span><input id="pl-p'+i+'" inputmode="decimal" data-pa="'+i+'" value="'+(p.amt?f2(p.amt):"")+'" placeholder="0.00"></div></div>';
+  V.bankAmt=V.bank&&V.bank.amt!=null?+V.bank.amt:null;
+  const fresh=!pt&&!sched;let totOverride=fresh&&total0?total0:null;
+  const td=today(),fmtD=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
+  const vb=(f,l,sub,cls)=>'<div class="plf'+(cls?" "+cls:"")+'"><label>'+l+(sub?'<small>'+sub+'</small>':'')+'</label><button type="button" class="plv num" data-f="'+f+'"></button></div>';
+  const payRow=(p,i)=>vb("p"+i,"Paycheck "+(i+1),'<span class="plds"><span class="pldt" data-dt="'+i+'"></span><input type="date" class="pld" data-pd="'+i+'" value="'+esc(p.d)+'" aria-label="Paycheck '+(i+1)+' date"></span>');
   openSheet('<h3>Planned for '+MONTHS[m-1]+'</h3>'+(V.pays.length>=3?'<p class="plbadge">3 paychecks this month</p>':'')+(sched?'<p class="note" style="margin:-4px 0 6px">Paydays filled in from your every-2-weeks schedule.</p>':'')+
-    fld("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+'<div id="pl-pays">'+V.pays.map(payRow).join("")+'</div>'+
-    '<div class="plf pladj"><label for="pl-adj">Adjustment<small id="pl-adjn">difference to reach your total</small></label><div class="plin"><span>$</span><input id="pl-adj" inputmode="decimal" data-k="adj" value="'+(V.adj?f2(V.adj):"")+'" placeholder="0.00"></div></div>'+
-    '<div class="plf pltot"><label for="pl-tot">Planned total</label><div class="plin"><span>$</span><input id="pl-tot" inputmode="decimal" value=""></div></div>'+(fresh&&total0?'<p class="note" style="margin:8px 0 0">Your current total is '+money(total0)+'. Enter your carryover and paychecks to build it up.</p>':'')+
+    vb("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+V.pays.map(payRow).join("")+
+    vb("adj","Adjustment",'<span id="pl-adjn">difference to reach your total</span>',"pladj")+vb("tot","Planned total","","pltot")+
+    (fresh&&total0?'<p class="note" style="margin:8px 0 0">Your current total is '+money(total0)+'. Enter your carryover and paychecks to build it up.</p>':'')+
     '<div class="plbal"><h4>Check against MSUFCU</h4><div class="plrow"><span>Should be in your account today</span><b class="num" id="pl-exp"></b></div><div class="plnote" id="pl-expn"></div>'+
-    '<div class="plf" style="border-bottom:0"><label for="pl-bank">MSUFCU balance<small id="pl-bankat">from your MSUFCU app</small></label><div class="plin"><span>$</span><input id="pl-bank" inputmode="decimal" placeholder="0.00" value="'+(V.bank&&V.bank.amt!=null?f2(V.bank.amt):"")+'"></div></div>'+
+    vb("bank","MSUFCU balance",'<span id="pl-bankat">from your MSUFCU app</span>',"plbk")+
     '<div class="pldiff" id="pl-diff" hidden></div><button class="plfix" id="pl-fix" hidden></button></div>'+
-    '<div class="btnrow" style="margin-top:16px"><button class="btn sec" id="pl-x">Cancel</button><button class="btn" id="pl-ok">Save</button></div>',
-  sh=>{const num=el=>{const v=parseFloat(String(el.value).replace(/[^0-9.\-]/g,""));return isNaN(v)?0:v},tot=sh.querySelector("#pl-tot"),adj=sh.querySelector("#pl-adj");
-    const sum=()=>round2(V.carry+V.pays.reduce((a,p)=>a+(+p.amt||0),0));
-    const paint=()=>{sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total"};
+    '<div class="btnrow" style="margin-top:16px"><button class="btn sec" id="pl-x">Cancel</button><button class="btn" id="pl-ok">Save</button></div><div class="plpad" id="pl-pad" hidden></div>',
+  sh=>{const sum=()=>round2(V.carry+V.pays.reduce((a,p)=>a+(+p.amt||0),0)),total=()=>totOverride!=null?totOverride:round2(sum()+V.adj);
+    const getF=f=>f==="carry"?V.carry:f==="adj"?V.adj:f==="tot"?total():f==="bank"?V.bankAmt:V.pays[+f.slice(1)].amt;
+    const setF=(f,v)=>{if(f!=="tot"&&f!=="bank")totOverride=null;if(f==="carry")V.carry=v;else if(f==="adj")V.adj=v;else if(f==="bank")V.bankAmt=v;else if(f==="tot"){totOverride=null;V.adj=round2(v-sum())}else V.pays[+f.slice(1)].amt=v};
     const spentSoFar=()=>ym>ymOf(td)?0:round2(S.tx.filter(t=>ym===S.ym&&t.date<=td).reduce((a,t)=>a+sAmt(t),0));
-    const bal=()=>{const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td);
-      const exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar());sh.querySelector("#pl-exp").textContent=money(exp);
+    const refresh=()=>{sh.querySelectorAll("[data-f]").forEach(b=>{const v=getF(b.dataset.f);b.innerHTML=v==null||(!v&&b.dataset.f!=="tot")?'<span class="ph">$0.00</span>':money(v)});
+      sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total";
+      const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar());
+      sh.querySelector("#pl-exp").textContent=money(exp);
       sh.querySelector("#pl-expn").textContent=[V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):"");
       sh.querySelectorAll("[data-dt]").forEach(el=>{const d=V.pays[+el.dataset.dt].d;el.textContent=d?(d<=td?"received "+fmtD(d):"coming "+fmtD(d)):"add date"});
-      const bi=sh.querySelector("#pl-bank"),dv=sh.querySelector("#pl-diff"),fx=sh.querySelector("#pl-fix");if(bi.value===""){dv.hidden=true;fx.hidden=true;return}
-      const diff=round2(num(bi)-exp);dv.hidden=false;
+      const dv=sh.querySelector("#pl-diff"),fx=sh.querySelector("#pl-fix");if(V.bankAmt==null){dv.hidden=true;fx.hidden=true;return}
+      const diff=round2(V.bankAmt-exp);dv.hidden=false;
       if(Math.abs(diff)<.005){dv.className="pldiff ok";dv.textContent="Matches. You're on track ✓";fx.hidden=true;return}
       dv.className="pldiff bad";dv.textContent="MSUFCU shows "+money(Math.abs(diff))+(diff>0?" more":" less")+" than expected";fx.hidden=false;fx.textContent=(diff>0?"Add ":"Subtract ")+money(Math.abs(diff))+(diff>0?" to":" from")+" adjustment";
-      fx.onclick=()=>{V.adj=round2(V.adj+diff);adj.value=V.adj?f2(V.adj):"";tot.value=f2(sum()+V.adj);paint();bal();try{haptic()}catch(_){}}};
-    tot.value=f2(fresh?total0:sum()+V.adj);
-    sh.querySelectorAll("input[data-k]").forEach(i=>i.addEventListener("input",()=>{V[i.dataset.k]=num(i);tot.value=f2(sum()+V.adj);paint();bal()}));
-    sh.querySelectorAll("input[data-pa]").forEach(i=>i.addEventListener("input",()=>{V.pays[+i.dataset.pa].amt=num(i);tot.value=f2(sum()+V.adj);bal()}));
-    sh.querySelectorAll(".pld").forEach(i=>i.addEventListener("change",()=>{V.pays[+i.dataset.pd].d=i.value;bal()}));
-    tot.addEventListener("input",()=>{V.adj=round2(num(tot)-sum());adj.value=V.adj?f2(V.adj):"";paint();bal()});
-    sh.querySelector("#pl-bank").addEventListener("input",bal);
-    sh.querySelectorAll("input:not([type=date])").forEach(i=>i.addEventListener("blur",()=>{if(i.value!=="")i.value=f2(num(i))}));
+      fx.onclick=()=>{setF("adj",round2(V.adj+diff));refresh();try{haptic()}catch(_){}}};
+    // in-sheet keypad: digits shift in from the right (moving decimal), optional calculator, ± for adjustment
+    const pad=sh.querySelector("#pl-pad");let act=null,T=null;
+    const raw=T=>{const cc=()=>T.cur===""?0:+T.cur;if(!T.ops.length)return T.cur===""?0:+T.cur;let acc=T.ops[0][0];for(let i=0;i<T.ops.length;i++){const nx=i+1<T.ops.length?T.ops[i+1][0]:(T.cur===""?null:cc());if(nx===null)break;acc=OPS[T.ops[i][1]](acc,nx)}return acc};
+    const val=()=>(T.neg?-1:1)*raw(T)/100;
+    const drawPad=()=>{const c=T.calc,sg=act==="adj";const keys=c?["1","2","3","÷","4","5","6","×","7","8","9","−","C","0","⌫","+"]:["1","2","3","4","5","6","7","8","9",sg?"±":"","0","⌫"];
+      const expr=c&&T.ops.length?T.ops.map(([v,o])=>money(v/100)+" "+o).join(" ")+(T.cur!==""?" "+money(+T.cur/100):""):"";
+      pad.innerHTML=(c?'<div class="texpr num">'+esc(expr)+'</div>':'')+'<div class="keys'+(c?" calc":"")+'">'+keys.map(k=>k?'<button type="button" class="key'+(OPS[k]?" op":"")+'" data-pk="'+k+'"'+(KEY_LABEL[k]?' aria-label="'+KEY_LABEL[k]+'"':'')+'>'+(k==="⌫"?BACK_SVG:k)+'</button>':'<span></span>').join("")+'</div>'+
+        '<div class="padfoot"><label class="tgl"><input type="checkbox" id="pl-calc" role="switch"'+(c?" checked":"")+'><span class="sw"></span><b>Calculator</b></label>'+(c?'<button type="button" class="btn sec padEq" data-pk="=" aria-label="Equals">=</button>':'')+'<button type="button" class="btn padDone" id="pl-done">Done</button></div>';
+      pad.querySelector("#pl-calc").onchange=e=>{T.calc=e.target.checked;ls.set("pb.calc",T.calc?"1":"0");drawPad()};pad.querySelector("#pl-done").onclick=closePad};
+    const openPad=f=>{act=f;const v=getF(f)||0;T={cur:v?String(Math.round(Math.abs(v)*100)):"",ops:[],fresh:true,calc:ls.get("pb.calc")==="1",neg:v<0};
+      sh.querySelectorAll("[data-f]").forEach(b=>b.classList.toggle("on",b.dataset.f===f));pad.hidden=false;drawPad();
+      const b=sh.querySelector('[data-f="'+f+'"]');requestAnimationFrame(()=>b.scrollIntoView({block:"center",behavior:"smooth"}))};
+    const closePad=()=>{if(act&&T&&T.ops.length){const v=val();T.ops=[];T.cur=String(Math.round(Math.abs(v)*100));T.neg=v<0;setF(act,round2(v));refresh()}act=null;pad.hidden=true;sh.querySelectorAll("[data-f]").forEach(b=>b.classList.remove("on"))};
+    pad.addEventListener("click",e=>{const b=e.target.closest("[data-pk]");if(!b||!act)return;const k=b.dataset.pk;
+      if(k==="±"){T.neg=!T.neg;T.fresh=false}
+      else if(k==="="){const v=raw(T);T.ops=[];T.cur=v?String(Math.abs(v)):"";if(v<0)T.neg=!T.neg;T.fresh=false}
+      else tKey(T,k);
+      try{haptic()}catch(_){}
+      if(act==="bank"&&T.cur===""&&!T.ops.length)setF("bank",null);else setF(act,round2(val()));refresh();drawPad()});
+    sh.addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(b){e.preventDefault();openPad(b.dataset.f)}});
+    sh.querySelectorAll(".pld").forEach(i=>i.addEventListener("change",()=>{V.pays[+i.dataset.pd].d=i.value;refresh()}));
     if(V.bank&&V.bank.at)sh.querySelector("#pl-bankat").textContent="last entered "+fmtD(V.bank.at);
-    paint();bal();
+    refresh();
     txForMonth(prev).then(list=>{const pi=incomeTotal(incomeFor(prev)),left=round2(pi-list.reduce((a,t)=>a+sAmt(t),0)),b=sh.querySelector("#pl-sug");if(!b||!(pi>0))return;
-      b.hidden=false;b.textContent="Use "+money(left);b.onclick=e=>{e.preventDefault();const c=sh.querySelector("#pl-carry");c.value=f2(left);V.carry=left;tot.value=f2(sum()+V.adj);bal();try{haptic()}catch(_){}}}).catch(()=>{});
+      b.hidden=false;b.textContent="Use "+money(left);b.onclick=e=>{e.preventDefault();e.stopPropagation();setF("carry",left);refresh();try{haptic()}catch(_){}}}).catch(()=>{});
     sh.querySelector("#pl-x").onclick=closeSheet;
-    sh.querySelector("#pl-ok").onclick=async()=>{const t=round2(sum()+V.adj),bi=sh.querySelector("#pl-bank");
-      const nx=Object.assign({},x,{name:x.name||"Planned",planned:t,parts:{carry:round2(V.carry),adj:round2(V.adj),pays:V.pays.map(p=>({d:p.d||"",amt:round2(+p.amt||0)})),bank:bi.value!==""?{amt:round2(num(bi)),at:today()}:(V.bank||null)}});
+    sh.querySelector("#pl-ok").onclick=async()=>{closePad();const t=total();
+      const nx=Object.assign({},x,{name:x.name||"Planned",planned:t,parts:{carry:round2(V.carry),adj:round2(totOverride!=null?round2(totOverride-sum()):V.adj),pays:V.pays.map(p=>({d:p.d||"",amt:round2(+p.amt||0)})),bank:V.bankAmt!=null?{amt:round2(V.bankAmt),at:(V.bank&&V.bank.amt===V.bankAmt&&V.bank.at)||today()}:null}});
       const newInc=[nx].concat(inc.slice(1).map(o=>Object.assign({},o,{planned:0})));
       if(await saveGroups(JSON.parse(JSON.stringify(groupsFor(ym))),newInc)){S.budgets[ym]=Object.assign({},S.budgets[ym]||{},{groups:groupsFor(ym),income:newInc});closeSheet();toast("Planned "+money(t));render()}};
   });
