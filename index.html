@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 9:45 AM"</script>
+<script>window.PB_BUILD="Nov 1, 9:55 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3050,7 +3050,7 @@ function shake(el){if(!el||matchMedia("(prefers-reduced-motion:reduce)").matches
    Cancels the moment the touch turns into a scroll or swipe. */
 (()=>{const M=$("#main");let card=null,x0=0,y0=0;
   const reset=()=>{if(!card)return;const c=card;card=null;if(!c._tilt)return;c._tilt=false;c.style.transition="transform .45s cubic-bezier(.3,.8,.3,1)";c.style.transform="";setTimeout(()=>{if(!c._tilt)c.style.transition=""},480)};
-  M.addEventListener("touchstart",e=>{reset();if(e.touches.length!==1)return;const c=e.target.closest("#main > .card");if(!c||c.closest(".peek")||matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+  M.addEventListener("touchstart",e=>{reset();if(e.touches.length!==1)return;const c=e.target.closest("#main > .card");if(!c||c.closest(".peek")||c.classList.contains("mlcard")||e.target.closest("select,input,textarea,.isel,.seg,.imap,.pscrub,svg.di")||matchMedia("(prefers-reduced-motion:reduce)").matches)return;
     const t=e.touches[0],r=c.getBoundingClientRect();x0=t.clientX;y0=t.clientY;card=c;
     const dx=((t.clientX-r.left)/r.width-.5)*2,dy=((t.clientY-r.top)/r.height-.5)*2,ang=Math.min(4,1600/Math.max(r.height,200));
     c._tilt=true;c.style.transition="transform .14s ease-out";c.style.transform="perspective(900px) rotateX("+(-dy*ang).toFixed(2)+"deg) rotateY("+(dx*ang*.8).toFixed(2)+"deg) scale(.985)"},{passive:true});
