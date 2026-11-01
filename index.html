@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 8:15 PM"</script>
+<script>window.PB_BUILD="Oct 31, 8:30 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -317,6 +317,7 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .plbal .plin{background:var(--card)}
 .pldiff{font-size:14px;font-weight:600;margin:2px 0 8px}.pldiff.ok{color:var(--ok)}.pldiff.bad{color:var(--over)}
 .plfix{display:block;width:100%;margin:0 0 8px;border:0;border-radius:12px;padding:9px;background:var(--card);color:var(--link);font:inherit;font-weight:700}
+.plbadge{display:inline-block;margin:-4px 0 8px;padding:3px 10px;border-radius:999px;background:#e6f4ea;color:#188038;font-size:13px;font-weight:700}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -3518,46 +3519,61 @@ function groupSheet(gid){
         c.querySelector("#cn").onclick=()=>c.innerHTML="";c.querySelector("#cy").onclick=async()=>{groups.splice(idx,1);if(await saveGroups(groups)){closeSheet();toast("Removed")}}};
     });
 }
-/* Planned breakdown: carryover + paycheck 1 + paycheck 2 + adjustment = planned total */
+/* Planned breakdown: carryover + paychecks + adjustment = planned total.
+   Paychecks repeat every 14 days: a month with no saved paychecks gets dates counted forward from the last known payday. */
+function ymAdd(ym,k){const [y,m]=ym.split("-").map(Number),d=new Date(y,m-1+k,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)}
+function partsPays(pt){if(!pt)return null;if(Array.isArray(pt.pays))return pt.pays.map(x=>({d:x.d||"",amt:+x.amt||0}));
+  const a=[];if(pt.p1||pt.d1)a.push({d:pt.d1||"",amt:+pt.p1||0});if(pt.p2||pt.d2)a.push({d:pt.d2||"",amt:+pt.p2||0});return a}
+function savedPays(ym){const b=S.budgets[ym],x=b&&Array.isArray(b.income)&&b.income[0];return x&&x.parts?partsPays(x.parts):null}
+function scheduledPays(ym){
+  // latest payday saved in an earlier month, then every 14 days
+  let last=null,amt=0;Object.keys(S.budgets).filter(k=>k<ym).sort().forEach(k=>{(savedPays(k)||[]).forEach(p=>{if(p.d&&(!last||p.d>last)){last=p.d;amt=p.amt}})});
+  if(!last)return null;const out=[];let d=new Date(last+"T12:00:00");
+  for(let n=0;n<80;n++){d.setDate(d.getDate()+14);const iso=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());if(iso.slice(0,7)>ym)break;if(iso.slice(0,7)===ym)out.push({d:iso,amt})}
+  return out.length?out:null}
 function plannedSheet(){
-  const ym=S.ym,[y,m]=ym.split("-").map(Number),pd=new Date(y,m-2,1),prev=pd.getFullYear()+"-"+pad(pd.getMonth()+1),inc=JSON.parse(JSON.stringify(incomeFor(ym)));
-  const x=inc[0]||{id:uid(),name:"Planned",planned:0},total0=round2(incomeTotal(inc)),pt=x.parts||{carry:0,p1:0,p2:0,adj:0};
-  const V={carry:+pt.carry||0,p1:+pt.p1||0,p2:+pt.p2||0,adj:+pt.adj||0,d1:pt.d1||"",d2:pt.d2||"",bank:pt.bank||null},fresh=!x.parts;
-  const f2=v=>(Math.round(v*100)/100).toFixed(2),fld=(k,l,sub)=>'<div class="plf"><label for="pl-'+k+'">'+l+(sub?'<small>'+sub+'</small>':'')+'</label><div class="plin"><span>$</span><input id="pl-'+k+'" inputmode="decimal" data-k="'+k+'" value="'+(V[k]?f2(V[k]):"")+'" placeholder="0.00"></div></div>';
-  openSheet('<h3>Planned for '+MONTHS[m-1]+'</h3>'+
-    fld("carry","Carryover",'from '+MONTHS[pd.getMonth()]+'<button class="plsug" id="pl-sug" hidden></button>')+fld("p1","Paycheck 1",'<span class="plds"><span class="pldt" data-dt="d1"></span><input type="date" class="pld" data-d="d1" value="'+esc(V.d1)+'" aria-label="Paycheck 1 date"></span>')+fld("p2","Paycheck 2",'<span class="plds"><span class="pldt" data-dt="d2"></span><input type="date" class="pld" data-d="d2" value="'+esc(V.d2)+'" aria-label="Paycheck 2 date"></span>')+
-    '<div class="plf pladj">'+'<label for="pl-adj">Adjustment<small id="pl-adjn">difference to reach your total</small></label><div class="plin"><span id="pl-adjs">$</span><input id="pl-adj" inputmode="decimal" data-k="adj" value="'+(V.adj?f2(V.adj):"")+'" placeholder="0.00"></div></div>'+
-    '<div class="plf pltot"><label for="pl-tot">Planned total</label><div class="plin"><span>$</span><input id="pl-tot" inputmode="decimal" value="'+f2(fresh?total0:V.carry+V.p1+V.p2+V.adj)+'"></div></div>'+(fresh&&total0?'<p class="note" style="margin:8px 0 0">Your current total is '+money(total0)+'. Enter your carryover and paychecks to build it up.</p>':'')+
+  const ym=S.ym,[y,m]=ym.split("-").map(Number),prev=ymAdd(ym,-1),inc=JSON.parse(JSON.stringify(incomeFor(ym)));
+  const x=inc[0]||{id:uid(),name:"Planned",planned:0},total0=round2(incomeTotal(inc)),pt=x.parts||null,saved=partsPays(pt),sched=saved&&saved.length?null:scheduledPays(ym);
+  const V={carry:pt?+pt.carry||0:0,adj:pt?+pt.adj||0:0,pays:saved&&saved.length?saved:(sched||[{d:"",amt:0},{d:"",amt:0}]),bank:pt&&pt.bank||null};
+  const fresh=!pt&&!sched;
+  const f2=v=>(Math.round(v*100)/100).toFixed(2),td=today(),fmtD=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
+  const fld=(k,l,sub)=>'<div class="plf"><label for="pl-'+k+'">'+l+(sub?'<small>'+sub+'</small>':'')+'</label><div class="plin"><span>$</span><input id="pl-'+k+'" inputmode="decimal" data-k="'+k+'" value="'+(V[k]?f2(V[k]):"")+'" placeholder="0.00"></div></div>';
+  const payRow=(p,i)=>'<div class="plf" data-pi="'+i+'"><label for="pl-p'+i+'">Paycheck '+(i+1)+'<small><span class="plds"><span class="pldt" data-dt="'+i+'"></span><input type="date" class="pld" data-pd="'+i+'" value="'+esc(p.d)+'" aria-label="Paycheck '+(i+1)+' date"></span></small></label><div class="plin"><span>$</span><input id="pl-p'+i+'" inputmode="decimal" data-pa="'+i+'" value="'+(p.amt?f2(p.amt):"")+'" placeholder="0.00"></div></div>';
+  openSheet('<h3>Planned for '+MONTHS[m-1]+'</h3>'+(V.pays.length>=3?'<p class="plbadge">3 paychecks this month</p>':'')+(sched?'<p class="note" style="margin:-4px 0 6px">Paydays filled in from your every-2-weeks schedule.</p>':'')+
+    fld("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+'<div id="pl-pays">'+V.pays.map(payRow).join("")+'</div>'+
+    '<div class="plf pladj"><label for="pl-adj">Adjustment<small id="pl-adjn">difference to reach your total</small></label><div class="plin"><span>$</span><input id="pl-adj" inputmode="decimal" data-k="adj" value="'+(V.adj?f2(V.adj):"")+'" placeholder="0.00"></div></div>'+
+    '<div class="plf pltot"><label for="pl-tot">Planned total</label><div class="plin"><span>$</span><input id="pl-tot" inputmode="decimal" value=""></div></div>'+(fresh&&total0?'<p class="note" style="margin:8px 0 0">Your current total is '+money(total0)+'. Enter your carryover and paychecks to build it up.</p>':'')+
     '<div class="plbal"><h4>Check against MSUFCU</h4><div class="plrow"><span>Should be in your account today</span><b class="num" id="pl-exp"></b></div><div class="plnote" id="pl-expn"></div>'+
     '<div class="plf" style="border-bottom:0"><label for="pl-bank">MSUFCU balance<small id="pl-bankat">from your MSUFCU app</small></label><div class="plin"><span>$</span><input id="pl-bank" inputmode="decimal" placeholder="0.00" value="'+(V.bank&&V.bank.amt!=null?f2(V.bank.amt):"")+'"></div></div>'+
     '<div class="pldiff" id="pl-diff" hidden></div><button class="plfix" id="pl-fix" hidden></button></div>'+
     '<div class="btnrow" style="margin-top:16px"><button class="btn sec" id="pl-x">Cancel</button><button class="btn" id="pl-ok">Save</button></div>',
   sh=>{const num=el=>{const v=parseFloat(String(el.value).replace(/[^0-9.\-]/g,""));return isNaN(v)?0:v},tot=sh.querySelector("#pl-tot"),adj=sh.querySelector("#pl-adj");
-    const sum=()=>round2(V.carry+V.p1+V.p2),paint=()=>{sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total"};
-    sh.querySelectorAll("input[data-k]").forEach(i=>i.addEventListener("input",()=>{V[i.dataset.k]=num(i);tot.value=f2(sum()+V.adj);paint()}));
-    tot.addEventListener("input",()=>{V.adj=round2(num(tot)-sum());adj.value=V.adj?f2(V.adj):"";paint();bal()});
-    const td=today(),fmtD=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
+    const sum=()=>round2(V.carry+V.pays.reduce((a,p)=>a+(+p.amt||0),0));
+    const paint=()=>{sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total"};
     const spentSoFar=()=>ym>ymOf(td)?0:round2(S.tx.filter(t=>ym===S.ym&&t.date<=td).reduce((a,t)=>a+sAmt(t),0));
-    const bal=()=>{const got=[["p1","d1"],["p2","d2"]].filter(([k,d])=>V[k]&&(!V[d]||V[d]<=td)),pend=[["p1","d1"],["p2","d2"]].filter(([k,d])=>V[k]&&V[d]&&V[d]>td);
-      const exp=round2(V.carry+got.reduce((a,[k])=>a+V[k],0)+V.adj-spentSoFar());sh.querySelector("#pl-exp").textContent=money(exp);
-      sh.querySelector("#pl-expn").textContent=[V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(pend.length?" · "+pend.map(([k,d])=>money(V[k])+" coming "+fmtD(V[d])).join(", "):"");
-      sh.querySelectorAll("[data-dt]").forEach(el=>{const d=V[el.dataset.dt];el.textContent=d?(d<=td?"received "+fmtD(d):"coming "+fmtD(d)):"add date"});
+    const bal=()=>{const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td);
+      const exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar());sh.querySelector("#pl-exp").textContent=money(exp);
+      sh.querySelector("#pl-expn").textContent=[V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):"");
+      sh.querySelectorAll("[data-dt]").forEach(el=>{const d=V.pays[+el.dataset.dt].d;el.textContent=d?(d<=td?"received "+fmtD(d):"coming "+fmtD(d)):"add date"});
       const bi=sh.querySelector("#pl-bank"),dv=sh.querySelector("#pl-diff"),fx=sh.querySelector("#pl-fix");if(bi.value===""){dv.hidden=true;fx.hidden=true;return}
       const diff=round2(num(bi)-exp);dv.hidden=false;
       if(Math.abs(diff)<.005){dv.className="pldiff ok";dv.textContent="Matches. You're on track ✓";fx.hidden=true;return}
       dv.className="pldiff bad";dv.textContent="MSUFCU shows "+money(Math.abs(diff))+(diff>0?" more":" less")+" than expected";fx.hidden=false;fx.textContent=(diff>0?"Add ":"Subtract ")+money(Math.abs(diff))+(diff>0?" to":" from")+" adjustment";
       fx.onclick=()=>{V.adj=round2(V.adj+diff);adj.value=V.adj?f2(V.adj):"";tot.value=f2(sum()+V.adj);paint();bal();try{haptic()}catch(_){}}};
-    sh.querySelectorAll(".pld").forEach(i=>i.addEventListener("change",()=>{V[i.dataset.d]=i.value;bal()}));
+    tot.value=f2(fresh?total0:sum()+V.adj);
+    sh.querySelectorAll("input[data-k]").forEach(i=>i.addEventListener("input",()=>{V[i.dataset.k]=num(i);tot.value=f2(sum()+V.adj);paint();bal()}));
+    sh.querySelectorAll("input[data-pa]").forEach(i=>i.addEventListener("input",()=>{V.pays[+i.dataset.pa].amt=num(i);tot.value=f2(sum()+V.adj);bal()}));
+    sh.querySelectorAll(".pld").forEach(i=>i.addEventListener("change",()=>{V.pays[+i.dataset.pd].d=i.value;bal()}));
+    tot.addEventListener("input",()=>{V.adj=round2(num(tot)-sum());adj.value=V.adj?f2(V.adj):"";paint();bal()});
     sh.querySelector("#pl-bank").addEventListener("input",bal);
-    sh.querySelectorAll("input[data-k]").forEach(i=>i.addEventListener("input",bal));
+    sh.querySelectorAll("input:not([type=date])").forEach(i=>i.addEventListener("blur",()=>{if(i.value!=="")i.value=f2(num(i))}));
     if(V.bank&&V.bank.at)sh.querySelector("#pl-bankat").textContent="last entered "+fmtD(V.bank.at);
-    bal();
-    sh.querySelectorAll("input").forEach(i=>i.addEventListener("blur",()=>{if(i.value!=="")i.value=f2(num(i))}));paint();
-    // suggest last month's leftover as carryover
-    txForMonth(prev).then(list=>{const left=round2(incomeTotal(incomeFor(prev))-list.reduce((a,t)=>a+sAmt(t),0)),b=sh.querySelector("#pl-sug");if(!b||!(incomeTotal(incomeFor(prev))>0))return;
-      b.hidden=false;b.textContent="Use "+money(left);b.onclick=e=>{e.preventDefault();const c=sh.querySelector("#pl-carry");c.value=f2(left);V.carry=left;tot.value=f2(sum()+V.adj);try{haptic()}catch(_){}}}).catch(()=>{});
+    paint();bal();
+    txForMonth(prev).then(list=>{const pi=incomeTotal(incomeFor(prev)),left=round2(pi-list.reduce((a,t)=>a+sAmt(t),0)),b=sh.querySelector("#pl-sug");if(!b||!(pi>0))return;
+      b.hidden=false;b.textContent="Use "+money(left);b.onclick=e=>{e.preventDefault();const c=sh.querySelector("#pl-carry");c.value=f2(left);V.carry=left;tot.value=f2(sum()+V.adj);bal();try{haptic()}catch(_){}}}).catch(()=>{});
     sh.querySelector("#pl-x").onclick=closeSheet;
-    sh.querySelector("#pl-ok").onclick=async()=>{const t=round2(sum()+V.adj);const nx=Object.assign({},x,{name:x.name||"Planned",planned:t,parts:{carry:round2(V.carry),p1:round2(V.p1),p2:round2(V.p2),adj:round2(V.adj),d1:V.d1||"",d2:V.d2||"",bank:sh.querySelector("#pl-bank").value!==""?{amt:round2(num(sh.querySelector("#pl-bank"))),at:today()}:(V.bank||null)}});
+    sh.querySelector("#pl-ok").onclick=async()=>{const t=round2(sum()+V.adj),bi=sh.querySelector("#pl-bank");
+      const nx=Object.assign({},x,{name:x.name||"Planned",planned:t,parts:{carry:round2(V.carry),adj:round2(V.adj),pays:V.pays.map(p=>({d:p.d||"",amt:round2(+p.amt||0)})),bank:bi.value!==""?{amt:round2(num(bi)),at:today()}:(V.bank||null)}});
       const newInc=[nx].concat(inc.slice(1).map(o=>Object.assign({},o,{planned:0})));
       if(await saveGroups(JSON.parse(JSON.stringify(groupsFor(ym))),newInc)){S.budgets[ym]=Object.assign({},S.budgets[ym]||{},{groups:groupsFor(ym),income:newInc});closeSheet();toast("Planned "+money(t));render()}};
   });
