@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 8:45 PM"</script>
+<script>window.PB_BUILD="Oct 31, 9:00 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -327,6 +327,15 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .plpad .keys{gap:6px}.plpad .key{height:48px}
 .plpad .padfoot{gap:10px;margin-top:10px}.plpad .tgl{flex:none;min-width:0}.plpad .tgl b{font-size:15px}.plpad .padEq{flex:0 0 56px;position:static}
 .plpad .texpr{min-height:18px;text-align:right;font-size:13px;color:var(--muted);margin:0 4px 6px}
+.plven{display:flex;justify-content:space-between;align-items:center;width:100%;margin:2px 0 8px;padding:9px 12px;border:0;border-radius:12px;background:#fef7e0;color:#8a5a00;font:inherit;font-size:14px;text-align:left}
+.plven b{font-weight:800}.plven svg{width:16px;height:16px;transition:transform .3s}.plven.open svg{transform:rotate(90deg)}
+.plven.ok{background:#e6f4ea;color:#188038}
+.pvl{margin:-2px 0 8px;border-radius:12px;background:var(--card);padding:2px 12px}
+.pvr{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}.pvr:first-child{border-top:0}
+.pvn{flex:1;min-width:0}.pvn b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pvn small{font-size:12px;color:var(--muted)}
+.pva{font-weight:700;font-size:14px}
+.pvt{flex:none;border:0;border-radius:999px;padding:5px 10px;font:inherit;font-size:12px;font-weight:700;background:#fef7e0;color:#8a5a00}
+.pvt.in{background:#e6f4ea;color:#188038}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -3540,6 +3549,11 @@ function scheduledPays(ym){
   if(!last)return null;const out=[];let d=new Date(last+"T12:00:00");
   for(let n=0;n<80;n++){d.setDate(d.getDate()+14);const iso=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());if(iso.slice(0,7)>ym)break;if(iso.slice(0,7)===ym)out.push({d:iso,amt})}
   return out.length?out:null}
+/* Venmo moves through MSUFCU 1–3 business days after the transaction. A Venmo transaction counts as
+   "pending" (not yet in the MSUFCU balance) until 3 business days pass, unless marked: bankCleared true/false. */
+const isVenmoTx=t=>/^\s*venmo\s*:/i.test(t.merchant||"");
+function addBizDays(iso,n){const d=new Date(iso+"T12:00:00");while(n>0){d.setDate(d.getDate()+1);const w=d.getDay();if(w!==0&&w!==6)n--}return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function venmoPending(t,td){if(!isVenmoTx(t)||isHist(t)||t.date>td)return false;if(t.bankCleared===true)return false;if(t.bankCleared===false)return true;return td<addBizDays(t.date,3)}
 function plannedSheet(){
   const ym=S.ym,[y,m]=ym.split("-").map(Number),prev=ymAdd(ym,-1),inc=JSON.parse(JSON.stringify(incomeFor(ym)));
   const x=inc[0]||{id:uid(),name:"Planned",planned:0},total0=round2(incomeTotal(inc)),pt=x.parts||null,saved=partsPays(pt),sched=saved&&saved.length?null:scheduledPays(ym);
@@ -3553,19 +3567,27 @@ function plannedSheet(){
     vb("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+V.pays.map(payRow).join("")+
     vb("adj","Adjustment",'<span id="pl-adjn">difference to reach your total</span>',"pladj")+vb("tot","Planned total","","pltot")+
     (fresh&&total0?'<p class="note" style="margin:8px 0 0">Your current total is '+money(total0)+'. Enter your carryover and paychecks to build it up.</p>':'')+
-    '<div class="plbal"><h4>Check against MSUFCU</h4><div class="plrow"><span>Should be in your account today</span><b class="num" id="pl-exp"></b></div><div class="plnote" id="pl-expn"></div>'+
+    '<div class="plbal"><h4>Check against MSUFCU</h4><div class="plrow"><span>Should be in your account today</span><b class="num" id="pl-exp"></b></div><div class="plnote" id="pl-expn"></div><button type="button" class="plven" id="pl-ven" hidden></button><div class="pvl" id="pl-venl" hidden></div>'+
     vb("bank","MSUFCU balance",'<span id="pl-bankat">from your MSUFCU app</span>',"plbk")+
     '<div class="pldiff" id="pl-diff" hidden></div><button class="plfix" id="pl-fix" hidden></button></div>'+
     '<div class="btnrow" style="margin-top:16px"><button class="btn sec" id="pl-x">Cancel</button><button class="btn" id="pl-ok">Save</button></div><div class="plpad" id="pl-pad" hidden></div>',
   sh=>{const sum=()=>round2(V.carry+V.pays.reduce((a,p)=>a+(+p.amt||0),0)),total=()=>totOverride!=null?totOverride:round2(sum()+V.adj);
     const getF=f=>f==="carry"?V.carry:f==="adj"?V.adj:f==="tot"?total():f==="bank"?V.bankAmt:V.pays[+f.slice(1)].amt;
     const setF=(f,v)=>{if(f!=="tot"&&f!=="bank")totOverride=null;if(f==="carry")V.carry=v;else if(f==="adj")V.adj=v;else if(f==="bank")V.bankAmt=v;else if(f==="tot"){totOverride=null;V.adj=round2(v-sum())}else V.pays[+f.slice(1)].amt=v};
-    const spentSoFar=()=>ym>ymOf(td)?0:round2(S.tx.filter(t=>ym===S.ym&&t.date<=td).reduce((a,t)=>a+sAmt(t),0));
-    const refresh=()=>{sh.querySelectorAll("[data-f]").forEach(b=>{const v=getF(b.dataset.f);b.innerHTML=v==null||(!v&&b.dataset.f!=="tot")?'<span class="ph">$0.00</span>':money(v)});
+    const spentSoFar=()=>ym>ymOf(td)?0:round2(S.tx.filter(t=>ym===S.ym&&t.date<=td&&!venmoPending(t,td)).reduce((a,t)=>a+sAmt(t),0));
+    const venRecent=()=>ym!==S.ym?[]:S.tx.filter(t=>isVenmoTx(t)&&!isHist(t)&&t.date<=td&&(venmoPending(t,td)||td<addBizDays(t.date,7))).sort((a,b)=>b.date.localeCompare(a.date));
+    const drawVen=()=>{const all=venRecent(),pend=all.filter(t=>venmoPending(t,td)),amt=round2(pend.reduce((a,t)=>a+sAmt(t),0)),btn=sh.querySelector("#pl-ven"),lst=sh.querySelector("#pl-venl");
+      if(!all.length){btn.hidden=true;lst.hidden=true;return}btn.hidden=false;
+      btn.innerHTML='<span>'+(pend.length?'Venmo pending <b class="num">'+money(Math.abs(amt))+'</b> · '+pend.length:'Recent Venmo all in MSUFCU ✓')+'</span>'+CHEV;btn.classList.toggle("ok",!pend.length);
+      lst.innerHTML=all.map(t=>{const p=venmoPending(t,td),back=t.type==="refund"||t.type==="income";return '<div class="pvr"><span class="pvn"><b>'+esc(String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"Venmo · "))+'</b><small>'+fmtD(t.date)+(p?' · lands by '+fmtD(addBizDays(t.date,3)):'')+'</small></span><span class="num pva"'+(back?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</span><button type="button" class="pvt'+(p?"":" in")+'" data-vc="'+esc(t.id)+'">'+(p?"Pending":"In MSUFCU ✓")+'</button></div>'}).join("")};
+    sh.addEventListener("click",async e=>{if(e.target.closest("#pl-ven")){const l=sh.querySelector("#pl-venl");l.hidden=!l.hidden;sh.querySelector("#pl-ven").classList.toggle("open",!l.hidden);return}
+      const b=e.target.closest("[data-vc]");if(!b)return;const t=S.tx.find(x=>x.id===b.dataset.vc);if(!t)return;const nv=venmoPending(t,td);t.bankCleared=nv;try{haptic()}catch(_){}
+      refresh();try{await S.db.doc("tx/"+t.id).update({bankCleared:nv})}catch(_){toast("Couldn't save that. Check your connection.")}});
+    const refresh=()=>{drawVen();sh.querySelectorAll("[data-f]").forEach(b=>{const v=getF(b.dataset.f);b.innerHTML=v==null||(!v&&b.dataset.f!=="tot")?'<span class="ph">$0.00</span>':money(v)});
       sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total";
       const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+V.adj-spentSoFar());
       sh.querySelector("#pl-exp").textContent=money(exp);
-      sh.querySelector("#pl-expn").textContent=[V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):"");
+      sh.querySelector("#pl-expn").textContent=[V.carry?"carryover":"",got.length?got.length+" paycheck"+(got.length>1?"s":"")+" in":"",V.adj?"adjustment":""].filter(Boolean).join(" + ")+(spentSoFar()?" − "+money(spentSoFar())+" spent so far":"")+(venRecent().some(t=>venmoPending(t,td))?" (Venmo pending left out)":"")+(pend.length?" · "+pend.map(p=>money(p.amt)+" coming "+fmtD(p.d)).join(", "):"");
       sh.querySelectorAll("[data-dt]").forEach(el=>{const d=V.pays[+el.dataset.dt].d;el.textContent=d?(d<=td?"received "+fmtD(d):"coming "+fmtD(d)):"add date"});
       const dv=sh.querySelector("#pl-diff"),fx=sh.querySelector("#pl-fix");if(V.bankAmt==null){dv.hidden=true;fx.hidden=true;return}
       const diff=round2(V.bankAmt-exp);dv.hidden=false;
