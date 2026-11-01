@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:none}</style>
-<script>window.PB_BUILD="Oct 31, 9:45 PM"</script>
+<script>window.PB_BUILD="Oct 31, 10:00 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3437,7 +3437,7 @@ function txSheet(existing){
       // Venmo transactions get a person: who you paid, or who paid you
       const prow=s.querySelector("#f-prow"),venB=s.querySelector("#f-venmo"),plbl=s.querySelector("#f-plbl");
       let vs=existing&&isVenmoTx(existing)?vst(existing):"xfer";const vsrow=s.querySelector("#f-vsrow");
-      const drawVs=()=>{if(kind==="expense"&&vs==="req")vs="xfer";vsrow.querySelector('[data-vs="req"]').hidden=kind==="expense";vsrow.querySelectorAll("[data-vs]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.vs===vs))};
+      const drawVs=()=>{if(kind==="expense"&&vs==="req")vs="xfer";vsrow.querySelector('[data-vs="req"]').hidden=kind==="expense";vsrow.querySelector('[data-vs="done"]').textContent=kind==="expense"?"Left MSUFCU":"In MSUFCU";vsrow.querySelectorAll("[data-vs]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.vs===vs))};
       vsrow.addEventListener("click",e=>{const b=e.target.closest("[data-vs]");if(!b)return;vs=b.dataset.vs;drawVs()});
       const syncPerson=()=>{prow.hidden=!venB.checked;vsrow.hidden=!venB.checked;plbl.textContent=kind==="expense"?"Paid to":"From";drawVs()};drawVs();
       venB.addEventListener("change",()=>{syncPerson();if(venB.checked&&!s.querySelector("#f-person").value)setTimeout(()=>s.querySelector("#f-person").focus(),50)});
@@ -3601,7 +3601,7 @@ function venCardHTML(){const td=today(),open=venAll().filter(t=>venmoPending(t,t
   const by=(a,b)=>a.date.localeCompare(b.date),net=round2(open.reduce((a,t)=>a+(venIn(t)?1:-1)*(+t.amount||0),0));
   const row=(t,red)=>{const st=vst(t),inn=venIn(t),nm=t.person||String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"")||"Venmo";
     return '<div class="vr'+(red?' red':'')+'"><div class="vn"><b>'+esc(nm)+'</b><small>'+esc(venCap(t,td))+'</small>'+(red?'':'<span class="vdots"><i class="on"></i><i'+(st==="xfer"?' class="on"':'')+'></i><i></i></span>')+'</div>'+
-      '<span class="num va'+(inn?' in':'')+'">'+(inn?"+":"−")+money(+t.amount||0)+'</span><button type="button" class="vbt" data-vact="'+(st==="req"?"xfer":"done")+'" data-vid="'+esc(t.id)+'">'+(st==="req"?"They paid":"In MSUFCU")+'</button></div>'};
+      '<span class="num va'+(inn?' in':'')+'">'+(inn?"+":"−")+money(+t.amount||0)+'</span><button type="button" class="vbt" data-vact="'+(st==="req"?"xfer":"done")+'" data-vid="'+esc(t.id)+'">'+(st==="req"?"They paid":inn?"In MSUFCU":"Left MSUFCU")+'</button></div>'};
   const sec=(lbl,list,red)=>list.length?'<div class="vsec'+(red?' red':'')+'">'+lbl+' · '+list.length+'</div>'+list.sort(by).map(t=>row(t,red)).join(""):"";
   return '<section class="card vcard"><div class="vhd"><b>Venmo</b><span>'+open.length+' open · <span class="num" style="color:'+(net>=0?'var(--ok)':'inherit')+'">'+(net>=0?"+":"−")+money(Math.abs(net))+'</span> net</span></div>'+
     sec("Needs a check",late,true)+sec("Waiting on payment",req)+sec("Transferring",xf)+'</section>'}
@@ -3635,8 +3635,8 @@ function plannedSheet(){
       const snap=await S.db.collection("tx").where("date",">=",from).where("date","<=",td).limit(500).get();VL=snap.docs.map(x=>Object.assign({id:x.id},x.data())).filter(isVenmoTx);if(sh.isConnected)refresh()}catch(_){}})();
     const drawVen=()=>{const all=venRecent(),pend=all.filter(t=>venmoPending(t,td)),amt=round2(pend.reduce((a,t)=>a+(t.type==="expense"||!t.type?1:-1)*(+t.amount||0),0)),btn=sh.querySelector("#pl-ven"),lst=sh.querySelector("#pl-venl");
       if(!all.length){btn.hidden=true;lst.hidden=true;return}btn.hidden=false;
-      btn.innerHTML='<span>'+(pend.length?'Venmo pending <b class="num">'+(amt<0?"+":"")+money(Math.abs(amt))+'</b> · '+pend.length:'Recent Venmo all in MSUFCU ✓')+'</span>'+CHEV;btn.classList.toggle("ok",!pend.length);
-      lst.innerHTML=all.map(t=>{const p=venmoPending(t,td),back=t.type==="refund"||t.type==="income",red=p&&venLate(t,td);return '<div class="pvr'+(red?' red':'')+'"><span class="pvn"><b>'+esc(String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"Venmo · "))+'</b><small>'+(p?esc(venCap(t,td)):fmtD(t.date))+'</small></span><span class="num pva"'+(back?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</span><button type="button" class="pvt'+(p?"":" in")+'" data-vc="'+esc(t.id)+'">'+(p?(vst(t)==="req"?"Requested":"Pending"):"In MSUFCU ✓")+'</button></div>'}).join("")};
+      btn.innerHTML='<span>'+(pend.length?'Venmo pending <b class="num">'+(amt<0?"+":"")+money(Math.abs(amt))+'</b> · '+pend.length:'Recent Venmo all cleared ✓')+'</span>'+CHEV;btn.classList.toggle("ok",!pend.length);
+      lst.innerHTML=all.map(t=>{const p=venmoPending(t,td),back=t.type==="refund"||t.type==="income",red=p&&venLate(t,td);return '<div class="pvr'+(red?' red':'')+'"><span class="pvn"><b>'+esc(String(t.merchant).replace(/^\s*venmo\s*:\s*/i,"Venmo · "))+'</b><small>'+(p?esc(venCap(t,td)):fmtD(t.date))+'</small></span><span class="num pva"'+(back?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</span><button type="button" class="pvt'+(p?"":" in")+'" data-vc="'+esc(t.id)+'">'+(p?(vst(t)==="req"?"Requested":"Pending"):(back?"In MSUFCU ✓":"Left MSUFCU ✓"))+'</button></div>'}).join("")};
     sh.addEventListener("click",async e=>{if(e.target.closest("#pl-ven")){const l=sh.querySelector("#pl-venl");l.hidden=!l.hidden;sh.querySelector("#pl-ven").classList.toggle("open",!l.hidden);return}
       const b=e.target.closest("[data-vc]");if(!b)return;const t=venRecent().find(x=>x.id===b.dataset.vc);if(!t)return;const nv=venmoPending(t,td)?"done":"xfer";VL.forEach(x=>{if(x.id===t.id)x.vstate=nv});await venSet(t.id,nv);refresh()});
     const refresh=()=>{drawVen();sh.querySelectorAll("[data-f]").forEach(b=>{const v=getF(b.dataset.f);b.innerHTML=v==null||(!v&&b.dataset.f!=="tot")?'<span class="ph">$0.00</span>':money(v)});
