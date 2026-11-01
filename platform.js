@@ -92,6 +92,7 @@ function docAPI(path){const [c,id]=String(path).split("/");const ref=base().coll
 function collAPI(c){const ref=base().collection(c);return Object.assign(query(ref),{
   doc(id){return docAPI(c+"/"+id)},
   add(v){return ref.add(v).then(r=>({id:r.id}),e=>{throw wrapErr(e)})},
+  newId(){return ref.doc().id}, /* id made on the phone, so a save can show up before the server answers */
 })}
 const DB={collection:collAPI,doc:docAPI};
 
@@ -339,7 +340,9 @@ let started=false;
 async function start(){
   const cfg=storedConfig();
   if(!cfg){setupScreen();return}
-  showGate('<h1>Pocket Budget</h1><p>Loading…</p>');
+  /* returning user with a saved copy: skip the loading screen, the app shows that copy right away */
+  const warm=!!(LS.get("pb.cache")&&LS.get("pb.lastUid"));
+  if(!warm)showGate('<h1>Pocket Budget</h1><p>Loading…</p>');
   try{await loadFirebase()}catch(e){showGate('<h1>Can\'t load</h1><p>Pocket Budget needs an internet connection the first time it opens.</p><button class="pbx-btn" onclick="location.reload()">Try again</button>');return}
   try{
     P.app=firebase.apps.length?firebase.app():firebase.initializeApp(cfg);
@@ -351,9 +354,10 @@ async function start(){
   P.auth.onAuthStateChanged(async u=>{
     if(!u){if(P.user){location.reload();return}loginScreen("signin");return}
     if(P.user)return;P.user=u;
-    // first run: offer the backup if this account has no budgets yet
+    if(LS.get("pb.lastUid")&&LS.get("pb.lastUid")!==u.uid)LS.set("pb.cache",null);LS.set("pb.lastUid",u.uid);
+    // first run: offer the backup if this account has no budgets yet (only asked once, so returning users skip this server round trip)
     let empty=false;
-    try{const s=await base().collection("budgets").limit(1).get();empty=s.empty}
+    if(!LS.get("pb.firstRunDone:"+u.uid))try{const s=await base().collection("budgets").limit(1).get();empty=s.empty}
     catch(e){const c=e&&e.code;showGate('<h1>Almost there</h1><p class="pbx-err">'+(c==="permission-denied"?"Your database refused access. In Firebase, open Firestore → Rules, paste firestore.rules and Publish.":"Couldn't reach your database: "+esc(e.message||c))+'</p><button class="pbx-btn" onclick="location.reload()">Try again</button>');return}
     hideGate();addGear();dbResolve(DB);setTimeout(autoDrive,12000);
     if(empty&&!LS.get("pb.firstRunDone:"+u.uid))firstRunScreen();

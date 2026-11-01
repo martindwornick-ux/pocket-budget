@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 1, 2:35 AM"</script>
+<script>window.PB_BUILD="Nov 1, 3:00 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -375,6 +375,15 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .iamt.on{border:1.5px solid #1a73e8;border-radius:10px;box-shadow:0 0 0 3px var(--sel);background:#fff;min-width:110px;text-align:right}
 .iamtin{width:110px;text-align:right;font:inherit;font-weight:700;font-size:17px;border:1.5px solid #1a73e8;border-radius:10px;padding:6px 8px;background:#fff;outline:0}
 div.txrow{cursor:pointer}
+/* Instant press feedback: zero-specificity so any element's own rule still wins */
+:where(.btn,.addlink,.plsug,.plmt,.plfix,.nowbar,.month,nav.tabs button,.seg button,.tamt,.tx-cam,.tx-x,.mpk-x,.mpk-me,.dbp,.subr,.fab,.plv,.iamt,.key){transition:transform .16s cubic-bezier(.2,.8,.3,1),opacity .16s,background-color .16s}
+:where(.txrow,.irow,.item,.tapbar,.mfr,.pvr){transition:background-color .2s}
+:where(.btn,.addlink,.plsug,.plmt,.plfix,.nowbar,.month,nav.tabs button,.seg button,.tamt,.tx-cam,.tx-x,.mpk-x,.mpk-me,.dbp,.subr,.fab,.plv,.iamt,.key,.txrow,.irow,.item,.tapbar,.mfr,.pvr):active{transition-duration:0s}
+:where(.btn,.addlink,.plsug,.plmt,.plfix,.nowbar,.month,nav.tabs button,.seg button,.tamt,.tx-cam,.tx-x,.mpk-x,.mpk-me,.dbp,.subr):active{transform:scale(.95);opacity:.85}
+:where(.fab):active{transform:scale(.9)}
+:where(.txrow,.irow,.item,.tapbar,.mfr,.pvr):active{background-color:rgba(60,64,67,.07)}
+:where(.plv,.iamt):active{transform:scale(.97)}
+:where(.key):active{transform:scale(.94)}
 .daylabel{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:2px 4px -6px}
 .txrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1px solid var(--line)}
 .txrow:last-child{border-bottom:0}
@@ -641,7 +650,7 @@ body.padopen .fab{display:none}
 :root{
   --glass:rgba(255,255,255,.58); --glass-strong:rgba(255,255,255,.78); --glass-edge:rgba(255,255,255,.75);
   --glass-shade:0 8px 32px rgba(20,50,40,.12),inset 0 1px 0 rgba(255,255,255,.85);
-  --blur:saturate(180%) blur(22px);
+  --blur:saturate(170%) blur(14px);
   --brand-glass:rgba(20,128,86,.84); --key:rgba(255,255,255,.62); --keyop:rgba(23,136,92,.16); --trk:rgba(20,40,30,.09); --line:rgba(20,40,30,.09);
   --bg:#eef3f1;
 }
@@ -669,14 +678,14 @@ main .seg.isub button[aria-pressed="true"]{background:var(--glass-strong);box-sh
 .banner{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-bottom:1px solid var(--glass-edge)}
 .card,.tile,.search,.txs .tcard{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);box-shadow:var(--glass-shade)}
 #hsearch .search{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.25);-webkit-backdrop-filter:none;backdrop-filter:none}
-.btn.sec{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);box-shadow:var(--glass-shade)}
+.btn.sec{background:var(--glass-strong);border:1px solid var(--glass-edge);box-shadow:var(--glass-shade)}
 .ghost{background:rgba(255,255,255,.12);border-color:var(--glass-edge)}
 nav.tabs{left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));padding:4px;border-radius:30px;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);box-shadow:var(--glass-shade),0 12px 30px rgba(0,0,0,.12)}
 nav.tabs button{border-radius:24px;padding:7px 4px 6px}
 nav.tabs button[aria-current="page"]{background:var(--glass-strong);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 2px 10px rgba(0,0,0,.08)}
 .fab{bottom:calc(92px + env(safe-area-inset-bottom,0px));background:linear-gradient(160deg,rgba(63,208,140,.9),rgba(23,136,92,.88));-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid rgba(255,255,255,.35);box-shadow:0 10px 26px rgba(10,80,50,.35),inset 0 1px 0 rgba(255,255,255,.5)}
 .scrim{background:rgba(5,15,10,.28)}
-.sheet,.pad{background:var(--glass-strong);-webkit-backdrop-filter:saturate(180%) blur(30px);backdrop-filter:saturate(180%) blur(30px);border:1px solid var(--glass-edge);border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.5)}
+.sheet,.pad{background:var(--glass-strong);-webkit-backdrop-filter:saturate(170%) blur(16px);backdrop-filter:saturate(170%) blur(16px);border:1px solid var(--glass-edge);border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.5)}
 .sheet.txs{background:var(--glass-strong)}
 .txs .tpad{background:transparent;box-shadow:none;border-top:1px solid var(--glass-edge)}
 .txs .tseg{background:var(--trk)}
@@ -1215,10 +1224,15 @@ const incomeTotal=inc=>round2(inc.reduce((a,x)=>a+(+x.planned||0),0));
 function groupsFor(ym){const b=S.budgets[ym];const g=b?(b.groups||[]):(templateFor(ym)||[]);
   if(PAD&&PAD.kind==="item"&&PAD.ym===ym)return g.map(x=>Object.assign({},x,{items:x.items.map(it=>it.id===PAD.id?Object.assign({},it,{planned:padValue()/100}):it)}));
   return g}
+/* Optimistic writes: the database applies a write on the phone right away (and tells the listeners),
+   then syncs it in the background. So sheets close at once and a failure shows up as a toast. */
+const saveFail=e=>toast(e&&e.code==="quota_exceeded"?"Storage is full":"Couldn't save. Check your connection.");
+function bgWrite(p){Promise.resolve(p).catch(saveFail)}
 async function saveGroups(groups,income){
   if(!S.db||S.readOnly){toast("Saving isn't available here");return false}
-  try{await S.db.doc("budgets/"+S.ym).set({groups,income:income||incomeFor(S.ym),updatedAt:new Date().toISOString()});return true}
-  catch(e){toast(e&&e.code==="quota_exceeded"?"Storage is full":"Couldn't save. Check your connection.");return false}
+  const body={groups,income:income||incomeFor(S.ym),updatedAt:new Date().toISOString()};
+  S.budgets[S.ym]=Object.assign({},S.budgets[S.ym]||{},body);
+  try{bgWrite(S.db.doc("budgets/"+S.ym).set(body));return true}catch(e){saveFail(e);return false}
 }
 function allItems(groups){const out=[];groups.forEach(g=>g.items.forEach(it=>out.push({g,it})));return out}
 const sAmt=t=>t.type==="income"?0:(t.type==="refund"?-1:1)*(+t.amount||0);
@@ -1437,7 +1451,7 @@ function confirmDelete(id){
   root.querySelector("#dk").onclick=()=>{done();if(SW.openRow)swClose(SW.openRow)};
   root.querySelector("#dy").onclick=async()=>{const b=root.querySelector("#dy");b.disabled=true;
     if(!S.db||S.readOnly){toast("Saving isn't available here");b.disabled=false;return}
-    try{await S.db.doc("tx/"+id).delete();SW.openRow=null;done();toast("Deleted")}catch(e){b.disabled=false;toast("Couldn't delete. Try again.")}};
+    Promise.resolve(S.db.doc("tx/"+id).delete()).catch(()=>toast("Couldn't delete. Try again."));SW.openRow=null;done();toast("Deleted")};
   root.querySelector("#dy").focus();
   return;
   openSheet('<h3>Delete transaction?</h3><p style="margin:0 0 6px;font-size:17px">Do you want to delete <b>'+esc(t.merchant||"Purchase")+'</b> for <b class="num">'+money(+t.amount||0)+'</b> on '+esc(fmtLong(t.date))+'?</p>'+
@@ -1446,7 +1460,7 @@ function confirmDelete(id){
     s=>{s.querySelector("#dk").onclick=()=>{closeSheet();if(SW.openRow)swClose(SW.openRow)};
       s.querySelector("#dy").onclick=async()=>{const b=s.querySelector("#dy");b.disabled=true;
         if(!S.db||S.readOnly){toast("Saving isn't available here");b.disabled=false;return}
-        try{await S.db.doc("tx/"+id).delete();SW.openRow=null;closeSheet();toast("Deleted")}catch(e){b.disabled=false;toast("Couldn't delete. Try again.")}}});
+        Promise.resolve(S.db.doc("tx/"+id).delete()).catch(()=>toast("Couldn't delete. Try again."));SW.openRow=null;closeSheet();toast("Deleted")}});
 }
 const ISUBS=[["totals","Totals"],["cal","Calendar"],["pace","Pace"]].concat(window.top===window?[["map","Map"]]:[]);
 function goMonth(ym,flashId,quiet){
@@ -2982,13 +2996,22 @@ function renderInsights(groups,sm){
   h+='<div class="isum"><span>Income</span><b class="num">'+money(tI)+'</b></div><div class="isum"><span>Spent</span><b class="num">'+money(tS)+'</b></div><div class="isum"><span>'+(net>=0?"Saved":"Overspent")+'</span><b class="num" style="color:'+(net>=0?"var(--ok)":"var(--over)")+'">'+money(Math.abs(net))+'</b></div>';
   return h+'</section>';
 }
+/* Redraw only the cards that changed: build the new page off-screen, then swap just the top-level
+   blocks whose HTML differs. Unchanged cards stay put (no flicker, open states and animations survive).
+   Insights (charts, map) always redraws fully. */
+function patchMain(m,html,key){
+  if(m.dataset.pk!==key||S.tab==="insights"){m.innerHTML=html;m.dataset.pk=key;[...m.children].forEach(c=>c._h=c.outerHTML);return}
+  const t=document.createElement("template");t.innerHTML=html;const nw=[...t.content.children],old=[...m.children];
+  if(nw.length!==old.length){m.innerHTML=html;[...m.children].forEach(c=>c._h=c.outerHTML);return}
+  nw.forEach((n,i)=>{const h=n.outerHTML,o=old[i];if(o._h===h)return;n._h=h;m.replaceChild(n,o)})}
 function render(){if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.classList.remove("on");
   renderHeader();
   const groups=groupsFor(S.ym), sm=spentMap();
   renderBanner(groups,sm);
   const m=$("#main");
   const ae=document.activeElement, keep=ae&&ae.id==="txq"?[ae.selectionStart,ae.selectionEnd]:null;
-  m.innerHTML=S.tab==="budget"?renderBudget(groups,sm):S.tab==="tx"?renderTx(groups):renderInsights(groups,sm);
+  const html=S.tab==="budget"?renderBudget(groups,sm):S.tab==="tx"?renderTx(groups):renderInsights(groups,sm);
+  patchMain(m,html,S.tab+"|"+S.ym);
   const snap=S.tab==="insights"&&IS.sub==="map"&&!!m.querySelector(".mlrow");document.documentElement.classList.toggle("mlsnap",snap);if(snap)mlSnapVar();
   if(keep){const i=$("#txq");if(i){i.focus();try{i.setSelectionRange(keep[0],keep[1])}catch(e){}}}
 }
@@ -3007,7 +3030,7 @@ function openSheet(html,bind){
 }
 // Open: start fully below the screen with a clear scrim, then glide up on the same
 // iOS-style curve the drag-to-dismiss uses, so opening and closing feel like one motion.
-const SHEET_EASE="cubic-bezier(.32,.72,0,1)",SHEET_IN=380;
+const SHEET_EASE="cubic-bezier(.32,.72,0,1)",SHEET_IN=300;
 function slideIn(sc,sh){
   if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
   sh.style.transition="none";sc.style.transition="none";
@@ -3030,7 +3053,8 @@ function dragSheet(sc,sh){
     const now=Date.now();pts.push([now,t.clientY]);while(pts.length>2&&now-pts[0][0]>100)pts.shift()},{passive:false});
   const end=()=>{if(mode!==1){mode=0;return}mode=0;
     const a=pts[0],b=pts[pts.length-1],v=b&&a&&b[0]>a[0]?(b[1]-a[1])/(b[0]-a[0]):0;
-    if(dy>Math.min(140,sh.offsetHeight*0.3)||v>0.6)closeSheet();
+    /* a flick closes it at the speed of your finger */
+    if(v>0.45)closeSheet(Math.max(110,Math.min(240,(sh.offsetHeight-dy)/v)));else if(dy>Math.min(120,sh.offsetHeight*0.25))closeSheet();
     else{sh.style.transition="transform .32s "+SHEET_EASE;sc.style.transition="background .28s";sh.style.transform="";sc.style.background="";setTimeout(()=>{sh.style.transition="";sc.style.transition=""},300)}};
   sh.addEventListener("touchend",end);sh.addEventListener("touchcancel",end);
 }
@@ -3046,15 +3070,15 @@ function dragSheet(sc,sh){
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")settle()});
   window.addEventListener("orientationchange",settle);
 })();
-function closeSheet(){
+function closeSheet(ms){ms=typeof ms==="number"?ms:220;
   try{const a=document.activeElement;if(a&&a.blur&&a.matches&&a.matches("input,textarea,select"))a.blur()}catch(_){}
   const root=$("#sheetRoot"),sc=root.firstChild;document.body.style.overflow="";
   if(!sc)return;const sh=sc.querySelector(".sheet");
   if(!sh||matchMedia("(prefers-reduced-motion:reduce)").matches){root.innerHTML="";return}
   sc.style.pointerEvents="none";sh._opening=false;
-  sh.style.animation="none";sh.style.transition="transform .26s cubic-bezier(.4,0,.6,1)";sc.style.transition="background .26s";
+  sh.style.animation="none";sh.style.transition="transform "+ms+"ms cubic-bezier(.3,.6,.5,1)";sc.style.transition="background "+ms+"ms";
   requestAnimationFrame(()=>{sh.style.transform="translateY("+(sh.offsetHeight+40)+"px)";sc.style.background="rgba(5,15,10,0)"});
-  setTimeout(()=>{if(root.firstChild===sc)root.innerHTML=""},280);
+  setTimeout(()=>{if(root.firstChild===sc)root.innerHTML=""},ms+30);
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(PAD){cancelPad();return}closeSheet()}});
 
@@ -3500,9 +3524,9 @@ function txSheet(existing){
         if(!S.db||S.readOnly){toast("Saving isn't available here");return}
         busy=true;
         try{
-          let ref;
-          if(existing)await S.db.doc("tx/"+existing.id).set(body);
-          else ref=await S.db.collection("tx").add(body);
+          let ref;const txc=S.db.collection("tx"),addFast=async v=>{if(txc.newId){const id=txc.newId();bgWrite(S.db.doc("tx/"+id).set(v));return{id}}return txc.add(v)};
+          if(existing)bgWrite(S.db.doc("tx/"+existing.id).set(body));
+          else ref=await addFast(body);
           ls.set("pb.lastItem",itemId);closeSheet();
           const moved=ymOf(date)!==S.ym;
           if(!existing)setTimeout(()=>celebrate(rOn?round2(a-rAmt):a,body.merchant,body.type),180);else if(!moved)toast("Saved");
@@ -3511,7 +3535,7 @@ function txSheet(existing){
           if(ref&&rOn){const from=s.querySelector("#f-rfrom").value.trim(),nm=body.merchant.replace(VP,"");
             rbodyDoc=Object.assign({},body,{person:undefined,amount:rAmt,type:"refund",merchant:rMeth+": "+(from?from+" reimbursement":"Reimbursement for "+nm),reimbMethod:rMeth,date:rdate.value||date,note:"For "+nm+(rAmt<a-.004?" ("+money(rAmt)+" of "+money(a)+")":"")+(body.note?" · "+body.note:""),
               pair:ref.id,reimbFrom:from,person:from||undefined,createdAt:new Date(Date.now()+1).toISOString(),sheet:"sending",sheetMsg:""});delete rbodyDoc.loc;delete rbodyDoc.vpaid;delete rbodyDoc.vdone;delete rbodyDoc.vstate;
-            if(!rbodyDoc.person)delete rbodyDoc.person;try{rref=await S.db.collection("tx").add(rbodyDoc);await S.db.doc("tx/"+ref.id).update({pair:rref.id})}catch(_){toast("Saved the purchase, but not the reimbursement. Add it as income.")}}
+            if(!rbodyDoc.person)delete rbodyDoc.person;try{rref=await addFast(rbodyDoc);bgWrite(S.db.doc("tx/"+ref.id).update({pair:rref.id}))}catch(_){toast("Saved the purchase, but not the reimbursement. Add it as income.")}}
           if(ref){pushToSheet(ref.id,body).then(ok=>{if(rref)return pushToSheet(rref.id,rbodyDoc).then(ok2=>{if(ok&&ok2)toast("Added both to your sheet")});if(ok)toast("Added "+money(a)+" to your sheet")})}
           // a fix that was still on its way when you tapped Done lands a moment later
           if(ref&&!locNow&&LF.pending()){const id=ref.id;LF.pending().then(l=>{if(l)S.db.doc("tx/"+id).update({loc:l}).catch(()=>{})})}
@@ -3520,7 +3544,7 @@ function txSheet(existing){
       if(existing)s.querySelector("#f-del").onclick=()=>{
         const c=s.querySelector("#f-conf");c.innerHTML='<div class="confirm">Delete this '+money(+existing.amount)+' transaction? This can\'t be undone.<div class="btnrow" style="margin-top:10px"><button class="btn sec" id="cn">Keep it</button><button class="btn" style="background:var(--over)" id="cy">Delete</button></div></div>';
         c.querySelector("#cn").onclick=()=>c.innerHTML="";
-        c.querySelector("#cy").onclick=async()=>{try{await S.db.doc("tx/"+existing.id).delete();closeSheet();toast("Deleted")}catch(e){toast("Couldn't delete. Try again.")}};
+        c.querySelector("#cy").onclick=()=>{Promise.resolve(S.db.doc("tx/"+existing.id).delete()).catch(()=>toast("Couldn't delete. Try again."));closeSheet();toast("Deleted")};
       };
     });
 }
@@ -3904,9 +3928,9 @@ async function syncAll(btn){
 /* ---------- data ---------- */
 let histUnsub=null;
 function subscribeTx(){
-  if(!S.db)return;venWatch();txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;S.txLoaded=false;S.tx=[];
+  if(!S.db)return;venWatch();txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;if(!(S.fromCache&&S.cacheYm===S.ym)){S.txLoaded=false;S.tx=[]}
   const ym=S.ym;let live=[],past=[],gotLive=false,gotPast=ym>=HIST_BEFORE;
-  const merge=()=>{if(ym!==S.ym)return;S.tx=live.concat(past);S.txLoaded=gotLive&&gotPast;render();if(S.txLoaded)setTimeout(reconcileSheet,800)};
+  const merge=()=>{if(ym!==S.ym)return;S.tx=live.concat(past);S.txLoaded=gotLive&&gotPast;S.fromCache=false;render();cacheSave();if(S.txLoaded)setTimeout(reconcileSheet,800)};
   txUnsub=S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).onSnapshot(snap=>{
     live=snap.docs.map(d=>Object.assign({id:d.id},d.data()));gotLive=true;merge();
   },()=>{gotLive=true;merge()});
@@ -3916,14 +3940,20 @@ function subscribeTx(){
 }
 /* no pinch / double-tap zoom: the layout is built for the phone screen */
 ["gesturestart","gesturechange"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+/* Saved copy of the last budget + this month's transactions, so the app paints instantly on launch. */
+let cacheT=0;
+function cacheSave(){clearTimeout(cacheT);cacheT=setTimeout(()=>{if(!S.budgetsLoaded||!S.txLoaded||S.fromCache)return;
+  try{localStorage.setItem("pb.cache",JSON.stringify({v:1,ym:S.ym,at:Date.now(),budgets:S.budgets,tx:S.tx.filter(t=>!isHist(t))}))}catch(e){}},1200)}
+function cacheLoad(){try{const c=JSON.parse(localStorage.getItem("pb.cache")||"null");if(!c||c.v!==1||c.ym!==S.ym)return false;
+  S.budgets=c.budgets||{};S.tx=c.tx||[];S.budgetsLoaded=true;S.txLoaded=true;S.fromCache=true;S.cacheYm=c.ym;return true}catch(e){return false}}
 async function init(){
-  render();
+  cacheLoad();render();
   const db=await (window.claude?.use?.("db")||Promise.resolve(null)).catch(()=>null);
   if(!db){S.dbState="none";S.budgetsLoaded=true;S.txLoaded=true;render();return}
   S.db=db;S.dbState="ok";loadSubs();
   const user=await (window.claude?.use?.("user")||Promise.resolve(null)).catch(()=>null);
   if(user){try{S.readOnly=!(await user.isOwner())}catch(e){}}
-  db.collection("budgets").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());S.budgets=m;S.budgetsLoaded=true;render()},()=>{S.budgetsLoaded=true;render()});
+  db.collection("budgets").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());S.budgets=m;S.budgetsLoaded=true;S.fromCache=false;render();cacheSave()},()=>{S.budgetsLoaded=true;render()});
   db.doc("meta/history").onSnapshot(snap=>{H.meta=snap.exists?snap.data():null;H.metaLoaded=true;render()},()=>{H.metaLoaded=true;render()});
   subscribeTx();
   setTimeout(merchLoad,1200);
