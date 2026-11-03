@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 3, 7:05 PM"</script>
+<script>window.PB_BUILD="Nov 3, 7:10 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -583,6 +583,7 @@ body.padopen .fab{display:none}
 .tgl{display:flex;align-items:center;gap:10px;flex:1;min-width:0;font-size:18px;cursor:pointer}
 .plro{background:none!important;border-color:transparent!important;box-shadow:none!important;opacity:.85}.plahn{margin:8px 2px 0;font-size:13.5px;line-height:1.4;color:var(--muted)}
 .ascard .icap>span{display:none}.ascard .icap::before{content:"Setting aside";margin-right:2px}
+#pl-fwmv{display:table;margin:5px 0 0}
 .ashint{margin:-2px 0 6px;font-size:13.5px;line-height:1.4;color:var(--muted)}.ascard{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,#1a73e8 35%,transparent)}
 .eqah .num{color:#1a5fc8}@media (prefers-color-scheme:dark){.eqah .num{color:#8ab4f8}}
 .ichip{display:inline-block;vertical-align:2px;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;line-height:1.5;white-space:nowrap}
@@ -3964,7 +3965,7 @@ function plannedSheet(){
     '<h4 class="plst">1 · Money to budget</h4><div class="plgl">Coming in</div>'+
     vb("carry","Carryover",'from '+MONTHS[+prev.slice(5)-1]+'<button class="plsug" id="pl-sug" hidden></button>')+
     (V.fwd?'<div class="plf plfw"><label>Set aside in '+MONTHS[+prev.slice(5)-1]+'<small>for '+esc(nmList(ahIn))+'</small></label><span class="plv num plro">'+money(V.fwd)+'</span></div>':'')+
-    (showFwm?vb("fwm","Already in bank",'<span>already there for '+MONTHS[m-1].slice(0,3)+' bills</span><button type="button" class="plsug" id="pl-fwmv" hidden>Move from adjustment</button>'):'')+
+    (showFwm?vb("fwm","Already in bank",'<span>for '+MONTHS[m-1].slice(0,3)+' bills, from adjustment</span><button type="button" class="plsug" id="pl-fwmv" hidden>Move from adjustment</button>'):'')+
     V.pays.map(payRow).join("")+vb("rew","Card rewards","off your card payment")+
     '<div class="plgl">Held back</div><div class="plrefill" id="pl-refill" hidden></div>'+
     vb("cush","Cushion",'<span id="pl-cusn">set aside · not budgeted</span><button type="button" class="plsug" id="pl-use" hidden>Use cushion</button>',"plcush")+
@@ -4023,7 +4024,7 @@ function plannedSheet(){
       if(el.closest("#pl-rfno")){V.cushTarget=V.cush;refresh();return}});
     const refresh=()=>{drawVen();sh.querySelectorAll("[data-f]").forEach(b=>{const v=getF(b.dataset.f);b.innerHTML=v==null||(!v&&b.dataset.f!=="tot")?'<span class="ph">$0.00</span>':money(v)});
       drawCush();
-      const fmv=sh.querySelector("#pl-fwmv");if(fmv){const mv=round2(Math.min(V.adj,ahNowT-V.fwm));fmv.hidden=!(mv>0.004);fmv.textContent="Move "+money(mv)+" from adjustment";
+      const fmv=sh.querySelector("#pl-fwmv");if(fmv){const mv=round2(Math.min(V.adj,ahNowT-V.fwm));fmv.hidden=!(mv>0.004);fmv.textContent="Move "+money(mv)+" here";
         fmv.onclick=e=>{e.preventDefault();e.stopPropagation();totOverride=null;V.fwm=round2(V.fwm+mv);V.adj=round2(V.adj-mv);refresh();try{haptic()}catch(_){}}}
       sh.querySelector("#pl-adjn").textContent=V.adj<0?"lowers your total":V.adj>0?"adds to your total":"difference to reach your total";
       const got=V.pays.filter(p=>p.amt&&(!p.d||p.d<=td)),pend=V.pays.filter(p=>p.amt&&p.d&&p.d>td),useCard=V.cardAmt!=null,exp=round2(V.carry+got.reduce((a,p)=>a+p.amt,0)+(useCard?V.rew:0)+V.adj+V.cush-spentSoFar());
