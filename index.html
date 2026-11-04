@@ -3444,12 +3444,12 @@ async function scanReceipt(file,sheet){
    The original rows are moved, not rebuilt, so every id and handler keeps working; each pill opens its row inline. */
 function txLayoutA(s,existing){try{
   const q=x=>s.querySelector(x),body=q(".tbody"),dateRow=q("#f-date").closest(".trow"),firstCard=dateRow.closest(".tcard");
-  const merRow=q("#f-mer").closest(".trow"),msug=q("#f-msug"),vrow=q("#f-vrow"),prow=q("#f-prow"),locRow=q("#f-loc").closest(".trow"),lsug=q("#f-lsug"),near=q("#f-near");
+  const payRow=q("#f-pay").closest(".trow"),merRow=q("#f-mer").closest(".trow"),msug=q("#f-msug"),vrow=q("#f-vrow"),prow=q("#f-prow"),locRow=q("#f-loc").closest(".trow"),lsug=q("#f-lsug"),near=q("#f-near");
   const catCard=q(".crow").closest(".tcard"),chips=q("#f-cchips"),rcard=q("#f-rcard"),noteCard=q("#f-note").closest(".tcard");
   // 1) budget item right under the amount, chips under it
   firstCard.before(catCard);catCard.after(chips);
   // 2) merchant card (merchant, suggestions, nearby places, Venmo person)
-  const mc=document.createElement("div");mc.className="tcard";mc.append(dateRow,merRow,msug);if(near)mc.append(near);mc.append(prow,locRow,lsug,vrow);vrow.hidden=true;vrow.classList.add("vhide");
+  const mc=document.createElement("div");mc.className="tcard";mc.append(dateRow,payRow,merRow,msug);if(near)mc.append(near);mc.append(prow,locRow,lsug,vrow);vrow.hidden=true;vrow.classList.add("vhide");
   catCard.before(mc); /* merchant first, then budget item */
   // 3) pills + inline panels
   const pills=document.createElement("div");pills.className="txpills";
