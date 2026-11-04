@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 4, 6:30 PM"</script>
+<script>window.PB_BUILD="Nov 3, 7:10 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1235,9 +1235,6 @@ const money=n=>(n<0?"-":"")+"$"+Math.abs(n).toLocaleString("en-US",{minimumFract
 const pad=n=>String(n).padStart(2,"0");
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
 const ymOf=d=>d.slice(0,7);
-/* How a transaction was paid. Older entries from before this field are treated as Discover card only in the current month. */
-const PAY_OPTS=["Discover card","MSUFCU direct","Cash","Venmo","Check"];
-const payOf=t=>t.pay||(t.date&&ymOf(t.date)===S.ym?"Discover card":"");
 const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
 const round2=n=>Math.round(n*100)/100;
 const parseAmt=s=>{const n=parseFloat(String(s).replace(/[^0-9.\-]/g,""));return isFinite(n)?round2(n):NaN};
@@ -1849,7 +1846,7 @@ function txDays(list,groups){
     const ref=t.type==="refund"||t.type==="income";
     const sw=!isHist(t);
     if(sw)h+='<div class="swr"><button class="swdel" data-del="'+esc(t.id)+'" tabindex="-1" aria-label="Delete '+esc(t.merchant||"Purchase")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>Delete</button>';
-    h+='<button class="txrow'+(S.flash===t.id?' flash':'')+'" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(payOf(t)?" · "+esc(payOf(t)):"")+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
+    h+='<button class="txrow'+(S.flash===t.id?' flash':'')+'" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span style="color:var(--over)">not in sheet</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
   });
   if(open)h+="</section>";
   return h;
@@ -3495,7 +3492,6 @@ function txSheetCore(existing){
   if(!allItems(groups).length){openSheet('<h3>Add a category first</h3><p class="note">Transactions go into budget items like Groceries or Auto Gas &amp; Oil. Add a group and an item on the Budget tab, then log purchases here.</p><div class="btnrow" style="margin-top:14px"><button class="btn" id="okc">Got it</button></div>',s=>s.querySelector("#okc").onclick=closeSheet);return}
   const last=ls.get("pb.lastItem")||"";
   const sel=existing?existing.itemId:""; // no automatic default: start empty unless the merchant suggests one
-  const payNow=existing?payOf(existing):"Discover card"; // new entries default to Discover card
   let kind=existing&&(existing.type==="refund"||existing.type==="income")?"refund":"expense";
   const VP=/^\s*venmo\s*:\s*/i;const mRaw=existing?(existing.merchant||""):"";const venmo0=VP.test(mRaw);const merch0=mRaw.replace(VP,"");
   const T={cur:existing?String(Math.round(+existing.amount*100)):"",ops:[],fresh:!!existing,calc:ls.get("pb.calc")==="1"};
@@ -3509,7 +3505,6 @@ function txSheetCore(existing){
           return '<button type="button" class="rlinkbtn" id="f-pair"><span class="ri">'+(isR?"↩︎":"↪︎")+'</span><span class="rt"><small>'+(isR?"Reimbursement for":"Paid back by")+'</small><b>'+(pr?esc(pr.merchant||"Purchase")+' · '+(pr.type==="refund"?"+":"")+money(+pr.amount||0):(isR?"the original purchase":"the reimbursement"))+'</b>'+(pr?'<span>'+esc(fmtLong(pr.date))+'</span>':'')+'</span>'+CHEV+'</button>'})():'')||'')+
       '<div class="tcard">'+
         '<div class="trow"><span>Date</span><span class="tv"><span class="mpill fut" id="f-mpill"'+(ymOf(d)===S.ym?' hidden':'')+'>→ '+MONTHS[+d.slice(5,7)-1]+'</span><span id="f-dtxt">'+esc(fmtLong(d))+'</span></span><input class="ovl" id="f-date" type="date" value="'+esc(d)+'" aria-label="Date"></div>'+
-        '<div class="trow"><span>Paid with</span><span class="tv" id="f-ptxt">'+esc(payNow||"Not set")+'</span><select class="ovl" id="f-pay" aria-label="Paid with">'+(payNow?"":'<option value="">Not set</option>')+PAY_OPTS.map(o=>'<option'+(o===payNow?' selected':'')+'>'+esc(o)+'</option>').join("")+'</select></div>'+
         '<label class="trow"><span>Merchant</span><input class="tin" id="f-mer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-controls="f-msug" aria-expanded="false" placeholder="Name" value="'+esc(merch0)+'"></label>'+
         '<div class="msug" id="f-msug" role="listbox" aria-label="Past merchants" hidden></div>'+
         '<label class="trow" id="f-vrow"><span>Venmo</span><input type="checkbox" class="tchk" id="f-venmo"'+(venmo0?" checked":"")+'></label>'+
@@ -3712,7 +3707,6 @@ function txSheetCore(existing){
       s.querySelectorAll(".tin,.tnote").forEach(i=>{i.addEventListener("focus",()=>showPad(false));i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();i.blur();showPad(true)}})});
       s.querySelector("#f-x").onclick=closeSheet;
       s.querySelector("#f-save2").onclick=()=>save();
-      s.querySelector("#f-pay").onchange=e=>{s.querySelector("#f-ptxt").textContent=e.target.value||"Not set"};
       s.querySelector("#f-kind").onclick=e=>{const b=e.target.closest("button");if(!b)return;kind=b.dataset.k;setTimeout(()=>{try{drawChips()}catch(_){}},0);s.querySelectorAll("#f-kind button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.k===kind)));const cl=s.querySelector("#f-clab");if(cl)cl.textContent=kind==="refund"?"Add to":"Budget Item";drawAmt()};
       const dIn=s.querySelector("#f-date");let dYm=ymOf(d);
       {const cam=s.querySelector("#f-cam"),cin=s.querySelector("#f-camin");if(cam&&cin){cam.onclick=()=>cin.click();cin.onchange=async()=>{const f=cin.files&&cin.files[0];cin.value="";if(!f)return;
@@ -3777,7 +3771,6 @@ function txSheetCore(existing){
         const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim()||catLabel()||(incSrc?incSrc.name:(f?f.it.name:""));return s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
         if(!body.merchant.replace(VP,"").trim()){const nm=itemId===MISC_ID&&body.sub?body.sub:(body.itemName||"");if(nm)body.merchant=(s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?"Venmo: ":"")+nm}
         if(locNow)body.loc=locNow;
-        {const pv=s.querySelector("#f-pay").value;if(pv)body.pay=pv}
         /* you typed or picked a different spot while standing there: remember it for next time (only spots without a business name) */
         try{const fx=LOC.last;if(locNow&&locNow.src!=="gps"&&!locNow.name&&fx&&Date.now()-LOC.lastAt<15*60e3&&(fx.acc||0)<200&&date===today())LOC.learn(locNow.label,fx)}catch(_){}
         {const who=s.querySelector("#f-person").value.trim();if(s.querySelector("#f-venmo").checked&&who)body.person=who}
@@ -3797,7 +3790,7 @@ function txSheetCore(existing){
           let rref=null,rbodyDoc=null;
           if(ref&&rOn){const from=s.querySelector("#f-rfrom").value.trim(),nm=body.merchant.replace(VP,"");
             rbodyDoc=Object.assign({},body,{person:undefined,amount:rAmt,type:"refund",merchant:rMeth+": "+(from?from+" reimbursement":"Reimbursement for "+nm),reimbMethod:rMeth,date:rdate.value||date,note:"For "+nm+(rAmt<a-.004?" ("+money(rAmt)+" of "+money(a)+")":"")+(body.note?" · "+body.note:""),
-              pair:ref.id,reimbFrom:from,person:from||undefined,createdAt:new Date(Date.now()+1).toISOString(),sheet:"sending",sheetMsg:""});delete rbodyDoc.loc;delete rbodyDoc.vpaid;delete rbodyDoc.vdone;delete rbodyDoc.vstate;delete rbodyDoc.pay;
+              pair:ref.id,reimbFrom:from,person:from||undefined,createdAt:new Date(Date.now()+1).toISOString(),sheet:"sending",sheetMsg:""});delete rbodyDoc.loc;delete rbodyDoc.vpaid;delete rbodyDoc.vdone;delete rbodyDoc.vstate;
             if(!rbodyDoc.person)delete rbodyDoc.person;try{rref=await addFast(rbodyDoc);bgWrite(S.db.doc("tx/"+ref.id).update({pair:rref.id}))}catch(_){toast("Saved the purchase, but not the reimbursement. Add it as income.")}}
           if(ref){pushToSheet(ref.id,body).then(ok=>{if(rref)return pushToSheet(rref.id,rbodyDoc).then(ok2=>{if(ok&&ok2)toast("Added both to your sheet")});if(ok)toast("Added "+money(a)+" to your sheet")})}
           // a fix that was still on its way when you tapped Done lands a moment later
