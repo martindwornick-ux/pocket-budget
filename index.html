@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 4, 6:55 PM"</script>
+<script>window.PB_BUILD="Nov 4, 7:05 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -270,18 +270,23 @@ nav.tabs button[aria-current="page"]{color:var(--bar)}
 .wpd span{font-size:15px;color:var(--muted)}
 .wpd b{font-family:var(--display);font-weight:800;font-size:22px;color:var(--ok)}
 @keyframes dup{from{opacity:0;transform:translateY(8px)}}
-.eqcard .chead{margin-bottom:2px}
-.eql{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:7px 0;font-size:17px}
-.eql+.eql{border-top:1px solid var(--line)}
-.eql>span:first-child{color:var(--muted)}
+.eqcard .chead{margin-bottom:14px}
 .eqpl{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--link);border-radius:8px;transition:background .2s}
 .eqpl svg{width:14px;height:14px}.eqpl.editing{background:var(--sel);padding:0 6px;margin-right:-6px}
-.eqt{border-top:2px solid var(--fg)!important;padding-top:9px;margin-top:2px}
-.eqt>span:first-child{color:var(--fg);font-weight:700}
-.eqt b{font-family:var(--display);font-weight:800;font-size:24px}
-.eqt b.neg,.eqd b.neg{color:var(--over)}
-.eqd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:3px;font-size:14px;color:var(--muted)}
-.eqd b{color:var(--ok);font-weight:700;font-size:16px}
+.eq-big{font-family:var(--display);font-weight:800;font-size:clamp(40px,11vw,52px);line-height:1;margin-bottom:4px}
+.eq-big.neg{color:var(--over)}
+.eq-sub{font-size:15px;color:var(--muted);margin-bottom:16px}
+.eq-sub .eqpl{font-size:15px}
+.eq-meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-bottom:16px}
+.eq-meter i{display:block;height:100%;border-radius:3px;background:var(--brand)}
+.eq-meter.over i{background:var(--over)}
+.eq-details{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+.eq-cell{padding:12px 0 4px}
+.eq-cell:first-child{border-right:1px solid var(--line);padding-right:12px}
+.eq-cell:last-child{padding-left:12px}
+.eq-cell small{display:block;font-size:12px;color:var(--muted);margin-bottom:1px}
+.eq-cell b{font-size:17px;font-weight:700}
+.eq-cell b.ok{color:var(--ok)}
 .pnban{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;text-align:left;font:inherit;color:var(--fg);cursor:pointer}
 .pnban:active{transform:scale(.985)}
 .pnic{width:40px;height:40px;border-radius:12px;background:var(--sel);color:var(--link);display:grid;place-items:center;flex:none}.pnic svg{width:22px;height:22px}
@@ -1654,11 +1659,13 @@ function dateCardHTML(itot,t0){
   const inc=incomeFor(S.ym),ed=PAD&&PAD.kind==="income"&&inc.length===1&&PAD.id===inc[0].id;
   const plan=inc.length===1?'<button class="eqpl num'+(ed?" editing":"")+'" data-iplan="'+esc(inc[0].id)+'" aria-label="Planned '+money(itot)+'. Tap to change">'+money(itot)+PENCIL+'</button>':inc.length?'<span class="eqpl num">'+money(itot)+'</span>':'<button class="eqpl" id="addIncome">Set amount'+PENCIL+'</button>';
   const days=isCur?d:dim,pdv=rem>0&&days?round2(rem/days):0,pd='<span data-roll="pd" data-v="'+pdv+'">'+money(pdv)+'</span>';
+  const sp=round2(t0.s+(aside||0)),pct=itot>0?Math.min(100,Math.max(0,sp/itot*100)):0;
   return '<section class="card eqcard"><div class="chead"><h2>'+title+'</h2>'+(side?'<span class="lbl">'+side+'</span>':'')+'</div>'+
-    '<div class="eql"><span>Planned</span>'+plan+'</div>'+
-    (()=>{const sp=round2(t0.s+(aside||0));return '<div class="eql"><span>Spent</span><span class="num"'+(sp<0?' style="color:var(--ok)">+ '+'<span data-roll="spent" data-v="'+(-sp)+'">'+money(-sp)+'</span>':'>− '+'<span data-roll="spent" data-v="'+sp+'">'+money(sp)+'</span>')+'</span></div>'})()+
-    '<div class="eql eqt"><span>'+(over?"Over budget":past?"Left over":"Remaining")+'</span><b class="num'+(over?" neg":"")+'"><span data-roll="rem" data-v="'+Math.abs(rem)+'">'+money(Math.abs(rem))+'</span></b></div>'+
-    (past?'':'<div class="eqd"><span>'+(isCur?(d===1?"Last day of the month":d+" days left, today included"):"Across all "+dim+" days")+'</span><b class="num'+(over?" neg":"")+'">'+pd+' a day</b></div>')+'</section>';
+    '<div class="eq-big num'+(over?" neg":"")+'"><span data-roll="rem" data-v="'+Math.abs(rem)+'">'+money(Math.abs(rem))+'</span></div>'+
+    '<div class="eq-sub">'+(over?"over budget":past?"left over":"remaining of ")+plan+'</div>'+
+    (past?'':'<div class="eq-meter'+(over?" over":"")+'"><i style="width:'+pct.toFixed(1)+'%"></i></div>'+
+    '<div class="eq-details"><div class="eq-cell"><small>'+(isCur?(d===1?"Last day":d+" days left"):"Across "+dim+" days")+'</small><b class="num">'+days+'</b></div>'+
+    '<div class="eq-cell"><small>Per day</small><b class="num ok">'+pd+'</b></div></div>')+'</section>';
 }
 function todayTileHTML(itot,t0){
   const td=today(),d=daysLeftAfterToday(S.ym);
