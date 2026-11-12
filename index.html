@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 12, 7:25 AM"</script>
+<script>window.PB_BUILD="Nov 12, 7:35 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -432,6 +432,9 @@ nav.tabs.hasind button{position:relative;z-index:1;transition:color .3s}nav.tabs
 .btn:disabled{opacity:.5}
 /* sheet */
 .scrim{position:fixed;inset:0;background:rgba(5,15,10,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.discard{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));max-width:616px;margin:0 auto;z-index:5;background:var(--card);border-radius:20px;padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.28);animation:dscin .22s cubic-bezier(.2,.9,.3,1.2) both}
+.discard b{display:block;font-size:16px;margin-bottom:2px}.discard p{margin:0 0 12px;color:var(--muted);font-size:14px}.discard .btnrow{display:flex;gap:10px}.discard .btn{flex:1}
+@keyframes dscin{from{opacity:0;transform:translateY(16px)}}
 .sheet{background:var(--card);width:100%;max-width:640px;border-radius:24px 24px 0 0;max-height:92%;overflow:auto;padding:10px max(20px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));will-change:transform}
 @keyframes up{from{transform:translateY(40px);opacity:.4}}
 @keyframes padup{from{transform:translateY(100%)}}
@@ -3219,7 +3222,7 @@ function openSheet(html,bind){
   const root=$("#sheetRoot");
   root.innerHTML='<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>'+html+'</div></div>';
   document.body.style.overflow="hidden";
-  $("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeSheet()});
+  $("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim")softCloseSheet()});
   const sh=root.querySelector(".sheet"),sc=root.firstChild;
   dragSheet(sc,sh);
   bind&&bind(sh);
@@ -3251,8 +3254,11 @@ function dragSheet(sc,sh){
   const end=()=>{if(mode!==1){mode=0;return}mode=0;
     const a=pts[0],b=pts[pts.length-1],v=b&&a&&b[0]>a[0]?(b[1]-a[1])/(b[0]-a[0]):0;
     /* a flick closes it at the speed of your finger */
-    if(v>0.45)closeSheet(Math.max(110,Math.min(240,(sh.offsetHeight-dy)/v)));else if(dy>Math.min(120,sh.offsetHeight*0.25))closeSheet();
-    else{sh.style.transition="transform .32s "+SHEET_EASE;sc.style.transition="background .28s";sh.style.transform="";sc.style.background="";setTimeout(()=>{sh.style.transition="";sc.style.transition=""},300)}};
+    const snap=()=>{sh.style.transition="transform .32s "+SHEET_EASE;sc.style.transition="background .28s";sh.style.transform="";sc.style.background="";setTimeout(()=>{sh.style.transition="";sc.style.transition=""},300)};
+    const shut=v>0.45||dy>Math.min(120,sh.offsetHeight*0.25);
+    /* a sheet with unsaved input springs back and asks first, so a stray swipe can't lose it */
+    if(shut&&sh._dirty&&sh._dirty()){snap();askDiscard(sc,sh)}
+    else if(v>0.45)closeSheet(Math.max(110,Math.min(240,(sh.offsetHeight-dy)/v)));else if(shut)closeSheet();else snap()};
   sh.addEventListener("touchend",end);sh.addEventListener("touchcancel",end);
 }
 /* iOS keeps a shrunken layout after the keyboard closes, so fixed bars (tab bar, + button) float mid-screen.
@@ -3267,6 +3273,13 @@ function dragSheet(sc,sh){
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")settle()});
   window.addEventListener("orientationchange",settle);
 })();
+function askDiscard(sc,sh){if(sc.querySelector(".discard"))return;try{haptic()}catch(_){}
+  const d=document.createElement("div");d.className="discard";d.setAttribute("role","alertdialog");
+  d.innerHTML='<b>Discard this transaction?</b><p>What you\'ve entered so far will be lost.</p><div class="btnrow"><button class="btn sec" data-dk="keep">Keep editing</button><button class="btn danger" data-dk="go">Discard</button></div>';
+  d.addEventListener("click",e=>{const b=e.target.closest("[data-dk]");if(!b)return;e.stopPropagation();if(b.dataset.dk==="go"){sh._dirty=null;closeSheet()}else d.remove()});
+  sc.appendChild(d);d.querySelector('[data-dk="keep"]').focus({preventScroll:true})}
+function softCloseSheet(){const sc=$("#sheetRoot").firstChild,sh=sc&&sc.querySelector(".sheet");
+  if(sh&&sh._dirty&&sh._dirty()){askDiscard(sc,sh);return}closeSheet()}
 function closeSheet(ms){ms=typeof ms==="number"?ms:220;
   try{const a=document.activeElement;if(a&&a.blur&&a.matches&&a.matches("input,textarea,select"))a.blur()}catch(_){}
   const root=$("#sheetRoot"),sc=root.firstChild;document.body.style.overflow="";
@@ -3277,7 +3290,7 @@ function closeSheet(ms){ms=typeof ms==="number"?ms:220;
   requestAnimationFrame(()=>{sh.style.transform="translateY("+(sh.offsetHeight+40)+"px)";sc.style.background="rgba(5,15,10,0)"});
   setTimeout(()=>{if(root.firstChild===sc)root.innerHTML=""},ms+30);
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(PAD){cancelPad();return}closeSheet()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(PAD){cancelPad();return}softCloseSheet()}});
 
 /* ---------- number pad for planned amounts ---------- */
 // Entry works in cents: typing 5,0,0,0,0 gives $500.00. The first key replaces the old amount.
@@ -3541,6 +3554,10 @@ function txSheetCore(existing){
     '<div class="tsave"><button class="btn" id="f-save2">'+(existing?"Save":"Done")+'</button></div>',
     s=>{
       s.classList.add("txs");txLayoutA(s,existing);
+      {const amt0=tVal(T);let touched=false;const mark=e=>{if(e.isTrusted)touched=true};
+        s.addEventListener("input",mark,true);s.addEventListener("change",mark,true);
+        s.addEventListener("click",e=>{if(e.target.closest("#f-cchips,#f-kind,#f-csug,#f-msug,#f-lsug,#f-rcard"))mark(e)},true);
+        s._dirty=()=>touched||tVal(T)!==amt0}
       const amtB=s.querySelector("#f-amt"),padEl=s.querySelector("#f-pad"),cat=s.querySelector("#f-cat"),ctxt=s.querySelector("#f-ctxt");
       const drawAmt=()=>{const v=tVal(T);amtB.textContent=(kind==="refund"?"+":"")+money(v/100);amtB.className="tamt num"+(kind==="refund"?" inc":"")+(v?"":" zero")+(s.classList.contains("kboff")?"":" on");try{updLeft()}catch(_){}};
       const drawKeys=()=>{const c=T.calc;
