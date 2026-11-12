@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 4, 7:05 PM"</script>
+<script>window.PB_BUILD="Nov 12, 7:25 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -957,6 +957,7 @@ body.mpk-open{overflow:hidden}
 .cd b{align-self:flex-end;font-size:11px;font-weight:700;white-space:nowrap;letter-spacing:-.01em}
 .cd.dark{color:#fff}.cd.dark .n{color:rgba(255,255,255,.85)}
 .cd.zero{background:#cfeed6}.cd.zero .n{color:#1e6b34}
+.cd.gain{background:#17885c;color:#fff}.cd.gain .n{color:rgba(255,255,255,.85)}
 .cd em{align-self:flex-end;font-style:normal;font-size:12px;color:#188038;font-weight:800}
 .cd.fut{background:rgba(60,64,67,.03)}.cd.fut .n{opacity:.45}
 .cd.today{box-shadow:inset 0 0 0 2px var(--g-blue,#1a73e8)}
@@ -2709,14 +2710,14 @@ function calendarCard(fh){
   for(let c=0;c<cells;c++){const n=c-first+1;
     if(n<1||n>dim){g+='<div class="cd out"></div>';continue}
     const v=day[n]||0,iso=ym+"-"+pad(n),fut=n>lastDay,hh=v>0?heatOf(v):0;
-    const cls=["cd"];if(iso===td)cls.push("today");if(fut)cls.push("fut");if(!fut&&!(v>0))cls.push("zero");if(n===big&&v>0)cls.push("big");if(IS.calSel===iso)cls.push("sel");if(v>0&&!fut&&hh>.6)cls.push("dark");
-    g+='<button class="'+cls.join(" ")+'" data-cday="'+iso+'" style="--h:'+hh.toFixed(3)+';--i:'+c+(v>0&&!fut?';--bg:'+flame(hh):'')+'" aria-label="'+esc(fmtLong(iso))+(v>0?", "+money(round2(v)):fut?"":", no spending")+'"><span class="n">'+n+'</span>'+(v>0?'<b class="num">'+kfmt(v)+'</b>':(!fut?'<em aria-hidden="true">✓</em>':''))+'</button>'}
+    const cls=["cd"];if(iso===td)cls.push("today");if(fut)cls.push("fut");const gain=!fut&&v<-.005;if(gain)cls.push("gain");else if(!fut&&!(v>0))cls.push("zero");if(n===big&&v>0)cls.push("big");if(IS.calSel===iso)cls.push("sel");if(v>0&&!fut&&hh>.6)cls.push("dark");
+    g+='<button class="'+cls.join(" ")+'" data-cday="'+iso+'" style="--h:'+hh.toFixed(3)+';--i:'+c+(v>0&&!fut?';--bg:'+flame(hh):'')+'" aria-label="'+esc(fmtLong(iso))+(v>0?", "+money(round2(v)):gain?", came out ahead "+money(round2(-v)):fut?"":", no spending")+'"><span class="n">'+n+'</span>'+(v>0?'<b class="num">'+kfmt(v)+'</b>':gain?'<b class="num">+'+kfmt(-v)+'</b>':(!fut?'<em aria-hidden="true">✓</em>':''))+'</button>'}
   g+='</div>';
   let h='<section class="card calcard"><div class="chead"><h2>Daily spending</h2><div class="cnav"><button data-cmon="-1" aria-label="Previous month">‹</button><span class="lbl">'+MONTHS[m-1].slice(0,3)+' '+y+'</span><button data-cmon="1" aria-label="Next month"'+(ym>=nextYm?" disabled":"")+'>›</button></div></div>'+fh;
   h+='<div class="cchips'+(anim?' anim':'')+'"><div><small>Per day</small><b class="num">'+(lastDay?money(round2(tot/lastDay)):"—")+'</b></div><div><small>$0 days</small><b class="num">'+(lastDay?ns:"—")+'</b></div><div><small>Streak</small><b class="num">'+(lastDay?best+" day"+(best===1?"":"s"):"—")+'</b></div>'+
     (big&&day[big]>0?'<button data-cday="'+ym+'-'+pad(big)+'"><small>Top day</small><b class="num">'+money(round2(day[big])).replace(/\.\d\d$/,"")+'</b><span>'+MONTHS[m-1].slice(0,3)+' '+big+'</span></button>':'')+'</div>';
   h+=g;
-  h+='<div class="calleg"><span>'+money(tot)+' this month</span><span class="scale"><i style="--bg:#cfeed6" title="No spending"></i>&nbsp;Less<i style="--bg:'+flame(.08)+'"></i><i style="--bg:'+flame(.35)+'"></i><i style="--bg:'+flame(.62)+'"></i><i style="--bg:'+flame(.85)+'"></i><i style="--bg:'+flame(1)+'"></i>More</span></div>';
+  h+='<div class="calleg"><span>'+money(tot)+' this month</span><span class="scale"><i style="--bg:#17885c" title="Came out ahead"></i><i style="--bg:#cfeed6" title="No spending"></i>&nbsp;Less<i style="--bg:'+flame(.08)+'"></i><i style="--bg:'+flame(.35)+'"></i><i style="--bg:'+flame(.62)+'"></i><i style="--bg:'+flame(.85)+'"></i><i style="--bg:'+flame(1)+'"></i>More</span></div>';
   h+='<div id="calpanel">'+(IS.calSel?calPanelHTML(IS.calSel):CALHINT)+'</div>';
   return h+'</section>';
 }
@@ -2724,7 +2725,7 @@ function calPanelHTML(iso){
   const ym=ymOf(iso),groups=groupsFor(ym),td=today();
   const all=txOf(ym).filter(t=>t.date===iso&&t.type!=="income"&&(!IS.group||groupNameOf(t,ym)===IS.group)&&(!IS.item||itemNameOf(t,ym)===IS.item));
   const spent=round2(all.reduce((a,t)=>a+sAmt(t),0));
-  let h='<div class="calp"><div class="calph"><b>'+esc(new Date(iso+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"}))+'</b><b class="num">'+money(spent)+'</b></div>';
+  let h='<div class="calp"><div class="calph"><b>'+esc(new Date(iso+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"}))+'</b><b class="num"'+(spent<0?' style="color:var(--ok)"':'')+'>'+(spent<0?"+"+money(-spent):money(spent))+'</b></div>';
   if(!all.length)h+='<p class="calnone">'+(iso>td?"Nothing scheduled yet.":"No spending — nice! 🎉")+'</p>';
   else h+=all.map((t,i)=>{const ref=t.type==="refund";return '<button class="txrow" data-ctx="'+esc(t.id)+'" style="--d:'+(i*0.04).toFixed(2)+'s"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.note?" · "+esc(t.note):"")+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'}).join("");
   return h+'</div>';
