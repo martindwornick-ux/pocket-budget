@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 12, 4:58 PM"</script>
+<script>window.PB_BUILD="Nov 12, 5:55 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -922,6 +922,7 @@ body.mpk-open{overflow:hidden}
 
 /* shared small segmented control inside cards */
 .avhead{margin:4px 0 8px}.avhead h2{font-size:18px}.isel.avrange{font-size:15px;flex:none}.avhead h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.avmort{display:inline-block;font:inherit;font-size:13px;color:var(--muted);background:rgba(60,64,67,.06);border-radius:999px;padding:5px 11px;margin:0 0 8px}.avmort u{color:var(--link);text-decoration:none;font-weight:700}
 .avsum{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 4px}.avsum .note{margin:0}
 .avpill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:14px;font-weight:700}
 .avpill.under{background:rgba(23,136,92,.12);color:var(--ok)}.avpill.over{background:rgba(200,55,45,.12);color:var(--over)}.avpill.even{background:rgba(60,64,67,.08);color:var(--muted)}
@@ -2543,6 +2544,7 @@ const wheelUp=e=>{
 $("#main").addEventListener("pointerup",wheelUp);$("#main").addEventListener("pointercancel",wheelUp);
 $("#main").addEventListener("click",e=>{
   const k=e.target.closest(".drow[data-dkey]");if(k){if(k.dataset.dkey===IS.sel)wholeView();else focusSlice(k.dataset.dkey);return}
+  if(e.target.closest("[data-avmort]")){ls.set("pb.avmort",ls.get("pb.avmort")==="show"?"hide":"show");try{haptic()}catch(_){}render();return}
   const dr=e.target.closest("[data-ddrill]");if(dr){IS.group=dr.dataset.ddrill;IS.item="";IS.sel=null;IS.rot=0;try{haptic()}catch(_){}render();return}
   const tr=e.target.closest("[data-dtrend]");if(tr){if(IS.group)IS.item=tr.dataset.dtrend;else{IS.group=tr.dataset.dtrend;IS.item=""}
     IS.tview="months";IS.bmSel=null;IS.sel=null;IS.rot=0;IS.ranges=IS.ranges||{};if((IS.ranges.totals||6)<3){IS.ranges.totals=6;ls.set("pb.irange.totals","6")}
@@ -3119,7 +3121,10 @@ function avgViewHTML(months,pending){
   const dayNow=cur?+td.slice(8,10):ym<ymOf(td)?dim:0,full=dayNow>=dim,mname=MONTHS[m-1].slice(0,3);
   const R=IS.avr,rsel='<label class="isel avrange"><select id="i-avr" aria-label="Average over">'+AVR.map(([v,l])=>'<option value="'+v+'"'+(+v===R?" selected":"")+'>'+l+'</option>').join("")+'</select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></label>';
   let h='<div class="chead avhead"><h2>'+(IS.group?esc(IS.group)+" vs avg":"Vs your average")+'</h2>'+rsel+'</div>';
-  const keyOf=t=>{const mo=ymOf(t.date||ym+"-01"),g=groupNameOf(t,mo);if(IS.group&&g!==IS.group)return null;return IS.group?itemNameOf(t,mo):g};
+  // the mortgage dwarfs everything else on a dollar axis, so it's left out unless you turn it back on
+  const hideM=ls.get("pb.avmort")!=="show",isM=(t,mo)=>/mortgage/i.test(itemNameOf(t,mo)||"")||/mortgage/i.test(t.merchant||"");
+  let hadM=false;
+  const keyOf=t=>{const mo=ymOf(t.date||ym+"-01"),g=groupNameOf(t,mo);if(IS.group&&g!==IS.group)return null;if(isM(t,mo)){hadM=true;if(hideM)return null}return IS.group?itemNameOf(t,mo):g};
   const sumOf=(mo,cut)=>{const o={};txOf(mo).forEach(t=>{if(t.type==="income")return;const d=+String(t.date||"").slice(8,10)||1;if(cut&&d>cut)return;const k=keyOf(t);if(k==null)return;o[k]=(o[k]||0)+sAmt(t)});return o};
   const tot=o=>Object.values(o).reduce((a,b)=>a+Math.max(0,b),0);
   const past=months.filter(mo=>mo<ym&&txOf(mo).some(t=>t.type!=="income"));
@@ -3135,6 +3140,7 @@ function avgViewHTML(months,pending){
   const N=round2(tot(now)),A=round2(tot(soFar)),W=round2(tot(whole)),D=round2(N-A),pct=A>0?Math.round(D/A*100):0;
   const band=Math.max(15,A*0.05),st=D>band?"over":D<-band?"under":"even",f0=v=>money(v).replace(/\.\d\d$/,"");
   if(pending)h+='<p class="note" style="margin:4px 0 0">Loading earlier months…</p>';
+  if(hadM)h+='<button class="avmort" data-avmort aria-pressed="'+!hideM+'">'+(hideM?'Mortgage hidden · <u>Show</u>':'Mortgage shown · <u>Hide</u>')+'</button>';
   h+='<div class="avsum"><span class="avpill '+st+'">'+(st==="even"?"Right about average":(st==="under"?"↓ ":"↑ ")+f0(Math.abs(D))+(st==="under"?" under":" over")+" usual"+(A>0?" ("+Math.abs(pct)+"%)":""))+'</span>'+
     '<span class="note">'+(full?"for the whole month":"by "+mname+" "+dayNow)+'</span></div>';
   // one bar per category on a dollar scale: the outlined tank is that category's usual whole month,
