@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 12, 7:35 AM"</script>
+<script>window.PB_BUILD="Nov 12, 4:25 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -921,6 +921,34 @@ body.mpk-open{overflow:hidden}
 .leaflet-control-attribution{background:rgba(255,255,255,.85);padding:1px 6px;font-size:10.5px;color:#333}.leaflet-control-attribution a{color:#1a73e8;text-decoration:none}
 
 /* shared small segmented control inside cards */
+.avh{padding:4px 2px 2px}
+.avh small{display:block;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+.avh .avbig{display:block;font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:2px 0 4px}
+.avh .avsub{font-size:15px;color:var(--muted)}.avh .avsub b{color:var(--fg)}
+.avpill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;border-radius:999px;font-size:14px;font-weight:700}
+.avpill.under{background:rgba(23,136,92,.12);color:var(--ok)}.avpill.over{background:rgba(200,55,45,.12);color:var(--over)}.avpill.even{background:rgba(60,64,67,.08);color:var(--muted)}
+.avcmp{margin:16px 0 4px;display:grid;gap:8px}
+.avcmp .r{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.avcmp .r b{color:var(--fg);font-size:14px}
+.avcmp .t{height:12px;border-radius:6px;background:var(--trk,rgba(60,64,67,.08));overflow:hidden}
+.avcmp .t i{display:block;height:100%;border-radius:6px;background:var(--brand);transform-origin:left;animation:avgrow .6s cubic-bezier(.2,.9,.3,1) both}
+.avcmp .r.typ .t i{background:#9aa0a6}.avcmp .t i.over{background:var(--over)}
+@keyframes avgrow{from{transform:scaleX(0)}}
+.avchips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 6px}
+.avchips div{background:rgba(60,64,67,.05);border-radius:14px;padding:10px 12px}
+.avchips small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.avchips b{font-size:18px}
+.avlist h4{margin:18px 2px 6px;font-size:15px}.avlist h4 span{font-weight:500;color:var(--muted);font-size:13px}
+.avr{display:block;width:100%;text-align:left;padding:10px 2px;border-top:1px solid var(--line);font:inherit;color:inherit}
+.avr .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.avr .nm{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avr .dl{font-weight:700;font-size:14px;white-space:nowrap}.avr .dl.over{color:var(--over)}.avr .dl.under{color:var(--ok)}.avr .dl.even{color:var(--muted)}
+.avr .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.avr .bar{position:relative;height:8px;border-radius:4px;background:var(--trk,rgba(60,64,67,.08));margin-top:7px}
+.avr .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--brand);transform-origin:left;animation:avgrow .6s cubic-bezier(.2,.9,.3,1) both}
+.avr .bar i.over{background:var(--over)}
+.avr .bar u{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;border-radius:1px;background:var(--fg);opacity:.55}
+.avr:active{opacity:.6}
 .seg2{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;border-radius:12px;background:rgba(60,64,67,.07);margin:2px 0 12px}
 .seg2 button{padding:7px 4px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted);transition:background .2s,color .2s,box-shadow .2s}
 .seg2 button[aria-pressed="true"]{background:#fff;color:var(--g-blue,#1a73e8);font-weight:600;box-shadow:0 1px 3px rgba(60,64,67,.18)}
@@ -2519,8 +2547,8 @@ $("#main").addEventListener("click",e=>{
   const tr=e.target.closest("[data-dtrend]");if(tr){if(IS.group)IS.item=tr.dataset.dtrend;else{IS.group=tr.dataset.dtrend;IS.item=""}
     IS.tview="months";IS.bmSel=null;IS.sel=null;IS.rot=0;IS.ranges=IS.ranges||{};if((IS.ranges.totals||6)<3){IS.ranges.totals=6;ls.set("pb.irange.totals","6")}
     render();window.scrollTo({top:0,behavior:"smooth"});return}
-  const tv=e.target.closest("[data-tview]");if(tv){const v=tv.dataset.tview;if((IS.tview||"wheel")===v)return;IS.tview=v;IS.bmSel=null;if(v==="wheel")IS.item="";
-    if(v==="months"){IS.ranges=IS.ranges||{};if((IS.ranges.totals||6)<3){IS.ranges.totals=6;ls.set("pb.irange.totals","6")}}
+  const tv=e.target.closest("[data-tview]");if(tv){const v=tv.dataset.tview;if((IS.tview||"avg")===v)return;IS.tview=v;IS.bmSel=null;if(v==="wheel")IS.item="";
+    if(v==="months"||v==="avg"){IS.ranges=IS.ranges||{};if((IS.ranges.totals||6)<3){IS.ranges.totals=6;ls.set("pb.irange.totals","6")}}
     IS.sel=null;IS.rot=0;try{haptic()}catch(_){}render();return}
   if(e.target.closest("[data-dback]")){IS.group="";IS.item="";IS.sel=null;IS.rot=0;render();return}
 });
@@ -2540,7 +2568,7 @@ function dock(){
   DBAR.raf=0;const w=document.querySelector("#main .dwrap"),el=dbarEl();
   const d=IS.sel&&IS.dd&&IS.dd[IS.sel];
   const hh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120;
-  const show=!!(w&&d&&S.tab==="insights"&&IS.sub==="totals"&&IS.tview!=="months"&&w.getBoundingClientRect().bottom<hh+24);
+  const show=!!(w&&d&&S.tab==="insights"&&IS.sub==="totals"&&IS.tview==="wheel"&&w.getBoundingClientRect().bottom<hh+24);
   if(d){el.style.setProperty("--c",d.c);el.querySelector(".dbn").textContent=IS.sel;el.querySelector(".dbv").textContent=money(round2(d.v));el.querySelector(".dbpct").textContent=d.pct+"%"}
   el.classList.toggle("on",show);
 }
@@ -3085,6 +3113,47 @@ $("#main").addEventListener("click",e=>{
   const r=e.target.closest(".mlrow");if(r)mlGo(+r.dataset.mi);
 });
 
+/* ---------- Totals: this month vs your average month, compared at the same day ---------- */
+function avgViewHTML(months,pending){
+  const ym=S.ym,[y,m]=ym.split("-").map(Number),dim=new Date(y,m,0).getDate(),td=today(),cur=ym===ymOf(td);
+  const dayNow=cur?+td.slice(8,10):ym<ymOf(td)?dim:0,full=dayNow>=dim;
+  const keyOf=t=>{const g=groupNameOf(t,ymOf(t.date||ym+"-01"));if(IS.group&&g!==IS.group)return null;return IS.group?itemNameOf(t,ymOf(t.date||ym+"-01")):g};
+  // per month: spending through the same day (capped at that month's length) and for the whole month, by group or item
+  const sumOf=(mo,cut)=>{const o={};txOf(mo).forEach(t=>{if(t.type==="income")return;const d=+String(t.date||"").slice(8,10)||1;if(cut&&d>cut)return;const k=keyOf(t);if(k==null)return;o[k]=(o[k]||0)+sAmt(t)});return o};
+  const tot=o=>Object.values(o).reduce((a,b)=>a+b,0);
+  const past=months.filter(mo=>mo<ym&&txOf(mo).some(t=>t.type!=="income"));
+  const label=IS.group||"spending";
+  if(!dayNow)return '<p class="note" style="text-align:center;margin:18px 0">This month hasn\'t started yet.</p>';
+  if(!past.length)return '<p class="note" style="text-align:center;margin:18px 0">'+(pending?"Loading earlier months…":"Pick Past 3, 6 or 12 Months above to compare this month with your average.")+'</p>';
+  const now=sumOf(ym,full?0:dayNow),soFar={},whole={};
+  past.forEach(mo=>{const [py,pm]=mo.split("-").map(Number),pdim=new Date(py,pm,0).getDate();
+    const a=sumOf(mo,full?0:Math.min(dayNow,pdim)),b=sumOf(mo,0);
+    Object.keys(a).forEach(k=>soFar[k]=(soFar[k]||0)+a[k]/past.length);Object.keys(b).forEach(k=>whole[k]=(whole[k]||0)+b[k]/past.length)});
+  const N=round2(tot(now)),A=round2(tot(soFar)),W=round2(tot(whole)),D=round2(N-A),pct=A>0?Math.round(D/A*100):0;
+  const band=Math.max(15,A*0.05),st=D>band?"over":D<-band?"under":"even";
+  const mname=MONTHS[m-1].slice(0,3),when=full?"for a whole month":"by "+mname+" "+dayNow;
+  let h='';
+  if(pending)h+='<p class="note" style="margin:4px 0 0">Loading earlier months…</p>';
+  h+='<div class="avh"><small>'+(full?MONTHS[m-1]+" "+label:label.charAt(0).toUpperCase()+label.slice(1)+" so far")+'</small><b class="avbig num">'+money(N).replace(/\.\d\d$/,"")+'</b>'+
+    '<div class="avsub">Your average '+when+' is <b class="num">'+money(A).replace(/\.\d\d$/,"")+'</b></div>'+
+    '<span class="avpill '+st+'">'+(st==="even"?"Right about average":(st==="under"?"↓ ":"↑ ")+money(Math.abs(D)).replace(/\.\d\d$/,"")+(st==="under"?" less":" more")+" than usual"+(A>0?" ("+Math.abs(pct)+"%)":""))+'</span></div>';
+  const mx=Math.max(N,A,1);
+  h+='<div class="avcmp"><div class="r"><span>This month</span><div class="t"><i'+(st==="over"?' class="over"':'')+' style="width:'+(N/mx*100).toFixed(1)+'%"></i></div><b class="num">'+money(N).replace(/\.\d\d$/,"")+'</b></div>'+
+    '<div class="r typ"><span>Average</span><div class="t"><i style="width:'+(A/mx*100).toFixed(1)+'%;animation-delay:.08s"></i></div><b class="num">'+money(A).replace(/\.\d\d$/,"")+'</b></div></div>';
+  if(!full){const proj=A>0?N/A*W:N;
+    h+='<div class="avchips"><div><small>Avg full month</small><b class="num">'+money(W).replace(/\.\d\d$/,"")+'</b></div><div><small>On pace for</small><b class="num">'+money(proj).replace(/\.\d\d$/,"")+'</b></div></div>'}
+  const keys=Array.from(new Set(Object.keys(now).concat(Object.keys(soFar)))).filter(k=>Math.abs(now[k]||0)>.5||(soFar[k]||0)>.5);
+  keys.sort((a,b)=>((now[b]||0)-(soFar[b]||0))-((now[a]||0)-(soFar[a]||0)));
+  if(keys.length){
+    h+='<div class="avlist"><h4>'+(IS.group?"Items in "+esc(IS.group):"By group")+' <span>· '+(IS.group?"tap for its trend":"tap to see items")+'</span></h4>';
+    h+=keys.map((k,i)=>{const n=round2(now[k]||0),a=round2(soFar[k]||0),d=round2(n-a),bd=Math.max(5,a*0.1),s2=d>bd?"over":d<-bd?"under":"even",mx2=Math.max(n,a,1);
+      return '<button class="avr" '+(IS.group?'data-dtrend':'data-ddrill')+'="'+esc(k)+'"><div class="top"><span class="nm">'+esc(k)+'</span><span class="dl num '+s2+'">'+(s2==="even"?"≈ avg":(d>0?"+":"−")+money(Math.abs(d)).replace(/\.\d\d$/,""))+'</span></div>'+
+        '<div class="sub num">'+money(n).replace(/\.\d\d$/,"")+' vs '+money(a).replace(/\.\d\d$/,"")+' avg</div>'+
+        '<div class="bar"><i'+(s2==="over"?' class="over"':'')+' style="width:'+(Math.max(0,n)/mx2*100).toFixed(1)+'%;animation-delay:'+(i*0.03).toFixed(2)+'s"></i>'+(a>0?'<u style="left:'+(a/mx2*100).toFixed(1)+'%"></u>':'')+'</div></button>'}).join("")+'</div>';
+  }
+  h+='<p class="note" style="margin:12px 2px 0">Average of '+past.length+' month'+(past.length===1?"":"s")+' ('+shortM(past[0])+(past.length>1?" – "+shortM(past[past.length-1]):"")+')'+(full?"":', each counted through day '+dayNow)+'. The line on each bar marks the average.</p>';
+  return h;
+}
 function renderInsights(groups,sm){
   IS.ranges=IS.ranges||{};
   if(!IS.ranges[IS.sub])IS.ranges[IS.sub]=+(ls.get("pb.irange."+IS.sub)||ls.get("pb.irange")||6);
@@ -3126,7 +3195,9 @@ function renderInsights(groups,sm){
   const cm=colorMap(IS.group?keys:gnames.concat(keys.filter(k=>!gnames.includes(k))));
   const total=round2(keys.reduce((a,k)=>a+byKey[k],0));
   if(IS.sub==="totals"){
-    h+='<div class="seg2 tview" role="group" aria-label="View"><button data-tview="wheel" aria-pressed="'+!BYM+'">Wheel</button><button data-tview="months" aria-pressed="'+BYM+'">By month</button></div>';
+    const AVG=!BYM&&IS.tview!=="wheel";
+    h+='<div class="seg2 tview" role="group" aria-label="View"><button data-tview="avg" aria-pressed="'+AVG+'">vs Average</button><button data-tview="wheel" aria-pressed="'+(IS.tview==="wheel")+'">Wheel</button><button data-tview="months" aria-pressed="'+BYM+'">By month</button></div>';
+    if(AVG){if(IS.group)h+='<button class="dback" data-dback>‹ All groups</button>';return h+avgViewHTML(months,pending)+'</section>'}
     if(BYM){
       if(!order.length)return h+'<p class="note" style="text-align:center;margin:18px 0">No spending logged for this period yet.</p></section>';
       h+=barChartI(months,byMonth,order,cm,(IS.item||IS.group||"All spending"));
