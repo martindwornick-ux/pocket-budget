@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 12, 4:25 PM"</script>
+<script>window.PB_BUILD="Nov 12, 4:40 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -921,33 +921,26 @@ body.mpk-open{overflow:hidden}
 .leaflet-control-attribution{background:rgba(255,255,255,.85);padding:1px 6px;font-size:10.5px;color:#333}.leaflet-control-attribution a{color:#1a73e8;text-decoration:none}
 
 /* shared small segmented control inside cards */
-.avh{padding:4px 2px 2px}
-.avh small{display:block;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.02em;text-transform:uppercase}
-.avh .avbig{display:block;font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:2px 0 4px}
-.avh .avsub{font-size:15px;color:var(--muted)}.avh .avsub b{color:var(--fg)}
-.avpill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;border-radius:999px;font-size:14px;font-weight:700}
+.avhead{margin:4px 0 8px}.avhead h2{font-size:18px}.isel.avrange{font-size:15px;flex:none}.avhead h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.avsum{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 4px}.avsum .note{margin:0}
+.avpill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:14px;font-weight:700}
 .avpill.under{background:rgba(23,136,92,.12);color:var(--ok)}.avpill.over{background:rgba(200,55,45,.12);color:var(--over)}.avpill.even{background:rgba(60,64,67,.08);color:var(--muted)}
-.avcmp{margin:16px 0 4px;display:grid;gap:8px}
-.avcmp .r{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-.avcmp .r b{color:var(--fg);font-size:14px}
-.avcmp .t{height:12px;border-radius:6px;background:var(--trk,rgba(60,64,67,.08));overflow:hidden}
-.avcmp .t i{display:block;height:100%;border-radius:6px;background:var(--brand);transform-origin:left;animation:avgrow .6s cubic-bezier(.2,.9,.3,1) both}
-.avcmp .r.typ .t i{background:#9aa0a6}.avcmp .t i.over{background:var(--over)}
-@keyframes avgrow{from{transform:scaleX(0)}}
-.avchips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 6px}
-.avchips div{background:rgba(60,64,67,.05);border-radius:14px;padding:10px 12px}
-.avchips small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
-.avchips b{font-size:18px}
-.avlist h4{margin:18px 2px 6px;font-size:15px}.avlist h4 span{font-weight:500;color:var(--muted);font-size:13px}
+.avkey{display:flex;align-items:center;gap:8px;justify-content:center;font-size:13px;color:var(--muted);margin:-2px 0 4px}.avkey i{width:22px;border-top:2px dashed var(--fg);opacity:.6}.avkey b{color:var(--fg)}
+.avchart .avtv{font-size:13px;font-weight:800;fill:var(--fg)}.avchart .avxl{font-size:12px;font-weight:600}
+.avchart .avline{stroke:var(--fg);stroke-width:1.5;stroke-dasharray:4 4;opacity:.6}.avchart .avll{font-size:10.5px;font-weight:700;fill:var(--fg);opacity:.75}
+.avchart .avcol{transform-origin:0 228px;animation:avup .6s cubic-bezier(.2,.9,.3,1) both;animation-delay:var(--d)}
+@keyframes avup{from{transform:scaleY(0)}}@keyframes avgrow{from{transform:scaleX(0)}}
+.avlist h4{margin:16px 2px 4px;font-size:15px}.avlist h4 span{font-weight:500;color:var(--muted);font-size:12px}
 .avr{display:block;width:100%;text-align:left;padding:10px 2px;border-top:1px solid var(--line);font:inherit;color:inherit}
 .avr .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.avr .nm{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.avr .dl{font-weight:700;font-size:14px;white-space:nowrap}.avr .dl.over{color:var(--over)}.avr .dl.under{color:var(--ok)}.avr .dl.even{color:var(--muted)}
-.avr .sub{font-size:13px;color:var(--muted);margin-top:2px}
-.avr .bar{position:relative;height:8px;border-radius:4px;background:var(--trk,rgba(60,64,67,.08));margin-top:7px}
-.avr .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--brand);transform-origin:left;animation:avgrow .6s cubic-bezier(.2,.9,.3,1) both}
-.avr .bar i.over{background:var(--over)}
-.avr .bar u{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;border-radius:1px;background:var(--fg);opacity:.55}
+.avr .nm{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avr .nm i{flex:none;width:10px;height:10px;border-radius:3px}
+.avr .dl{font-size:13px;color:var(--muted);white-space:nowrap}.avr .dl b{color:var(--fg);font-size:15px}
+.avr .sub{font-size:12.5px;color:var(--muted);margin-top:5px}.avr .sub em{font-style:normal;font-weight:700}.avr .sub em.over{color:var(--over)}.avr .sub em.under{color:var(--ok)}
+.avr .bar{position:relative;height:9px;border-radius:5px;background:var(--trk,rgba(60,64,67,.08));margin-top:7px}
+.avr .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--c);transform-origin:left;animation:avgrow .6s cubic-bezier(.2,.9,.3,1) both}
+.avr .bar s{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-2px;border-radius:1px;background:var(--muted);opacity:.7}
+.avr .bar u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--fg);box-shadow:0 0 0 1.5px var(--card)}
 .avr:active{opacity:.6}
 .seg2{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;border-radius:12px;background:rgba(60,64,67,.07);margin:2px 0 12px}
 .seg2 button{padding:7px 4px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted);transition:background .2s,color .2s,box-shadow .2s}
@@ -2548,7 +2541,7 @@ $("#main").addEventListener("click",e=>{
     IS.tview="months";IS.bmSel=null;IS.sel=null;IS.rot=0;IS.ranges=IS.ranges||{};if((IS.ranges.totals||6)<3){IS.ranges.totals=6;ls.set("pb.irange.totals","6")}
     render();window.scrollTo({top:0,behavior:"smooth"});return}
   const tv=e.target.closest("[data-tview]");if(tv){const v=tv.dataset.tview;if((IS.tview||"avg")===v)return;IS.tview=v;IS.bmSel=null;if(v==="wheel")IS.item="";
-    if(v==="months"||v==="avg"){IS.ranges=IS.ranges||{};if((IS.ranges.totals||6)<3){IS.ranges.totals=6;ls.set("pb.irange.totals","6")}}
+    if(v==="months"){IS.ranges=IS.ranges||{};if((IS.ranges.totals||6)<3){IS.ranges.totals=6;ls.set("pb.irange.totals","6")}}
     IS.sel=null;IS.rot=0;try{haptic()}catch(_){}render();return}
   if(e.target.closest("[data-dback]")){IS.group="";IS.item="";IS.sel=null;IS.rot=0;render();return}
 });
@@ -3116,48 +3109,52 @@ $("#main").addEventListener("click",e=>{
 /* ---------- Totals: this month vs your average month, compared at the same day ---------- */
 function avgViewHTML(months,pending){
   const ym=S.ym,[y,m]=ym.split("-").map(Number),dim=new Date(y,m,0).getDate(),td=today(),cur=ym===ymOf(td);
-  const dayNow=cur?+td.slice(8,10):ym<ymOf(td)?dim:0,full=dayNow>=dim;
-  const keyOf=t=>{const g=groupNameOf(t,ymOf(t.date||ym+"-01"));if(IS.group&&g!==IS.group)return null;return IS.group?itemNameOf(t,ymOf(t.date||ym+"-01")):g};
-  // per month: spending through the same day (capped at that month's length) and for the whole month, by group or item
+  const dayNow=cur?+td.slice(8,10):ym<ymOf(td)?dim:0,full=dayNow>=dim,mname=MONTHS[m-1].slice(0,3);
+  const R=IS.avr,rsel='<label class="isel avrange"><select id="i-avr" aria-label="Average over">'+AVR.map(([v,l])=>'<option value="'+v+'"'+(+v===R?" selected":"")+'>'+l+'</option>').join("")+'</select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></label>';
+  let h='<div class="chead avhead"><h2>'+(IS.group?esc(IS.group)+" vs avg":"Vs your average")+'</h2>'+rsel+'</div>';
+  const keyOf=t=>{const mo=ymOf(t.date||ym+"-01"),g=groupNameOf(t,mo);if(IS.group&&g!==IS.group)return null;return IS.group?itemNameOf(t,mo):g};
   const sumOf=(mo,cut)=>{const o={};txOf(mo).forEach(t=>{if(t.type==="income")return;const d=+String(t.date||"").slice(8,10)||1;if(cut&&d>cut)return;const k=keyOf(t);if(k==null)return;o[k]=(o[k]||0)+sAmt(t)});return o};
-  const tot=o=>Object.values(o).reduce((a,b)=>a+b,0);
+  const tot=o=>Object.values(o).reduce((a,b)=>a+Math.max(0,b),0);
   const past=months.filter(mo=>mo<ym&&txOf(mo).some(t=>t.type!=="income"));
-  const label=IS.group||"spending";
-  if(!dayNow)return '<p class="note" style="text-align:center;margin:18px 0">This month hasn\'t started yet.</p>';
-  if(!past.length)return '<p class="note" style="text-align:center;margin:18px 0">'+(pending?"Loading earlier months…":"Pick Past 3, 6 or 12 Months above to compare this month with your average.")+'</p>';
+  if(!dayNow)return h+'<p class="note" style="text-align:center;margin:18px 0">This month hasn\'t started yet.</p>';
+  if(!past.length)return h+'<p class="note" style="text-align:center;margin:18px 0">'+(pending?"Loading earlier months…":"No earlier months logged to compare with yet.")+'</p>';
   const now=sumOf(ym,full?0:dayNow),soFar={},whole={};
   past.forEach(mo=>{const [py,pm]=mo.split("-").map(Number),pdim=new Date(py,pm,0).getDate();
     const a=sumOf(mo,full?0:Math.min(dayNow,pdim)),b=sumOf(mo,0);
     Object.keys(a).forEach(k=>soFar[k]=(soFar[k]||0)+a[k]/past.length);Object.keys(b).forEach(k=>whole[k]=(whole[k]||0)+b[k]/past.length)});
+  const keys=Array.from(new Set(Object.keys(now).concat(Object.keys(whole)))).filter(k=>(now[k]||0)>.5||(whole[k]||0)>.5);
+  keys.sort((a,b)=>(whole[b]||0)-(whole[a]||0)||(now[b]||0)-(now[a]||0));
+  const cm=colorMap(keys);
   const N=round2(tot(now)),A=round2(tot(soFar)),W=round2(tot(whole)),D=round2(N-A),pct=A>0?Math.round(D/A*100):0;
-  const band=Math.max(15,A*0.05),st=D>band?"over":D<-band?"under":"even";
-  const mname=MONTHS[m-1].slice(0,3),when=full?"for a whole month":"by "+mname+" "+dayNow;
-  let h='';
+  const band=Math.max(15,A*0.05),st=D>band?"over":D<-band?"under":"even",f0=v=>money(v).replace(/\.\d\d$/,"");
   if(pending)h+='<p class="note" style="margin:4px 0 0">Loading earlier months…</p>';
-  h+='<div class="avh"><small>'+(full?MONTHS[m-1]+" "+label:label.charAt(0).toUpperCase()+label.slice(1)+" so far")+'</small><b class="avbig num">'+money(N).replace(/\.\d\d$/,"")+'</b>'+
-    '<div class="avsub">Your average '+when+' is <b class="num">'+money(A).replace(/\.\d\d$/,"")+'</b></div>'+
-    '<span class="avpill '+st+'">'+(st==="even"?"Right about average":(st==="under"?"↓ ":"↑ ")+money(Math.abs(D)).replace(/\.\d\d$/,"")+(st==="under"?" less":" more")+" than usual"+(A>0?" ("+Math.abs(pct)+"%)":""))+'</span></div>';
-  const mx=Math.max(N,A,1);
-  h+='<div class="avcmp"><div class="r"><span>This month</span><div class="t"><i'+(st==="over"?' class="over"':'')+' style="width:'+(N/mx*100).toFixed(1)+'%"></i></div><b class="num">'+money(N).replace(/\.\d\d$/,"")+'</b></div>'+
-    '<div class="r typ"><span>Average</span><div class="t"><i style="width:'+(A/mx*100).toFixed(1)+'%;animation-delay:.08s"></i></div><b class="num">'+money(A).replace(/\.\d\d$/,"")+'</b></div></div>';
-  if(!full){const proj=A>0?N/A*W:N;
-    h+='<div class="avchips"><div><small>Avg full month</small><b class="num">'+money(W).replace(/\.\d\d$/,"")+'</b></div><div><small>On pace for</small><b class="num">'+money(proj).replace(/\.\d\d$/,"")+'</b></div></div>'}
-  const keys=Array.from(new Set(Object.keys(now).concat(Object.keys(soFar)))).filter(k=>Math.abs(now[k]||0)>.5||(soFar[k]||0)>.5);
-  keys.sort((a,b)=>((now[b]||0)-(soFar[b]||0))-((now[a]||0)-(soFar[a]||0)));
-  if(keys.length){
-    h+='<div class="avlist"><h4>'+(IS.group?"Items in "+esc(IS.group):"By group")+' <span>· '+(IS.group?"tap for its trend":"tap to see items")+'</span></h4>';
-    h+=keys.map((k,i)=>{const n=round2(now[k]||0),a=round2(soFar[k]||0),d=round2(n-a),bd=Math.max(5,a*0.1),s2=d>bd?"over":d<-bd?"under":"even",mx2=Math.max(n,a,1);
-      return '<button class="avr" '+(IS.group?'data-dtrend':'data-ddrill')+'="'+esc(k)+'"><div class="top"><span class="nm">'+esc(k)+'</span><span class="dl num '+s2+'">'+(s2==="even"?"≈ avg":(d>0?"+":"−")+money(Math.abs(d)).replace(/\.\d\d$/,""))+'</span></div>'+
-        '<div class="sub num">'+money(n).replace(/\.\d\d$/,"")+' vs '+money(a).replace(/\.\d\d$/,"")+' avg</div>'+
-        '<div class="bar"><i'+(s2==="over"?' class="over"':'')+' style="width:'+(Math.max(0,n)/mx2*100).toFixed(1)+'%;animation-delay:'+(i*0.03).toFixed(2)+'s"></i>'+(a>0?'<u style="left:'+(a/mx2*100).toFixed(1)+'%"></u>':'')+'</div></button>'}).join("")+'</div>';
-  }
-  h+='<p class="note" style="margin:12px 2px 0">Average of '+past.length+' month'+(past.length===1?"":"s")+' ('+shortM(past[0])+(past.length>1?" – "+shortM(past[past.length-1]):"")+')'+(full?"":', each counted through day '+dayNow)+'. The line on each bar marks the average.</p>';
+  h+='<div class="avsum"><span class="avpill '+st+'">'+(st==="even"?"Right about average":(st==="under"?"↓ ":"↑ ")+f0(Math.abs(D))+(st==="under"?" under":" over")+" usual"+(A>0?" ("+Math.abs(pct)+"%)":""))+'</span>'+
+    '<span class="note">'+(full?"for the whole month":"by "+mname+" "+dayNow)+'</span></div>';
+  // stacked columns: this month so far | average whole month, with a dashed line where the average usually is by today
+  const Wd=340,H=250,L=44,Rr=8,T=22,B=40,pw=Wd-L-Rr,ph=H-T-B,max=niceMax(Math.max(N,W,A)),bw=82;
+  const cols=[[full?mname:mname+" so far",now,N],["Avg month",whole,W]],cx=[L+pw*0.27-bw/2,L+pw*0.73-bw/2];
+  let g='';for(let i=0;i<=4;i++){const yy=T+ph-ph*i/4;g+='<line x1="'+L+'" x2="'+(Wd-Rr)+'" y1="'+yy+'" y2="'+yy+'" class="grid"/><text x="'+(L-6)+'" y="'+(yy+4)+'" class="ax" text-anchor="end">'+kfmt(max*i/4)+'</text>'}
+  cols.forEach(([lab,o,t],ci)=>{let yy=T+ph;const parts=keys.map(k=>[k,Math.max(0,o[k]||0)]).filter(p=>p[1]>0);let col='';
+    parts.forEach(([k,v],pi)=>{const hh=ph*v/max;yy-=hh;col+='<path d="'+barPath(cx[ci],yy,bw,hh,pi===parts.length-1?6:0)+'" fill="'+cm[k]+'"/>'});
+    g+='<g class="avcol" style="--d:'+(ci*0.08)+'s">'+col+'</g><text x="'+(cx[ci]+bw/2)+'" y="'+(yy-7)+'" class="avtv" text-anchor="middle">'+f0(t)+'</text><text x="'+(cx[ci]+bw/2)+'" y="'+(H-B+18)+'" class="ax avxl" text-anchor="middle">'+esc(lab)+'</text>'});
+  if(!full&&A>0){const ly=T+ph-ph*A/max;g+='<line x1="'+(cx[0]-8)+'" x2="'+(cx[1]+bw+8)+'" y1="'+ly+'" y2="'+ly+'" class="avline"/>'}
+  h+='<svg class="chart avchart" viewBox="0 0 '+Wd+' '+H+'" role="img" aria-label="'+esc((full?mname:mname+" so far")+" "+f0(N)+", average month "+f0(W))+'">'+g+'</svg>'+(!full&&A>0?'<div class="avkey"><i></i>Usual by '+mname+' '+dayNow+' <b class="num">'+f0(A)+'</b></div>':'');
+  // category rows: spent so far vs the average whole month, tick where the average is by today
+  h+='<div class="avlist"><h4>'+(IS.group?"Items":"Categories")+' <span>· so far vs avg month · '+(IS.group?"tap for trend":"tap for items")+'</span></h4>';
+  h+=keys.map((k,i)=>{const n=round2(now[k]||0),w=round2(whole[k]||0),a=round2(soFar[k]||0),mx2=Math.max(n,w,1),bd=Math.max(5,a*0.1),s2=n-a>bd?"over":n-a<-bd?"under":"even";
+    return '<button class="avr" '+(IS.group?'data-dtrend':'data-ddrill')+'="'+esc(k)+'"><div class="top"><span class="nm"><i style="background:'+cm[k]+'"></i>'+esc(k)+'</span><span class="dl num"><b>'+f0(n)+'</b> / '+f0(w)+'</span></div>'+
+      '<div class="bar"><i class="'+s2+'" style="--c:'+cm[k]+';width:'+(Math.max(0,n)/mx2*100).toFixed(1)+'%;animation-delay:'+(i*0.03).toFixed(2)+'s"></i><s style="left:'+(w/mx2*100).toFixed(1)+'%"></s>'+(!full&&a>0?'<u style="left:'+(a/mx2*100).toFixed(1)+'%"></u>':'')+'</div>'+
+      '<div class="sub">'+(w>0?Math.round(n/w*100)+'% of a usual month':'Not usually spent')+(!full&&a>0?' · '+(s2==="even"?"on track":s2==="over"?'<em class="over">'+f0(n-a)+' ahead of usual</em>':'<em class="under">'+f0(a-n)+' behind usual</em>'):'')+'</div></button>'}).join("")+'</div>';
+  h+='<p class="note" style="margin:12px 2px 0">Average of '+past.length+' month'+(past.length===1?"":"s")+' ('+shortM(past[0])+" ’"+past[0].slice(2,4)+(past.length>1?" – "+shortM(past[past.length-1])+" ’"+past[past.length-1].slice(2,4):"")+'). '+(full?"":'The small tick on each bar is where you usually are by '+mname+' '+dayNow+'; the end mark is a usual whole month.')+'</p>';
   return h;
 }
+const AVR=[["1","Last month"],["3","3 months"],["6","6 months"],["12","Year"],["36","3 years"],["120","All time"]];
 function renderInsights(groups,sm){
   IS.ranges=IS.ranges||{};
   if(!IS.ranges[IS.sub])IS.ranges[IS.sub]=+(ls.get("pb.irange."+IS.sub)||ls.get("pb.irange")||6);
   IS.range=IS.ranges[IS.sub];
+  const AVGV=IS.sub==="totals"&&IS.tview!=="wheel"&&IS.tview!=="months";
+  if(AVGV){if(!IS.avr)IS.avr=+(ls.get("pb.avr")||6);IS.range=IS.avr+1}
   loadHist();
   const months=monthsBack(IS.range);
   const pending=months.some(ym=>ym!==S.ym&&!IS.hist[ym]);
@@ -3171,7 +3168,7 @@ function renderInsights(groups,sm){
   const groupSel=selHTML("i-group",[["","All Groups"]].concat(gnames.map(n=>[n,n])),IS.group);
   let fh='<div class="ifilters">';
   fh+=groupSel;
-  if(IS.sub!=="cal"&&IS.sub!=="pace")fh+=rangeSel;
+  if(IS.sub!=="cal"&&IS.sub!=="pace"&&!AVGV)fh+=rangeSel;
   fh+='</div>';
   if(!IS.group)IS.item="";
   if((BYM||IS.sub==="cal"||IS.sub==="pace"||IS.sub==="wd"||IS.sub==="map")&&IS.group){
@@ -4236,7 +4233,8 @@ document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target
 $("#monthBtn").onclick=monthSheet;
 $("#addBtnTop").onclick=()=>txSheet();$("#fab").onclick=()=>txSheet();
 $("#main").addEventListener("change",e=>{const id=e.target.id;
-  if(id==="i-range"){IS.sel=null;IS.rot=0;IS.range=+e.target.value;IS.ranges=IS.ranges||{};IS.ranges[IS.sub]=IS.range;ls.set("pb.irange."+IS.sub,String(IS.range));render()}
+  if(id==="i-avr"){IS.avr=+e.target.value;ls.set("pb.avr",String(IS.avr));render()}
+  else if(id==="i-range"){IS.sel=null;IS.rot=0;IS.range=+e.target.value;IS.ranges=IS.ranges||{};IS.ranges[IS.sub]=IS.range;ls.set("pb.irange."+IS.sub,String(IS.range));render()}
   else if(id==="i-group"){IS.group=e.target.value;IS.item="";IS.sel=null;IS.rot=0;IS.bmSel=null;IS.wdSel=null;IS.calSel=null;render()}
   else if(id==="i-item"){IS.item=e.target.value;render()}
   else if(id==="wd-var"){IS.wdVar=e.target.checked;ls.set("pb.wdvar",IS.wdVar?"1":"0");render()}});
