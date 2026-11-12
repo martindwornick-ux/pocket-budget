@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 12, 5:55 PM"</script>
+<script>window.PB_BUILD="Nov 12, 6:00 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3162,15 +3162,15 @@ function avgViewHTML(months,pending){
     b+='<text x="'+cx0+'" y="'+(top-17)+'" class="avtv'+(ov?' over':'')+'" text-anchor="middle">'+kfmt(nv)+'</text><text x="'+cx0+'" y="'+(top-5)+'" class="avtw" text-anchor="middle">/'+kfmt(wv).slice(1)+'</text>';
     const nm=k.length>11?k.slice(0,10)+"…":k;
     b+='<text class="ax avxl" text-anchor="end" transform="translate('+(cx0+4)+','+(base+14)+') rotate(-38)">'+esc(nm)+'</text>';
-    g+='<g class="avbar" '+(IS.group?'data-dtrend':'data-ddrill')+'="'+esc(k)+'"><rect x="'+(L+step*i)+'" y="0" width="'+step+'" height="'+H+'" fill="transparent"/>'+b+'</g>'});
+    g+='<g class="avbar"'+(IS.group?'':' data-ddrill="'+esc(k)+'"')+'><rect x="'+(L+step*i)+'" y="0" width="'+step+'" height="'+H+'" fill="transparent"/>'+b+'</g>'});
   h+='<div class="avscroll"><svg class="chart avchart" viewBox="0 0 '+Wd+' '+H+'" style="width:'+(Wd>340?Wd+'px':'100%')+'" role="img" aria-label="Each category: spent so far against its average month">'+g+'</svg></div>';
   h+='<div class="avkey"><span><i class="k1"></i>Usual month</span><span><i class="k2"></i>Spent so far</span><span><i class="k4"></i>Over</span>'+(!full?'<span><i class="k3"></i>Usual by '+mname+' '+dayNow+'</span>':'')+'</div>';
   // category rows: spent so far vs the average whole month, tick where the average is by today
-  h+='<div class="avlist"><h4>'+(IS.group?"Items":"Categories")+' <span>· so far vs avg month · '+(IS.group?"tap for trend":"tap for items")+'</span></h4>';
+  h+='<div class="avlist"><h4>'+(IS.group?"Items":"Categories")+' <span>· so far vs avg month · '+(IS.group?"this month":"tap for items")+'</span></h4>';
   h+=keys.map((k,i)=>{const n=round2(now[k]||0),w=round2(whole[k]||0),a=round2(soFar[k]||0),mx2=Math.max(n,w,1),bd=Math.max(5,a*0.1),s2=n-a>bd?"over":n-a<-bd?"under":"even";
-    return '<button class="avr" '+(IS.group?'data-dtrend':'data-ddrill')+'="'+esc(k)+'"><div class="top"><span class="nm"><i style="background:'+cm[k]+'"></i>'+esc(k)+'</span><span class="dl num"><b>'+f0(n)+'</b> / '+f0(w)+'</span></div>'+
+    return (IS.group?'<div class="avr">':'<button class="avr" data-ddrill="'+esc(k)+'">')+'<div class="top"><span class="nm"><i style="background:'+cm[k]+'"></i>'+esc(k)+'</span><span class="dl num"><b>'+f0(n)+'</b> / '+f0(w)+'</span></div>'+
       '<div class="bar"><i class="'+s2+'" style="--c:'+cm[k]+';width:'+(Math.max(0,n)/mx2*100).toFixed(1)+'%;animation-delay:'+(i*0.03).toFixed(2)+'s"></i><s style="left:'+(w/mx2*100).toFixed(1)+'%"></s>'+(!full&&a>0?'<u style="left:'+(a/mx2*100).toFixed(1)+'%"></u>':'')+'</div>'+
-      '<div class="sub">'+(w>0?Math.round(n/w*100)+'% of a usual month':'Not usually spent')+(!full&&a>0?' · '+(s2==="even"?"on track":s2==="over"?'<em class="over">'+f0(n-a)+' ahead of usual</em>':'<em class="under">'+f0(a-n)+' behind usual</em>'):'')+'</div></button>'}).join("")+'</div>';
+      '<div class="sub">'+(w>0?Math.round(n/w*100)+'% of a usual month':'Not usually spent')+(!full&&a>0?' · '+(s2==="even"?"on track":s2==="over"?'<em class="over">'+f0(n-a)+' ahead of usual</em>':'<em class="under">'+f0(a-n)+' behind usual</em>'):'')+'</div>'+(IS.group?'</div>':'</button>')}).join("")+'</div>';
   h+='<p class="note" style="margin:12px 2px 0">Average of '+past.length+' month'+(past.length===1?"":"s")+' ('+shortM(past[0])+" ’"+past[0].slice(2,4)+(past.length>1?" – "+shortM(past[past.length-1])+" ’"+past[past.length-1].slice(2,4):"")+'). '+(full?"":'The small tick on each bar is where you usually are by '+mname+' '+dayNow+'; the end mark is a usual whole month.')+'</p>';
   return h;
 }
@@ -3179,12 +3179,12 @@ function renderInsights(groups,sm){
   IS.ranges=IS.ranges||{};
   if(!IS.ranges[IS.sub])IS.ranges[IS.sub]=+(ls.get("pb.irange."+IS.sub)||ls.get("pb.irange")||6);
   IS.range=IS.ranges[IS.sub];
-  const AVGV=IS.sub==="totals"&&IS.tview!=="wheel"&&IS.tview!=="months";
+  IS.tview="avg";const AVGV=IS.sub==="totals";
   if(AVGV){if(!IS.avr)IS.avr=+(ls.get("pb.avr")||6);IS.range=IS.avr+1}
   loadHist();
   const months=monthsBack(IS.range);
   const pending=months.some(ym=>ym!==S.ym&&!IS.hist[ym]);
-  if(IS.sub==="details"){IS.sub="totals";IS.tview="months"}
+  if(IS.sub==="details"){IS.sub="totals"}
   if(!ISUBS.some(x=>x[0]===IS.sub))IS.sub="totals";
   const BYM=IS.sub==="totals"&&IS.tview==="months";
   let h='';
@@ -3219,7 +3219,6 @@ function renderInsights(groups,sm){
   const total=round2(keys.reduce((a,k)=>a+byKey[k],0));
   if(IS.sub==="totals"){
     const AVG=!BYM&&IS.tview!=="wheel";
-    h+='<div class="seg2 tview" role="group" aria-label="View"><button data-tview="avg" aria-pressed="'+AVG+'">vs Average</button><button data-tview="wheel" aria-pressed="'+(IS.tview==="wheel")+'">Wheel</button><button data-tview="months" aria-pressed="'+BYM+'">By month</button></div>';
     if(AVG){if(IS.group)h+='<button class="dback" data-dback>‹ All groups</button>';return h+avgViewHTML(months,pending)+'</section>'}
     if(BYM){
       if(!order.length)return h+'<p class="note" style="text-align:center;margin:18px 0">No spending logged for this period yet.</p></section>';
