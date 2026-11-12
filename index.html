@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 12, 4:40 PM"</script>
+<script>window.PB_BUILD="Nov 12, 4:50 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -925,10 +925,17 @@ body.mpk-open{overflow:hidden}
 .avsum{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 4px}.avsum .note{margin:0}
 .avpill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:14px;font-weight:700}
 .avpill.under{background:rgba(23,136,92,.12);color:var(--ok)}.avpill.over{background:rgba(200,55,45,.12);color:var(--over)}.avpill.even{background:rgba(60,64,67,.08);color:var(--muted)}
-.avkey{display:flex;align-items:center;gap:8px;justify-content:center;font-size:13px;color:var(--muted);margin:-2px 0 4px}.avkey i{width:22px;border-top:2px dashed var(--fg);opacity:.6}.avkey b{color:var(--fg)}
+.avscroll{overflow-x:auto;margin:0 -4px;-webkit-overflow-scrolling:touch}.avscroll svg{display:block;height:auto}
+.avkey{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;justify-content:center;font-size:12.5px;color:var(--muted);margin:2px 0 4px}
+.avkey span{display:inline-flex;align-items:center;gap:6px}.avkey i{width:12px;height:12px;border-radius:3px}
+.avkey .k1{border:1.5px dashed var(--muted);background:rgba(60,64,67,.08)}.avkey .k2{background:var(--muted)}.avkey .k4{background:repeating-linear-gradient(45deg,var(--over) 0 3px,#f2a29b 3px 5px)}.avkey .k3{height:0;width:16px;border-top:2.5px solid var(--fg);border-radius:0}
+.avchart .avfull{stroke:var(--muted);stroke-opacity:.5}
+.avchart .avtw{font-size:10px;fill:var(--muted);font-weight:600}.avchart .avtv.over{fill:var(--over)}
+.avchart .avtick{stroke:var(--fg);stroke-width:2.5;stroke-linecap:round}
+.avchart .avfill{transform-box:fill-box;transform-origin:bottom;animation:avup .6s cubic-bezier(.2,.9,.3,1) both;animation-delay:var(--d)}
+.avchart .avbar{cursor:pointer}
 .avchart .avtv{font-size:13px;font-weight:800;fill:var(--fg)}.avchart .avxl{font-size:12px;font-weight:600}
 .avchart .avline{stroke:var(--fg);stroke-width:1.5;stroke-dasharray:4 4;opacity:.6}.avchart .avll{font-size:10.5px;font-weight:700;fill:var(--fg);opacity:.75}
-.avchart .avcol{transform-origin:0 228px;animation:avup .6s cubic-bezier(.2,.9,.3,1) both;animation-delay:var(--d)}
 @keyframes avup{from{transform:scaleY(0)}}@keyframes avgrow{from{transform:scaleX(0)}}
 .avlist h4{margin:16px 2px 4px;font-size:15px}.avlist h4 span{font-weight:500;color:var(--muted);font-size:12px}
 .avr{display:block;width:100%;text-align:left;padding:10px 2px;border-top:1px solid var(--line);font:inherit;color:inherit}
@@ -3130,15 +3137,26 @@ function avgViewHTML(months,pending){
   if(pending)h+='<p class="note" style="margin:4px 0 0">Loading earlier months…</p>';
   h+='<div class="avsum"><span class="avpill '+st+'">'+(st==="even"?"Right about average":(st==="under"?"↓ ":"↑ ")+f0(Math.abs(D))+(st==="under"?" under":" over")+" usual"+(A>0?" ("+Math.abs(pct)+"%)":""))+'</span>'+
     '<span class="note">'+(full?"for the whole month":"by "+mname+" "+dayNow)+'</span></div>';
-  // stacked columns: this month so far | average whole month, with a dashed line where the average usually is by today
-  const Wd=340,H=250,L=44,Rr=8,T=22,B=40,pw=Wd-L-Rr,ph=H-T-B,max=niceMax(Math.max(N,W,A)),bw=82;
-  const cols=[[full?mname:mname+" so far",now,N],["Avg month",whole,W]],cx=[L+pw*0.27-bw/2,L+pw*0.73-bw/2];
-  let g='';for(let i=0;i<=4;i++){const yy=T+ph-ph*i/4;g+='<line x1="'+L+'" x2="'+(Wd-Rr)+'" y1="'+yy+'" y2="'+yy+'" class="grid"/><text x="'+(L-6)+'" y="'+(yy+4)+'" class="ax" text-anchor="end">'+kfmt(max*i/4)+'</text>'}
-  cols.forEach(([lab,o,t],ci)=>{let yy=T+ph;const parts=keys.map(k=>[k,Math.max(0,o[k]||0)]).filter(p=>p[1]>0);let col='';
-    parts.forEach(([k,v],pi)=>{const hh=ph*v/max;yy-=hh;col+='<path d="'+barPath(cx[ci],yy,bw,hh,pi===parts.length-1?6:0)+'" fill="'+cm[k]+'"/>'});
-    g+='<g class="avcol" style="--d:'+(ci*0.08)+'s">'+col+'</g><text x="'+(cx[ci]+bw/2)+'" y="'+(yy-7)+'" class="avtv" text-anchor="middle">'+f0(t)+'</text><text x="'+(cx[ci]+bw/2)+'" y="'+(H-B+18)+'" class="ax avxl" text-anchor="middle">'+esc(lab)+'</text>'});
-  if(!full&&A>0){const ly=T+ph-ph*A/max;g+='<line x1="'+(cx[0]-8)+'" x2="'+(cx[1]+bw+8)+'" y1="'+ly+'" y2="'+ly+'" class="avline"/>'}
-  h+='<svg class="chart avchart" viewBox="0 0 '+Wd+' '+H+'" role="img" aria-label="'+esc((full?mname:mname+" so far")+" "+f0(N)+", average month "+f0(W))+'">'+g+'</svg>'+(!full&&A>0?'<div class="avkey"><i></i>Usual by '+mname+' '+dayNow+' <b class="num">'+f0(A)+'</b></div>':'');
+  // one bar per category, each scaled to its own average: the outlined tank is a usual whole month (100%),
+  // the fill is spent so far, anything past the tank is striped
+  const n=keys.length,L=34,Rr=6,T=36,B=58,H=270,ph=H-T-B,step=Math.max(36,Math.min(80,(340-L-Rr)/Math.max(1,n))),Wd=Math.max(340,L+Rr+step*n),bw=Math.min(40,step*0.66);
+  const rat=k=>{const w=whole[k]||0,v=Math.max(0,now[k]||0);return w>0?v/w:(v>0?9:0)};
+  const cap=Math.max(1,Math.min(2,Math.ceil(Math.max(0,...keys.map(rat))*4)/4)),yOf=r=>T+ph-ph*Math.min(r,cap)/cap;
+  let g='<defs><pattern id="avst" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--over)"/><rect width="2.6" height="6" fill="#fff" fill-opacity=".45"/></pattern></defs>';
+  [0,.5,1,1.5,2].filter(r=>r<=cap).forEach(r=>{const yy=yOf(r);g+='<line x1="'+L+'" x2="'+(Wd-Rr)+'" y1="'+yy+'" y2="'+yy+'" class="grid'+(r===1?' avfull':'')+'"/><text x="'+(L-5)+'" y="'+(yy+4)+'" class="ax" text-anchor="end">'+Math.round(r*100)+'%</text>'});
+  keys.forEach((k,i)=>{const x=L+step*i+(step-bw)/2,cx0=x+bw/2,c=cm[k],nv=Math.max(0,now[k]||0),wv=Math.max(0,whole[k]||0),av=Math.max(0,soFar[k]||0),r=rat(k);
+    const base=T+ph,y1=yOf(1),yr=yOf(r),top=Math.min(y1,yr);let b='';
+    if(wv>0)b+='<path d="'+barPath(x,y1,bw,base-y1,6)+'" fill="'+c+'" fill-opacity=".14" stroke="'+c+'" stroke-opacity=".6" stroke-width="1.5" stroke-dasharray="3 2.5"/>';
+    if(r>0){const yin=wv>0?Math.max(yr,y1):yr;b+='<path class="avfill" style="--d:'+(i*0.04).toFixed(2)+'s" d="'+barPath(x,yin,bw,base-yin,r>=.97&&r<=1?6:(r>1?0:3))+'" fill="'+c+'"/>';
+      if(r>1&&wv>0)b+='<path class="avfill" style="--d:'+(i*0.04+.3).toFixed(2)+'s" d="'+barPath(x,yr,bw,y1-yr,6)+'" fill="url(#avst)"/>'}
+    if(!full&&av>0&&wv>0){const ty=yOf(av/wv);b+='<line x1="'+(x-4)+'" x2="'+(x+bw+4)+'" y1="'+ty+'" y2="'+ty+'" class="avtick"/>'}
+    const ov=wv>0&&nv>wv+.5;
+    b+='<text x="'+cx0+'" y="'+(top-17)+'" class="avtv'+(ov?' over':'')+'" text-anchor="middle">'+kfmt(nv)+'</text><text x="'+cx0+'" y="'+(top-5)+'" class="avtw" text-anchor="middle">/'+kfmt(wv).slice(1)+'</text>';
+    const nm=k.length>11?k.slice(0,10)+"…":k;
+    b+='<text class="ax avxl" text-anchor="end" transform="translate('+(cx0+4)+','+(base+14)+') rotate(-38)">'+esc(nm)+'</text>';
+    g+='<g class="avbar" '+(IS.group?'data-dtrend':'data-ddrill')+'="'+esc(k)+'"><rect x="'+(L+step*i)+'" y="0" width="'+step+'" height="'+H+'" fill="transparent"/>'+b+'</g>'});
+  h+='<div class="avscroll"><svg class="chart avchart" viewBox="0 0 '+Wd+' '+H+'" style="width:'+(Wd>340?Wd+'px':'100%')+'" role="img" aria-label="Each category: spent so far against its average month">'+g+'</svg></div>';
+  h+='<div class="avkey"><span><i class="k1"></i>Usual month</span><span><i class="k2"></i>Spent so far</span><span><i class="k4"></i>Over</span>'+(!full?'<span><i class="k3"></i>Usual by '+mname+' '+dayNow+'</span>':'')+'</div>';
   // category rows: spent so far vs the average whole month, tick where the average is by today
   h+='<div class="avlist"><h4>'+(IS.group?"Items":"Categories")+' <span>· so far vs avg month · '+(IS.group?"tap for trend":"tap for items")+'</span></h4>';
   h+=keys.map((k,i)=>{const n=round2(now[k]||0),w=round2(whole[k]||0),a=round2(soFar[k]||0),mx2=Math.max(n,w,1),bd=Math.max(5,a*0.1),s2=n-a>bd?"over":n-a<-bd?"under":"even";
