@@ -1,89 +1,76 @@
-# Pocket Budget — Session Handoff
+# Pocket Budget: Session Handoff
+
+_Last updated: Nov 13, 2026 (build "Nov 13, 11:45 PM", sw `pb-2026-11-13b`)_
 
 ## What this is
-A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`. Single-page app — nearly all logic lives in `index.html` (4,399 lines).
+A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
 
 ## Stack
-- **Frontend**: Vanilla JS, single `index.html` file wrapped in a closure
-- **Backend**: Firebase Firestore (project `pocket-budget-bc452`), transactions at `users/{uid}/tx/{id}`
+- **Frontend**: vanilla JS in one `index.html`, wrapped in a closure (functions are not on `window`)
+- **Backend**: Firebase Firestore (project `pocket-budget-bc452`). Transactions are at `tx/{id}`, budgets at `budgets/{ym}`, and pre-Oct-2026 EveryDollar history at `hist/{ym}`.
+- **Platform layer**: `platform.js` provides `window.claude.use("db" | "user" | "mcp" | "downloads")` on top of Firebase plus the Google Apps Script sheet bridge (`mcp.pbAppend`, `mcp.pbCheck`)
 - **Hosting**: GitHub Pages, `main` branch
-- **Service worker**: `sw.js` with version-keyed cache (currently `pb-2026-11-04d`)
-- **Font**: Hanken Grotesk (Google Fonts)
-- **Build version**: `window.PB_BUILD` in `<head>` script tag (line 17), currently `"Nov 4, 7:05 PM"`
+- **Service worker**: `sw.js` with a version-keyed cache
+- **Font**: Hanken Grotesk
 
 ## Files
-| File | Lines | Role |
-|------|-------|------|
-| `index.html` | 4,399 | Entire app: HTML, CSS, JS |
-| `sw.js` | 41 | Service worker, offline cache |
-| `config.js` | 13 | **SECRET** — Apps Script key. Never commit changes or expose publicly |
-| `platform.js` | 389 | Platform helpers |
-| `manifest.webmanifest` | — | PWA manifest |
-| `icon-*.png` | — | App icons (180, 192, 512) |
-
-## Key code locations in index.html
-- **Line 17**: `window.PB_BUILD` — app version string
-- **Lines 25–43**: CSS custom properties (design tokens, light + dark themes)
-- **Lines 273–284**: Today card CSS (`.eqcard`, `.eq-big`, `.eq-sub`, `.eq-meter`, `.eq-details`, `.eq-cell`)
-- **Lines 256–271**: Weekly card CSS (`.wcard`, `.wrem`, `.wpd`)
-- **Line 1237**: `ymOf(d)` — date-to-month helper
-- **Line 1547**: `totals()` — computes planned/spent/remaining/aside
-- **Line 1577**: `const COMBINED=true` — combined view mode flag
-- **Lines 1654–1668**: `dateCardHTML()` — **Today card** (the "Wednesday the 4th" card). Recently redesigned to Option D: hero remaining number, thin progress meter, bottom row with days left + per-day
-- **Lines 1670–1675**: `todayTileHTML()` — Today tile (today's spend vs allowance)
-- **Lines 1782–1820**: `renderBudget()` — main budget tab renderer
-- **Lines 1822+**: `renderTx()` — transaction list renderer
-- **Lines 3448–3460**: `txLayoutA()` — DOM reorganizer for transaction form. Moves rows from original card into dynamically created card. **Any new form row must be included in the `mc.append(...)` call or it will be hidden**
-- **Lines 3495–3542**: `txSheetCore()` — builds Add/Edit Transaction bottom sheet HTML
-- **Line 3771 area**: Transaction save body creation
-
-## Design system (CSS tokens)
-```
---brand:#17885c  --brand-deep:#0f6a47  --brand-ink:#ffffff
---bg:#f2f5f3  --card:#ffffff  --fg:#17201c  --muted:#6b7a73  --line:#e3e9e6
---bar:#0d2f55  --link:#0a6fbf  --over:#c8372d  --ok:#17885c
-```
-Cards: `border-radius:22px`, `box-shadow:var(--shadow)`, glass morphism effects on scroll. Dark theme defined at lines 34–43.
-
-## Architecture notes
-- **Zero-based budgeting**: "Set aside for {next month}" groups have `aside:true` flag. The `aside` variable holds the total set-aside amount, excluded from Remaining
-- **Today card math**: `rem = itot - t0.s - aside` where `itot` = total planned income, `t0.s` = total spending, `aside` = set-aside amount. The "Spent" line combines both: `sp = round2(t0.s + (aside||0))`
-- **Google Sheets sync**: Transactions can push to a Google Sheet via Apps Script. The key in `config.js` is a secret
-- **`txLayoutA` gotcha**: The transaction form is built as HTML, then `txLayoutA` physically moves DOM elements between cards. If you add a new form row, you must also add it to the `mc.append(...)` call in `txLayoutA` or it stays in a hidden card
+| File | Role |
+|------|------|
+| `index.html` | Entire app: HTML, CSS, JS |
+| `sw.js` | Service worker. `VERSION` is on line 2 |
+| `config.js` | **SECRET**: Firebase config and Apps Script key. Never commit, print or expose it |
+| `platform.js` | Firebase, sign-in and sheet bridge |
+| `manifest.webmanifest`, `icon-*.png` | PWA bits |
 
 ## Release process
-1. Edit files
-2. Bump `window.PB_BUILD` (line 17) to current date/time
-3. Bump `VERSION` in `sw.js` (line 2) — increment the letter suffix (e.g. `pb-2026-11-04d` → `pb-2026-11-04e`)
-4. `git fetch origin main && git rebase origin/main`
-5. `git add <files> && git commit`
-6. `git push origin main`
+1. Edit files.
+2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-13c`, or `pb-<new date>a` on a new day).
+4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
+5. `git add index.html sw.js && git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
 ## Hard rules
-- **Never force-push** or overwrite other sessions' commits
-- **Never overwrite `config.js`** — the Apps Script key is a secret
-- **Never put the key in the repo** or anywhere public
-- **Always bump both PB_BUILD and sw.js VERSION** on every deploy
+- **Never force-push** or overwrite other sessions' commits.
+- **Never touch or expose `config.js`.**
+- **Always bump both PB_BUILD and the sw.js VERSION** on every deploy.
+- Any new transaction-form row must be added to the `mc.append(...)` call in `txLayoutA()`, or it stays in a hidden card.
+- The owner likes changes shipped straight to `main`, with a screenshot of the result.
 
-## Recent changes (Nov 4, 2026)
-1. **"Paid with" payment source** — Added then fully reverted at user's request. No traces remain in code
-2. **Today card "Spent" consolidation** — Previously showed separate "Spent" and "Set aside for December" lines. Now shows one combined total
-3. **Today card redesign (Option D)** — Most recent change. The card now shows:
-   - Big remaining number as centerpiece (`eq-big` class)
-   - Subtitle: "remaining of $X" with tappable planned amount
-   - Thin green progress meter (`eq-meter`)
-   - Bottom row: days left (left) and per-day amount in green (right)
-   - Previous design used stacked label-value rows (`.eql` classes, now removed)
+## Testing locally with sample data (no sign-in needed)
+The app paints from `localStorage["pb.cache"]` (`{v:1, ym, at, budgets:{[ym]:{groups,income}}, tx:[...]}`). If `platform.js` is blank, there's no db and it runs read-only on that cache. Recipe used this session:
+1. Copy the repo files into a temp folder, replace `platform.js` and `config.js` with empty files, and run `python3 -m http.server`.
+2. With Playwright (viewport 390×844, scale 2, `service_workers="block"`), use `add_init_script` to set `pb.cache` to generated sample groups, items and transactions for the current month.
+3. Click `nav.tabs [data-tab=tx|budget|insights]` and take screenshots. A red "Sign in to save entries." banner is expected in this mode.
+Closure functions can't be called from the page. To test one (e.g. `celebrate`), add `window.__x=...` to the temp copy only.
 
-## Git history (latest first)
-```
-25d0ec6 Today card: redesign with hero remaining number (Option D)
-297ccb2 Bump build to Nov 4, 6:55 PM
-0779390 Today card: Spent shows one total including set-aside
-95dcbef Today card: put set-aside amount on the Spent line
-81e0a7b Revert Paid with transaction source
-9f75696 Revert "Show Paid with row in the transaction sheet"
-88593bd Show Paid with row in the transaction sheet
-dc25b02 Add Paid with source to transactions (default Discover card)
-abfa219 Planned: 'Move here' button on its own line
-```
+## Key code map (index.html; grep the name, line numbers drift)
+- `dateCardHTML()`: Today card (hero remaining number, meter, Days left / Per day). The meter fill shows **what's left**, matching the item bars.
+- `itemComboHTML()`: budget item row. Its bar shows **what's left**; past budget it turns red. The caption reads "$X spent of $Y".
+- `renderBudget()`: income card and group cards. **Groups are collapsible**: `.gcard`, `[data-gtog]`, with open state in `localStorage["pb.gopen"]`. A group opens itself while one of its amounts is being edited (`PAD`).
+- `renderTx()`: transaction list. Unsynced rows show a grey "not synced". The sync card only appears when auto-send failed (`AS.fail`) or auto-send isn't available (`AS.auto===false`).
+- `autoSync()` and `AS`: background sending to the sheet, via `mcp.pbAppend` only, because that call is idempotent. It runs on load (after the tx snapshot), when the app becomes visible again, and on the `online` event. It is throttled to once every 60 s unless forced, and stops at the first failure. `pushToSheet(id,t,quiet)` takes a `quiet` flag that skips the toast.
+- `celebrate(amount,merchant,kind,left)`: the screen after saving. It shows "$X left in <item>" (or "over" in red) when `left` is passed from the save path.
+- `askDiscard()` / `softCloseSheet()`: swiping down, tapping the backdrop or pressing Escape on a transaction sheet with unsaved input brings up "Discard this transaction?". The sheet's `_dirty()` is set in the tx sheet's bind. Save and X close directly.
+- The FAB (`#fab`) gets the `.tuck` class while scrolling down (more than 120px) and loses it on scroll up. It uses the CSS `translate` property so it doesn't clash with `.qaon` rotate. The header "+" was removed, so the FAB is the only add button.
+- **Insights → Totals** is now only the **vs Average** view (`avgViewHTML()`). Wheel and By month are hidden: `IS.tview` is forced to `"avg"`, but their code is still there.
+  - One bar per category on a **dollar y-axis**. The dashed "tank" is the category's average whole month, the fill is spent so far, anything past the tank is red-striped, and a black tick marks the usual amount by today's day-of-month.
+  - Range picker top right: `AVR` (Last month, 3, 6, 12, 36, 120 = "All time"), stored in `localStorage["pb.avr"]`. Empty months are skipped.
+  - The mortgage (item or merchant matching `/mortgage/i`) is hidden by default. The toggle is `[data-avmort]`, stored in `localStorage["pb.avmort"]`.
+  - Tapping a group drills into its items (`IS.group`). Items aren't tappable.
+- Insights → Calendar: days where refunds exceed spending get the `.cd.gain` class (solid green, "+$X") and a green "+" total in the day panel.
+
+## Design tokens
+`--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
+
+## Changes Nov 12–13, 2026 (newest first)
+- UX pass 2 (Laws of UX): collapsible groups, automatic sheet sync, FAB tucks on scroll
+- UX pass 1: single add button, consistent "left" meters, "Days left" label, quiet "not synced" and "+ Add item", save screen shows what's left in the item
+- Totals rebuilt as the vs Average chart (see above); Wheel and By month removed
+- Transaction sheet asks before a swipe discards unsaved input
+- Calendar shows net-refund days as green "+$" days
+
+## Known follow-ups / ideas
+- On the Calendar, net-refund days still count toward "$0 days" and the streak (the owner was asked; no decision yet).
+- iOS location prompts can't be fixed in code. The owner was pointed to Settings → Apps → Safari → Location.
+- The mortgage matcher is only `/mortgage/i`. If the owner's mortgage is logged under a lender name, extend `isM` in `avgViewHTML()`.
+- Auto-send to the sheet hasn't been verified against the live sheet yet.
