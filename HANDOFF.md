@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 13, 2026 (build "Nov 13, 11:45 PM", sw `pb-2026-11-13b`)_
+_Last updated: Nov 13, 2026 (build "Nov 13, 11:20 PM", sw `pb-2026-11-13c`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
@@ -25,7 +25,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-13c`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-13d`, or `pb-<new date>a` on a new day).
 4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
 5. `git add index.html sw.js && git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -51,7 +51,7 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 - `autoSync()` and `AS`: background sending to the sheet, via `mcp.pbAppend` only, because that call is idempotent. It runs on load (after the tx snapshot), when the app becomes visible again, and on the `online` event. It is throttled to once every 60 s unless forced, and stops at the first failure. `pushToSheet(id,t,quiet)` takes a `quiet` flag that skips the toast.
 - `celebrate(amount,merchant,kind,left)`: the screen after saving. It shows "$X left in <item>" (or "over" in red) when `left` is passed from the save path.
 - `askDiscard()` / `softCloseSheet()`: swiping down, tapping the backdrop or pressing Escape on a transaction sheet with unsaved input brings up "Discard this transaction?". The sheet's `_dirty()` is set in the tx sheet's bind. Save and X close directly.
-- The FAB (`#fab`) gets the `.tuck` class while scrolling down (more than 120px) and loses it on scroll up. It uses the CSS `translate` property so it doesn't clash with `.qaon` rotate. The header "+" was removed, so the FAB is the only add button.
+- The FAB (`#fab`) gets the `.tuck` class while scrolling down (more than 120px) and loses it on scroll up or ~550 ms after scrolling stops. It uses the CSS `translate` property so it doesn't clash with `.qaon` rotate. The header "+" was removed, so the FAB is the only add button.
 - **Insights → Totals** is now only the **vs Average** view (`avgViewHTML()`). Wheel and By month are hidden: `IS.tview` is forced to `"avg"`, but their code is still there.
   - One bar per category on a **dollar y-axis**. The dashed "tank" is the category's average whole month, the fill is spent so far, anything past the tank is red-striped, and a black tick marks the usual amount by today's day-of-month.
   - Range picker top right: `AVR` (Last month, 3, 6, 12, 36, 120 = "All time"), stored in `localStorage["pb.avr"]`. Empty months are skipped.
@@ -63,6 +63,7 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–13, 2026 (newest first)
+- FAB also comes back once scrolling stops, not only on scroll up
 - UX pass 2 (Laws of UX): collapsible groups, automatic sheet sync, FAB tucks on scroll
 - UX pass 1: single add button, consistent "left" meters, "Days left" label, quiet "not synced" and "+ Add item", save screen shows what's left in the item
 - Totals rebuilt as the vs Average chart (see above); Wheel and By month removed

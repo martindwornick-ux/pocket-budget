@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 13, 11:45 PM"</script>
+<script>window.PB_BUILD="Nov 13, 11:20 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1559,9 +1559,10 @@ $("#main").addEventListener("click",e=>{const del=e.target.closest("[data-del]")
   if(SW.justSwiped&&e.target.closest(".swr")){e.stopPropagation();e.preventDefault();return}
   if(SW.openRow){e.stopPropagation();e.preventDefault();swClose(SW.openRow)}},true);
 document.addEventListener("scroll",()=>{if(SW.openRow)swClose(SW.openRow)},{passive:true});
-/* Fitts: the + tucks away while you scroll down so it doesn't sit on top of rows and menus; any scroll up brings it back */
-(()=>{let y0=scrollY;addEventListener("scroll",()=>{const y=scrollY,f=document.getElementById("fab");if(!f)return;
-  if(y>y0+6&&y>120)f.classList.add("tuck");else if(y<y0-6||y<120)f.classList.remove("tuck");if(Math.abs(y-y0)>6||y<120)y0=y},{passive:true})})();
+/* Fitts: the + tucks away while you scroll down so it doesn't sit on top of rows and menus; it comes back on any scroll up, or once scrolling stops */
+(()=>{let y0=scrollY,idle=0;addEventListener("scroll",()=>{const y=scrollY,f=document.getElementById("fab");if(!f)return;
+  if(y>y0+6&&y>120)f.classList.add("tuck");else if(y<y0-6||y<120)f.classList.remove("tuck");if(Math.abs(y-y0)>6||y<120)y0=y;
+  clearTimeout(idle);if(f.classList.contains("tuck"))idle=setTimeout(()=>f.classList.remove("tuck"),550)},{passive:true})})();
 function confirmDelete(id){
   const t=S.tx.find(x=>x.id===id);if(!t)return;
   const synced=t.sheet==="synced";
