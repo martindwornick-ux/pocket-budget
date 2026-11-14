@@ -18,7 +18,5 @@ jobs:
         with:
           node-version: "20"
       - run: pip install playwright && python -m playwright install --with-deps chromium
-      - name: Live app
+      - name: App
         run: python tools/check.py
-      - name: Preview copy
-        run: python tools/check.py preview

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pocket Budget release checks.
 
-Usage:  python3 tools/check.py [app-folder]     (default: repo root; pass "preview" for the preview copy)
+Usage:  python3 tools/check.py [app-folder]     (default: repo root, the live app)
 
 Runs the app in a headless phone-sized browser on made-up sample data (no sign-in, no real data) and checks:
   1. every inline script parses
@@ -42,9 +42,9 @@ for name in ("platform.js", "sw.js"):
     r = subprocess.run(["node", "--check", os.path.join(APP, name)], capture_output=True, text=True)
     ok(r.returncode == 0, "%s parses %s" % (name, r.stderr.strip()[:200]))
 
-if os.path.abspath(APP) == os.path.join(ROOT, "preview"):
+if os.path.abspath(APP) == ROOT:
     r = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "build.py"), "--check"], capture_output=True, text=True)
-    ok(r.returncode == 0, "preview/index.html is exactly what src/ builds (edit src/, then run tools/build.py)")
+    ok(r.returncode == 0, "index.html is exactly what src/ builds (edit src/, then run tools/build.py)")
 r = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "vendor_hashes.py"), "--check"], capture_output=True, text=True)
 ok(r.returncode == 0, "hosted libraries match vendor/README.md " + r.stdout.strip()[:200])
 for v in sorted(set(re.findall(r'VEND\+"([^"]+)"', html))):

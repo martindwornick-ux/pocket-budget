@@ -1,6 +1,6 @@
 # App source
 
-`preview/index.html` is built from these files by `python3 tools/build.py`. The build only pastes them together in order (no minifying, no rewriting), so the result is byte-for-byte what you see here. All the JavaScript files form **one** script (one closure): a function in one file can use anything defined in another, and they must stay in this order.
+`index.html` (the live app page) is built from these files by `python3 tools/build.py`. The build only pastes them together in order (no minifying, no rewriting), so the result is byte-for-byte what you see here. All the JavaScript files form **one** script (one closure): a function in one file can use anything defined in another, and they must stay in this order.
 
 | File | What's in it |
 |---|---|
@@ -24,4 +24,4 @@
 | `js/events-data.js` | Click handlers, loading data from the database |
 | `js/gestures.js` | Pull to refresh, swipe between tabs |
 
-Splitting further (or moving code between files) is fine: keep the order valid and run `python3 tools/build.py && python3 tools/check.py preview`.
+Splitting further (or moving code between files) is fine: keep the order valid and run `python3 tools/build.py && python3 tools/check.py`.
