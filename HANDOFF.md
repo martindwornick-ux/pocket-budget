@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 14, 2026 (build "Nov 14, 2:25 PM", sw `pb-2026-11-14g`)_
+_Last updated: Nov 14, 2026 (live build "Nov 14, 2:50 PM", sw `pb-2026-11-14h`; preview build "Nov 14, 2:50 PM · preview 1", sw `pb-2026-11-14h-p1`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
@@ -18,21 +18,35 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 |------|------|
 | `index.html` | Entire app: HTML, CSS, JS |
 | `sw.js` | Service worker. `VERSION` is on line 2 |
-| `config.js` | **SECRET**: Firebase config and Apps Script key. Never commit, print or expose it |
+| `config.js` | Firebase web config. It is published with the site (it has to be) and is not a password: the data is protected by the Firestore rules, not by hiding this file. Still: don't edit it or paste its contents anywhere |
+| `preview/` | **Preview copy** of the app files, served at `…/pocket-budget/preview/`. Changes go here first (see Preview process) |
+| `tools/check.py` | Release checks (see Release process) |
+| `tools/preview.sh` | `promote` (preview → live), `reset` (live → preview), `status` |
+| `firestore.rules` | The database rules that should be published in Firebase (owner-only access to `users/{uid}/…`) |
+| `.github/workflows/check.yml` | Runs `tools/check.py` on both copies on every push |
 | `platform.js` | Firebase, sign-in and sheet bridge |
 | `manifest.webmanifest`, `icon-*.png` | PWA bits |
 | `hanken-grotesk.woff2` | Self-hosted font (in the SW `SHELL` list) |
 
+## Preview process (use this for anything the owner will see or feel)
+1. Make the change in `preview/` only. Bump the preview's `PB_BUILD` (suffix `· preview N`) and `preview/sw.js` `VERSION` (suffix `-pN`).
+2. `python3 tools/check.py preview`, commit, push to `main`. Send the owner the link `martindwornick-ux.github.io/pocket-budget/preview/` and a screenshot. The preview shows an orange "Preview" badge.
+3. Owner says yes → `tools/preview.sh promote`, then do the Release process below for the live copy. Owner says no → `tools/preview.sh reset` (and bump the preview version so phones pick it up).
+- The preview is the same site, so it uses the owner's **real sign-in and real data**. Anything saved in the preview is really saved. Don't preview risky data migrations there.
+- `sw.js` is the same file in both copies. It detects the preview by its scope, keeps a separate cache (`pv-` prefix) and only deletes its own old caches; the live worker ignores `/preview/` requests. Keep that logic identical in both copies.
+- Tiny fixes and non-visible changes (docs, tools, tests) can still go straight to live.
+- **Waiting in preview now**: Settings → Privacy check → "Check database lock" (`lockCheck()` in `preview/platform.js`). Read-only: it confirms a signed-out visitor and a different account are both refused. Promote once the owner has tried it.
+
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14h`, or `pb-<new date>a` on a new day).
-4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14i`, or `pb-<new date>a` on a new day).
+4. Run the checks: `python3 tools/check.py` (and `python3 tools/check.py preview` if the preview changed). It checks that all scripts parse, loads every screen on sample data with no sign-in, and compares the money shown (remaining, per day, spent of planned, refunds, calendar totals, bills left out) with figures worked out separately. All lines must say `ok`. `PB_SHOTS=/some/folder` also saves screenshots. When a change adds money logic, add a check for it. The same checks run on GitHub after every push (Actions tab).
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
 ## Hard rules
 - **Never force-push** or overwrite other sessions' commits.
-- **Never touch or expose `config.js`.**
+- **Never edit `config.js` or paste its contents anywhere.**
 - **Always bump both PB_BUILD and the sw.js VERSION** on every deploy.
 - Any new transaction-form row must be added to the `mc.append(...)` call in `txLayoutA()`, or it stays in a hidden card.
 - The owner likes changes shipped straight to `main`, with a screenshot of the result.
@@ -99,6 +113,7 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–14, 2026 (newest first)
+- Safety nets: release checks (`tools/check.py`, also on GitHub), a preview copy at `/preview/`, `firestore.rules` saved in the repo, and a Privacy check button waiting in the preview
 - A 3D swipe-to-tilt calendar was shipped (sw f) and removed at the owner's request (sw g); don't re-add it unless asked
 - Fix: scrolling Transactions opened the row on iPhone (switch overlays were draggable). Overlays are now labels pointing at one hidden switch
 - Haptics now work on current iOS: invisible real switches over every button (no visual or behaviour change)
@@ -117,6 +132,8 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 - Calendar shows net-refund days as green "+$" days
 
 ## Known follow-ups / ideas
+- Database lock: the published Firestore rules could not be read from a Claude session. The owner should run the Privacy check (preview) and, in Firebase → Authentication → Settings → User actions, turn off "Enable create (sign-up)" so no new accounts can be made.
+- From the Nov 14 review, not yet built: hidden error log in Settings (about 96 silent `catch` blocks, no global error handler), Undo for deletes, automatic backup + restore, saving map/receipt-scan libraries for offline use with pinned versions, splitting `index.html` by screen, recurring bills.
 - More Laws of UX ideas offered, not yet built: top-4 item chips (Hick), forgiving amount input (Postel), "Almost out" chip (Von Restorff), end-of-month countdown (Goal-Gradient), month wrap-up on the 1st (Peak-End), "needs an item" nudge (Zeigarnik).
 - On the Calendar, net-refund days still count toward "$0 days" and the streak (the owner was asked; no decision yet).
 - iOS location prompts can't be fixed in code. The owner was pointed to Settings → Apps → Safari → Location.
