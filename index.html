@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 13, 11:20 PM"</script>
+<script>window.PB_BUILD="Nov 13, 11:45 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -67,6 +67,14 @@ main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px
 .chead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
 .chead h2{margin:0;font-size:20px;font-weight:700}
 .dots{color:var(--link);width:44px;height:36px;display:grid;place-items:center;margin-right:-10px}
+.gcard .chead{margin-bottom:2px}.gcard.open .chead{margin-bottom:6px}
+.gtog{flex:1;min-width:0;display:flex;align-items:center;gap:8px;text-align:left;font:inherit;color:inherit;padding:4px 0}
+.gtog h2{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gsum{margin-left:auto;font-size:17px;font-weight:700;white-space:nowrap}.gsum.neg{color:var(--over)}
+.gchev{flex:none;width:18px;height:18px;color:var(--muted);transition:transform .25s cubic-bezier(.2,.9,.3,1)}.gcard.open .gchev{transform:rotate(180deg)}
+.gmini{display:block;width:100%;text-align:left;font:inherit;color:var(--muted);font-size:13.5px;padding:2px 0 0}.gmini .track{margin:6px 0 7px}
+.gcard.open .citem,.gcard.open .item{animation:gin .28s cubic-bezier(.2,.9,.3,1) both}@keyframes gin{from{opacity:0;transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){.gchev{transition:none}.gcard.open .citem,.gcard.open .item{animation:none}}
 .item{display:block;width:100%;text-align:left;padding:14px 0 12px}
 .irow{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:18px}
 .irow .nm{min-width:0;overflow-wrap:anywhere}
@@ -397,7 +405,8 @@ nav.tabs.hasind button{position:relative;z-index:1;transition:color .3s}nav.tabs
 .qa{position:fixed;inset:0;z-index:30;background:rgba(5,15,10,0);transition:background .25s}.qa.on{background:rgba(5,15,10,.28)}
 .qai{position:fixed;display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:999px;background:var(--card);color:var(--fg);font:inherit;font-size:15px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.18);border:0;white-space:nowrap;opacity:0;transform:translate(0,0) scale(.35);transform-origin:right bottom;transition:transform .38s cubic-bezier(.3,1.35,.5,1),opacity .2s}
 .qa.on .qai{opacity:1;transform:translate(var(--x),var(--y)) scale(1)}.qai svg{width:18px;height:18px}
-.fab{transition:transform .3s cubic-bezier(.3,1.4,.5,1)}.fab.qaon{transform:rotate(45deg) scale(.92);z-index:31}
+.fab{transition:transform .3s cubic-bezier(.3,1.4,.5,1),translate .32s cubic-bezier(.2,.9,.3,1),opacity .22s}
+.fab.tuck{translate:0 calc(100% + 110px);opacity:0;pointer-events:none}.fab.qaon{transform:rotate(45deg) scale(.92);z-index:31}
 .zconf{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}.zconf i{position:absolute;border-radius:2px}
 .sheet .cchips{display:flex;gap:8px;margin-top:2px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.sheet .cchips::-webkit-scrollbar{display:none}
 .sheet .cchip{flex:none;scroll-snap-align:start;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;line-height:1.2;font:inherit;font-size:14px;font-weight:600;color:var(--fg);white-space:nowrap;transition:background-color .2s,color .2s,border-color .2s,transform .16s}
@@ -1342,13 +1351,13 @@ function sheetErrMsg(e){const c=e&&e.code;
   if(c==="wrong_key")return"Your sheet script refused the key. Check Script key under gear icon → Google Sheet sync.";
   if(c==="tool_error")return"Google Sheets refused the row: "+(e.message||"").slice(0,120);
   return"Couldn't reach Google Sheets. Tap Send to sheet to try again.";}
-async function pushToSheet(id,t){
+async function pushToSheet(id,t,quiet){
   const mcp=await getMcp();
   if(!mcp){await markSheet(id,"failed","Google Sheets isn't available in this view.");return false}
   const row=sheetRow(t);
   if(mcp.pbAppend){ // standalone app: one call that won't double-add a row it already wrote
     try{await mcp.pbAppend(id,row);await markSheet(id,"synced","");return true}
-    catch(e){await markSheet(id,"failed",sheetErrMsg(e));toast("Saved here, not in your sheet yet");return false}
+    catch(e){await markSheet(id,"failed",sheetErrMsg(e));if(!quiet)toast("Saved here, not in your sheet yet");return false}
   }
   let inserted=false;
   try{
@@ -1358,7 +1367,7 @@ async function pushToSheet(id,t){
     await markSheet(id,"synced","");return true;
   }catch(e){
     const msg=sheetErrMsg(e);
-    await markSheet(id,"failed",msg);toast("Saved here, not in your sheet yet");return false;
+    await markSheet(id,"failed",msg);if(!quiet)toast("Saved here, not in your sheet yet");return false;
   }
 }
 function sheetRow(t){const inc=t.type==="refund"||t.type==="income",amt=round2((inc?1:-1)*(+t.amount||0));
@@ -1374,6 +1383,24 @@ async function reconcileSheet(){
   try{const found=await mcp.pbCheck(list.map(t=>({id:t.id,row:sheetRow(t)})));for(const id of found||[])await markSheet(id,"synced","")}catch(e){}
   rcBusy=false;
 }
+/* Tesler's law: the app handles the sheet, not you. Unsent rows go up quietly in the background
+   (on load, when the app comes back to the front, and when the phone gets signal back).
+   Only the standalone app's append is safe to retry (it never adds a row twice), so only that path auto-sends.
+   If a send fails, it stops and the Transactions tab shows one card with the reason and a Try again button. */
+const AS={busy:false,last:0,fail:""};
+async function autoSync(force){
+  if(AS.busy||S.readOnly||!S.db||!S.txLoaded||S.fromCache)return;if(navigator.onLine===false)return;
+  if(!force&&Date.now()-AS.last<60000)return;
+  const mcp=await getMcp();const was0=AS.auto;AS.auto=!!(mcp&&mcp.pbAppend);if(was0!==AS.auto&&S.tab==="tx")render();if(!AS.auto)return;
+  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)).sort((a,b)=>(a.date+(a.createdAt||"")).localeCompare(b.date+(b.createdAt||"")));if(!list.length){AS.fail="";return}
+  AS.busy=true;AS.last=Date.now();
+  try{await reconcileSheet()}catch(_){}
+  let fail="";for(const t of list){const cur=S.tx.find(x=>x.id===t.id);if(!cur||cur.sheet==="synced")continue;
+    if(!(await pushToSheet(t.id,cur,true))){const f=S.tx.find(x=>x.id===t.id);fail=(f&&f.sheetMsg)||"Couldn't reach your sheet.";break}}
+  AS.busy=false;const was=AS.fail;AS.fail=fail;if(was!==fail&&S.tab==="tx")render();
+}
+addEventListener("online",()=>autoSync(true));
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")setTimeout(()=>autoSync(),1500)});
 async function markSheet(id,state,msg){try{await S.db.doc("tx/"+id).update({sheet:state,sheetMsg:msg})}catch(e){}}
 function findItem(groups,id){for(const g of groups)for(const it of g.items)if(it.id===id)return{g,it};return null}
 
@@ -1532,6 +1559,9 @@ $("#main").addEventListener("click",e=>{const del=e.target.closest("[data-del]")
   if(SW.justSwiped&&e.target.closest(".swr")){e.stopPropagation();e.preventDefault();return}
   if(SW.openRow){e.stopPropagation();e.preventDefault();swClose(SW.openRow)}},true);
 document.addEventListener("scroll",()=>{if(SW.openRow)swClose(SW.openRow)},{passive:true});
+/* Fitts: the + tucks away while you scroll down so it doesn't sit on top of rows and menus; any scroll up brings it back */
+(()=>{let y0=scrollY;addEventListener("scroll",()=>{const y=scrollY,f=document.getElementById("fab");if(!f)return;
+  if(y>y0+6&&y>120)f.classList.add("tuck");else if(y<y0-6||y<120)f.classList.remove("tuck");if(Math.abs(y-y0)>6||y<120)y0=y},{passive:true})})();
 function confirmDelete(id){
   const t=S.tx.find(x=>x.id===id);if(!t)return;
   const synced=t.sheet==="synced";
@@ -1837,8 +1867,15 @@ function renderBudget(groups,sm){
     h+='<button class="item" data-income="'+esc(x.id)+'"><div class="irow"><span class="nm">'+esc(x.name)+'</span><span class="v num'+(v==="planned"?" inc":"")+'">'+money(val)+'</span></div><div class="track" style="justify-content:flex-start">'+bar+'</div></button>'});
   h+='<button class="addlink" id="addIncome">Add Income</button></section>';}
   if(!groups.length)h+='<div class="card empty"><h3>No categories yet</h3>Add a group like Food, then items like Groceries and Restaurants.</div>';
+  /* Groups fold to one summary line (Miller's law: chunk the long list); tap to open. Open groups are remembered. */
+  let gopen={};try{gopen=JSON.parse(ls.get("pb.gopen")||"{}")||{}}catch(_){}
   groups.forEach(g=>{
-    h+='<section class="card'+(g.aside?' ascard':'')+'"><div class="chead"><h2>'+esc(groupLbl(g))+'</h2><button class="dots" data-gmenu="'+esc(g.id)+'" aria-label="Options for '+esc(groupLbl(g))+'"><svg width="26" height="8" viewBox="0 0 26 8" fill="currentColor"><circle cx="4" cy="4" r="3"/><circle cx="13" cy="4" r="3"/><circle cx="22" cy="4" r="3"/></svg></button></div>';
+    const editing=PAD&&PAD.kind==="item"&&g.items.some(it=>it.id===PAD.id),open=!!gopen[g.id]||editing;
+    const gp=round2(g.items.reduce((a,it)=>a+(+it.planned||0),0)),gs=round2(g.items.reduce((a,it)=>a+(sm[it.id]||0),0)),gl=round2(gp-gs),gov=gl<0;
+    const glp=gov?Math.min(100,gp>0?-gl/gp*100:100):(gp>0?Math.max(0,gl/gp*100):0),glow=!gov&&gp>0&&gs>0&&glp<=15;
+    const gsum=g.aside?money(gp):(gov?money(-gl)+' over':money(gl)+' left');
+    h+='<section class="card gcard'+(open?' open':'')+(g.aside?' ascard':'')+'"><div class="chead"><button class="gtog" data-gtog="'+esc(g.id)+'" aria-expanded="'+open+'"><h2>'+esc(groupLbl(g))+'</h2><span class="gsum num'+(gov?' neg':'')+'">'+gsum+'</span><svg class="gchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><button class="dots" data-gmenu="'+esc(g.id)+'" aria-label="Options for '+esc(groupLbl(g))+'"><svg width="26" height="8" viewBox="0 0 26 8" fill="currentColor"><circle cx="4" cy="4" r="3"/><circle cx="13" cy="4" r="3"/><circle cx="22" cy="4" r="3"/></svg></button></div>';
+    if(!open){h+='<button class="gmini" data-gtog="'+esc(g.id)+'" tabindex="-1" aria-hidden="true">'+(g.aside?'':'<div class="track fill cb"><i class="'+(gov?'ov':glow?'low':'')+'" style="width:'+(gov?Math.max(4,glp):glp).toFixed(1)+'%;margin-left:0"></i></div>')+'<span class="num">'+(g.aside?'Setting aside for '+esc(nextMonthName()):money(gs)+' spent of '+money(gp))+' · '+g.items.length+' item'+(g.items.length===1?'':'s')+'</span></button></section>';return}
     const solo=g.items.length===1&&g.items[0].name.trim().toLowerCase()===g.name.trim().toLowerCase();
     if(g.aside)h+='<p class="ashint">Saved from '+MONTHS[+S.ym.slice(5)-1]+'\'s money, paid in '+nextMonthName()+'. Not counted as spending. It carries into '+nextMonthName()+' as starting money.</p>';
     g.items.forEach(it=>{h+=itemHTML(it,sm,solo)});
@@ -1866,7 +1903,8 @@ function renderTx(groups){
     if(!list.length)return h+'<div class="card empty"><h3>Nothing scheduled</h3>No transactions are dated after today this month.</div>'}
   if(q)h+='<p class="note" style="margin:-6px 4px 0">'+list.length+' match'+(list.length===1?"":"es")+' · '+money(round2(list.reduce((a,t)=>a+sAmt(t),0)))+' spent</p>';
   h+='<div class="btnrow"><a class="btn sec" style="text-align:center;text-decoration:none" href="'+SHEET_URL+'" target="_blank" rel="noopener">Open Finance Tracker</a><a class="btn sec" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none" href="venmo://" id="openVenmo" aria-label="Open Venmo"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>Venmo</a></div>';
-  if(pending.length)h+='<div class="card" style="padding:14px 18px"><div class="irow" style="font-size:16px"><span class="nm"><b>'+pending.length+' not in your sheet yet</b></span><button class="addlink" style="padding:0" id="syncAll">Send to sheet</button></div><p class="note" style="margin:6px 0 0">'+esc(pending[0].sheetMsg||"These were saved here but haven't reached your Transactions tab.")+'</p></div>';
+  const stuck=pending.length&&(AS.fail||AS.auto===false);
+  if(stuck)h+='<div class="card" style="padding:14px 18px"><div class="irow" style="font-size:16px"><span class="nm"><b>'+(AS.fail?'Couldn\'t send '+pending.length+' to your sheet':pending.length+' not in your sheet yet')+'</b></span><button class="addlink" style="padding:0" id="syncAll">'+(AS.fail?'Try again':'Send to sheet')+'</button></div><p class="note" style="margin:6px 0 0">'+esc(AS.fail||(pending.find(t=>t.sheetMsg)||{}).sheetMsg||"")+'</p></div>';
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
   if(!list.length)return h+'<div class="card empty"><h3>No transactions this month</h3>Tap + to log a purchase. It takes about five seconds.</div>';
   const td0=today();
@@ -3299,7 +3337,7 @@ function rollNumbers(root){const reduce=matchMedia("(prefers-reduced-motion:redu
     const t0=performance.now(),d=Math.min(900,420+Math.log10(1+Math.abs(v-prev))*120);el.textContent=money(prev);
     const step=n=>{if(!el.isConnected||el._rolling!==v)return;const q=Math.min(1,(n-t0)/d),e=1-Math.pow(1-q,3);el.textContent=money(round2(prev+(v-prev)*e));if(q<1)requestAnimationFrame(step);else el._rolling=null};
     requestAnimationFrame(step)})}
-function render(){if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.classList.remove("on");
+function render(){{const f=document.getElementById("fab");if(f&&scrollY<120)f.classList.remove("tuck")}if(DBAR.el&&!(S.tab==="insights"&&IS.sub==="totals"))DBAR.el.classList.remove("on");
   renderHeader();
   const groups=groupsFor(S.ym), sm=spentMap();
   renderBanner(groups,sm);
@@ -4283,6 +4321,7 @@ $("#main").addEventListener("click",e=>{
   if(e.target.closest("#histImport")){importHistory();return}
   if(e.target.closest("[data-upcoming]")){S.upcoming=true;S.q="";S.tab="tx";try{haptic()}catch(_){}render();window.scrollTo(0,0);return}
   const mtg=e.target.closest("#msTog");if(mtg){msToggle(mtg);return}
+  const gt=e.target.closest("[data-gtog]");if(gt){let o={};try{o=JSON.parse(ls.get("pb.gopen")||"{}")||{}}catch(_){}const id=gt.dataset.gtog;if(o[id])delete o[id];else o[id]=1;ls.set("pb.gopen",JSON.stringify(o));try{haptic()}catch(_){}render();return}
   const ct=e.target.closest("[data-mtog]");if(ct&&!e.target.closest("[data-plan]")){const c=ct.closest(".pb-card");const op=!c.classList.contains("is-open");c.classList.toggle("is-open",op);
     const tg=c.querySelector(".pb-toggle");if(tg)tg.setAttribute("aria-expanded",String(op));ls.set("pb.msubOpen",op?"1":"0");try{haptic()}catch(_){}return}
   if(e.target.closest("#futTog")){const w=e.target.closest(".futw");const shut=!w.classList.contains("shut");w.classList.toggle("shut",shut);ls.set("pb.futHide",shut?"1":"0");e.target.closest("#futTog").setAttribute("aria-expanded",String(!shut));try{haptic()}catch(_){}return}
@@ -4307,12 +4346,12 @@ $("#main").addEventListener("click",e=>{
   else if(t.id==="exportCsv")exportCsv();
   else if(t.id==="syncAll")syncAll(t);
 });
-async function syncAll(btn){
+async function syncAll(btn){AS.fail="";
   const list=sortedTx().filter(t=>t.sheet!=="synced").reverse();
   btn.disabled=true;btn.textContent="Sending…";let n=0;
-  if(!list.length){btn.disabled=false;btn.textContent="Send to sheet";return}
+  if(!list.length){btn.disabled=false;btn.textContent="Try again";return}
   let err="";for(const t of list){if(await pushToSheet(t.id,t))n++;else{const f=S.tx.find(x=>x.id===t.id);err=(f&&f.sheetMsg)||"";break}}
-  if(btn.isConnected){btn.disabled=false;btn.textContent="Send to sheet"}
+  if(btn.isConnected){btn.disabled=false;btn.textContent="Try again"}AS.fail=err;render();
   toast(n&&!err?"Added "+n+" to your sheet":n?"Added "+n+", then stopped: "+(err||"couldn't reach your sheet"):(err||"Couldn't reach your sheet. Check Settings → Google Sheet sync"));
 }
 
@@ -4321,7 +4360,7 @@ let histUnsub=null;
 function subscribeTx(){
   if(!S.db)return;venWatch();txUnsub&&txUnsub();histUnsub&&histUnsub();histUnsub=null;if(!(S.fromCache&&S.cacheYm===S.ym)){S.txLoaded=false;S.tx=[]}
   const ym=S.ym;let live=[],past=[],gotLive=false,gotPast=ym>=HIST_BEFORE;
-  const merge=()=>{if(ym!==S.ym)return;S.tx=live.concat(past);S.txLoaded=gotLive&&gotPast;S.fromCache=false;render();cacheSave();if(S.txLoaded)setTimeout(reconcileSheet,800)};
+  const merge=()=>{if(ym!==S.ym)return;S.tx=live.concat(past);S.txLoaded=gotLive&&gotPast;S.fromCache=false;render();cacheSave();if(S.txLoaded)setTimeout(()=>autoSync(),800)};
   txUnsub=S.db.collection("tx").where("date",">=",ym+"-01").where("date","<=",ym+"-31").limit(1000).onSnapshot(snap=>{
     live=snap.docs.map(d=>Object.assign({id:d.id},d.data()));gotLive=true;merge();
   },()=>{gotLive=true;merge()});
