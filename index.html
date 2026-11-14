@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 14, 1:15 PM"</script>
+<script>window.PB_BUILD="Nov 14, 1:30 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1313,7 +1313,7 @@ html[data-theme="dark"]{background:#000}
 
 /* real-tap haptic switches (see .hapsw script): invisible, cover the whole button, never shift layout */
 :where(.hapon){position:relative}
-.hapsw{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;opacity:0!important;transform:none!important;display:block!important;visibility:visible!important;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:16px}
+.hapsw{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;background:none!important;transform:none!important;display:block!important;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 :disabled>.hapsw.hapsw,[aria-disabled="true"]>.hapsw.hapsw{display:none!important}
 </style>
 
@@ -4481,15 +4481,17 @@ const HAP={last:0};
 const haptic=(()=>{let lab=null;return()=>{try{if(navigator.vibrate&&navigator.vibrate(8))return;if(performance.now()-HAP.last<150)return;
   if(!lab){lab=document.createElement("label");lab.className="pbhap";lab.setAttribute("aria-hidden","true");lab.style.cssText="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0";const i=document.createElement("input");i.type="checkbox";i.setAttribute("switch","");i.tabIndex=-1;lab.appendChild(i);document.body.appendChild(lab)}
   lab.click()}catch(e){}}})();
-/* Real-tap haptics. iOS 26.5 stopped haptics for switches clicked from code, but a switch your finger actually taps still
-   gives one. So every button gets an invisible <input type=checkbox switch> laid over it (.hapsw): the tap lands on the switch
-   (haptic), and the click still bubbles up to the button, so everything works as before. The switch's own input/change events
-   are stopped at the window so no sheet thinks a field was edited. Skipped: links, labels, .nohap, and buttons holding a
-   select/input/textarea (custom pickers). haptic() above skips its old trick right after a real switch tap, so older iPhones
-   don't get two taps. */
+/* Real-tap haptics. iOS 26.5 stopped haptics for switches clicked from code, but a switch toggled by a real tap still gives one.
+   Every button gets an invisible <label class="hapsw" for="pbHapSw"> laid over it. A tap on the label toggles the one hidden
+   switch (#pbHapSw) inside that same tap (haptic), and the click still bubbles up to the button, so everything works as before.
+   A label (not the switch itself) is what sits over the button: iOS lets you drag a switch, which swallowed scrolls that started
+   on a row; a label scrolls normally. The switch's input/change events are stopped at the window. Skipped: links, labels, .nohap,
+   and buttons holding a select/input/textarea (custom pickers). haptic() above skips its old trick right after a real tap. */
 (()=>{const SEL="button,[role=button]";
-  const T=document.createElement("input");T.type="checkbox";T.setAttribute("switch","");T.className="hapsw";T.tabIndex=-1;T.setAttribute("aria-hidden","true");
-  const arm=b=>{const h=b._hap;if(h&&h.parentNode===b)return;if(b.closest("a,label,.nohap")||b.querySelector("select,textarea,input:not(.hapsw)"))return;
+  const SW=document.createElement("input");SW.type="checkbox";SW.setAttribute("switch","");SW.id="pbHapSw";SW.tabIndex=-1;SW.setAttribute("aria-hidden","true");
+  SW.style.cssText="position:fixed;left:-60px;top:0;width:40px;height:24px;opacity:0;pointer-events:none";document.body.appendChild(SW);
+  const T=document.createElement("label");T.htmlFor="pbHapSw";T.className="hapsw";T.setAttribute("aria-hidden","true");
+  const arm=b=>{const h=b._hap;if(h&&h.parentNode===b)return;if(b.closest("a,label,.nohap")||b.querySelector("select,textarea,input"))return;
     const t=T.cloneNode(false);b.classList.add("hapon");b.appendChild(t);b._hap=t};
   window.addEventListener("mousedown",e=>{if(e.target&&e.target.classList&&e.target.classList.contains("hapsw"))e.preventDefault()},true);
   /* long lists (Map, Transactions) can hold 1,000+ buttons: in #main, a button gets its switch only once it's within ~1 screen of view */
@@ -4500,8 +4502,8 @@ const haptic=(()=>{let lab=null;return()=>{try{if(navigator.vibrate&&navigator.v
   new MutationObserver(ms=>{for(const m of ms){if(m.target.nodeType===1&&m.target.matches&&m.target.matches(SEL))Q.add(m.target);m.addedNodes.forEach(n=>{if(n.nodeType===1&&!n.classList.contains("hapsw"))Q.add(n)})}
     if(Q.size&&!qd){qd=true;queueMicrotask(flush)}}).observe(document.body,{childList:true,subtree:true});
   scan(document.body);
-  ["input","change"].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.classList&&e.target.classList.contains("hapsw"))e.stopImmediatePropagation()},true));
-  window.addEventListener("click",e=>{if(e.target&&e.target.classList&&e.target.classList.contains("hapsw"))HAP.last=performance.now()},true);
+  ["input","change"].forEach(ev=>window.addEventListener(ev,e=>{if(e.target===SW)e.stopImmediatePropagation()},true));
+  window.addEventListener("click",e=>{if(e.target===SW){e.stopImmediatePropagation();HAP.last=performance.now()}},true);
 })();
 /* tuned haptics: n quick taps (iPhone web apps get one tap style, so strength comes from rhythm) */
 const hapticN=(n,gap)=>{for(let i=0;i<n;i++)setTimeout(haptic,i*(gap||100))};

@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 13, 2026 (build "Nov 14, 1:15 PM", sw `pb-2026-11-14d`)_
+_Last updated: Nov 13, 2026 (build "Nov 14, 1:30 PM", sw `pb-2026-11-14e`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
@@ -26,7 +26,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14e`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14f`, or `pb-<new date>a` on a new day).
 4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -86,8 +86,8 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
   - Map list rows use `content-visibility:auto; contain-intrinsic-size:auto 38px` (rows are 60px with 22px padding), so off-screen rows skip layout. Row positions were verified identical. If `.mlrow` padding or height changes, update the 38px.
   - The `dock()` scroll handler exits early unless the Totals wheel view is showing. The Map `mlStuck` scroll handler is rAF-throttled.
   - Measured with 1,250 map rows: Map render 152 → 34 ms, Transactions 12.7 → 9 ms, Budget 3 → 1.7 ms, Totals (3 yr) 17 → 10 ms (desktop CPU; phones are roughly 3–5× slower).
-- **Haptics on iPhone (iOS 26.5+)**: Apple stopped haptics for a switch clicked from code (the old `haptic()` trick: hidden `.pbhap` label). A switch tapped by a real finger still buzzes. So every `button`/`[role=button]` gets an invisible `<input type=checkbox switch class="hapsw">` laid over it (`.hapon` gets `position:relative` via a zero-specificity `:where`). A tap lands on the switch (haptic), and the click bubbles to the button as before.
-  - The switch's `input`/`change` events are stopped at window capture, so sheets don't mark themselves edited. Its `mousedown` is prevented, so it never takes focus.
+- **Haptics on iPhone (iOS 26.5+)**: Apple stopped haptics for a switch clicked from code (the old `haptic()` trick: hidden `.pbhap` label). A switch tapped by a real finger still buzzes. So every `button`/`[role=button]` gets an invisible `<label class="hapsw" for="pbHapSw">` laid over it (`.hapon` gets `position:relative` via a zero-specificity `:where`). A real tap on the label toggles the single hidden switch `#pbHapSw` (haptic), and the click bubbles to the button as before. **Do not put the switch input itself over buttons**: iOS lets you drag a switch, which swallowed scrolls that started on a row and opened the row instead (fixed Nov 14).
+  - `#pbHapSw`'s click/input/change events are stopped at window capture. The label's `mousedown` is prevented, so focus never moves.
   - Skipped: links, labels, `.nohap`, buttons containing select/input/textarea (custom pickers). Disabled buttons hide the switch.
   - In `#main`, switches are added lazily with an IntersectionObserver (about 900px around the view), so the Map's 1,000+ rows don't slow rendering.
   - `haptic()` skips its old trick for 150 ms after a real switch tap (avoids double taps on older iOS). Haptics fired from timers (celebration ticks, `hapticN`) only work on iOS < 26.5 or Android.
@@ -99,6 +99,7 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–14, 2026 (newest first)
+- Fix: scrolling Transactions opened the row on iPhone (switch overlays were draggable). Overlays are now labels pointing at one hidden switch
 - Haptics now work on current iOS: invisible real switches over every button (no visual or behaviour change)
 - Performance pass: cached number/date formatters, memoized address and GL checks, lighter Map layout and scroll handlers (no visible changes)
 - Premium pass: grow-from-row sheets, springier sheets, save fly-in, haptic rhythms, optional sounds, real true-black dark mode (opt-in), greeting line, month-change doodle swap, long-press peek, illustrated empty states, Settings → Personal touches (name, appearance, sounds)
