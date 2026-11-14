@@ -1,0 +1,15 @@
+// Pocket Budget database rules. Each account can read and write only its own data (users/<its own id>/...).
+// Nobody else, signed in or not, can read or write anything.
+// To apply: Firebase console → Firestore Database → Rules → paste this whole file → Publish.
+// To verify from the phone: Settings → Privacy check → Check database lock.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
