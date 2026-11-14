@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 13, 2026 (build "Nov 13, 11:58 PM", sw `pb-2026-11-13g`)_
+_Last updated: Nov 13, 2026 (build "Nov 14, 11:30 AM", sw `pb-2026-11-14a`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
@@ -26,7 +26,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-13h`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14b`, or `pb-<new date>a` on a new day).
 4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -66,13 +66,14 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 - Transactions shortcuts are a slim `.qlinks` pill row (Finance Tracker, Venmo).
 - Merchant → item auto-pick already exists: `autoCat()` in the tx sheet uses `merchIndex()` history, then `catGuess()`.
 - **Home / regular-spot address**: `LOC.mySpot(fix)` first checks hand-corrected spots on this phone (`pb.mySpots`, set by `LOC.learn`), then `LOC.pastSpot(fix)`. That looks at your saved transactions (synced) for street addresses you typed or picked (`loc.src!=="gps"`, no business name) within 120–220 m and picks the most used one. This fixes GPS drift at home showing a neighbour's number (e.g. 2976 instead of 2944 Gerald Ave NE).
-- **Doodle mood** (header month doodle, e.g. November's pie): `doodleMood()` compares flexible spending (fixed bills and set-aside groups left out) with the plan. It returns `good` (steam/sparkles), `warn` (ahead of the calendar by more than 8 points, blue sweat drop) or `over` (past plan: `.dbody` filtered to look burnt, grey smoke). Classes are `.doodle.m-*`. Tapping the doodle toasts `MOOD_MSG` (the pie-specific wording is used in November).
+- **Doodle mood** (header month doodle, e.g. November's turkey): `doodleMood()` compares flexible spending (fixed bills and set-aside groups left out) with the plan. It returns `good` (steam/sparkles), `warn` (ahead of the calendar by more than 8 points, blue sweat drop) or `over` (past plan: `.dbody` filtered to look burnt, grey smoke). Classes are `.doodle.m-*`. Tapping the doodle toasts `MOOD_MSG` (the turkey wording is used in November; its sweat drop is shifted beside the head).
 - Insights → Calendar: days where refunds exceed spending get the `.cd.gain` class (solid green, "+$X") and a green "+" total in the day panel.
 
 ## Design tokens
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
-## Changes Nov 12–13, 2026 (newest first)
+## Changes Nov 12–14, 2026 (newest first)
+- November doodle is now a turkey (Google-colour tail feathers) instead of a pie; moods are strutting, sweating, roasted
 - Header doodle reacts to the month: warm and steaming on track, sweating ahead of pace, burnt and smoking when over
 - New transactions at home use the address you typed before (`pastSpot`), not the GPS nearest-house guess; the match radius is now 120–220 m
 - Polish pass: instant cache-first launch with Update ready pill, past months saved on the phone, self-hosted font, skeleton placeholders, bills left out of Pace/Calendar (with toggle), full group names when collapsed, room below the FAB, slim shortcut row
