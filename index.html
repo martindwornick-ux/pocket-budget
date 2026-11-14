@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 html,body{overscroll-behavior-y:auto}</style>
-<script>window.PB_BUILD="Nov 13, 11:20 PM"</script>
+<script>window.PB_BUILD="Nov 13, 11:25 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2035,7 +2035,10 @@ const LOC={
 };
 /* A location is {label, name?, place?, lat?, lng?, src}. label is what you see ("Dog River Coffee, Hood River, OR"
    or just "Hood River, OR"); name is the business, place is the town. Older saves without a label still read fine. */
-function locText(l){if(!l)return"";if(l.label)return l.label;return l.place||l.road||(l.lat!=null?l.lat.toFixed(4)+", "+l.lng.toFixed(4):"")}
+/* Aesthetic-usability: drop repeated pieces of an address ("2944 Gerald Ave NE, 2944 Gerald Ave NE, …"), ignoring case, dots and Northeast/NE spellings */
+function addrKey(x){return String(x).toLowerCase().replace(/[.#]/g,"").replace(/\b(north|south)(east|west)\b/g,(m,a,b)=>a[0]+b[0]).replace(/\b(north|south|east|west)\b/g,m=>m[0]).replace(/\bavenue\b/g,"ave").replace(/\bstreet\b/g,"st").replace(/\broad\b/g,"rd").replace(/\bdrive\b/g,"dr").replace(/\s+/g," ").trim()}
+function addrDedupe(str){const seen=new Set();return String(str||"").split(",").map(x=>x.trim()).filter(x=>{const k=addrKey(x);if(!k||seen.has(k))return false;seen.add(k);return true}).join(", ")}
+function locText(l){if(!l)return"";if(l.label)return addrDedupe(l.label);return l.place||l.road||(l.lat!=null?l.lat.toFixed(4)+", "+l.lng.toFixed(4):"")}
 function locShort(l){if(!l)return"";if(l.name)return l.name;const t=locText(l);return l.place&&t===l.place?l.place.replace(/,\s*[A-Z]{2}$/,""):t.split(",")[0]}
 const GPS_SVG='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.6 3.4a.9.9 0 0 0-1-.2L3.9 9.9a.9.9 0 0 0 .1 1.7l6.6 1.8 1.8 6.6a.9.9 0 0 0 1.7.1l6.7-15.7a.9.9 0 0 0-.2-1z"/></svg>';
 const PIN_SVG='<svg class="pin" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
@@ -2234,7 +2237,7 @@ function locField(s,o){
       if(!hit&&mk&&(gpKey()||mbxToken())&&mk.length>=3){const key="ext|"+mk+"|"+f.lat.toFixed(3)+","+f.lng.toFixed(3);const M=LOC.pcache[key];
         if(!M){if(LOC._extK&&LOC.pcache[LOC._extK]&&!LOC.pcache[LOC._extK].v)delete LOC.pcache[LOC._extK];LOC._extK=key;LOC.pcache[key]={};clearTimeout(LOC._extT);LOC._extT=setTimeout(()=>{(gpKey()?gpSearch(mraw,f,3):mbxSearch(mraw,f,3)).then(r=>{LOC.pcache[key].v=r||[];if(s.isConnected)applyAuto()})},900)}
         else if(M.v){const m=M.v.find(x=>x.name&&x.far!=null&&x.far<400);if(m){l=Object.assign({},m,{acc:f.acc,src:"gps"})}}}
-      if(!l&&hit){const ad=hit.addr||f.road;l={label:[hit.name,ad,f.place].filter(Boolean).join(", "),name:hit.name,place:f.place,lat:+hit.lat.toFixed(6),lng:+hit.lng.toFixed(6),acc:f.acc,src:"gps"}}}
+      if(!l&&hit){const ad=hit.addr||f.road;l={label:addrDedupe([hit.name,ad,f.place].filter(Boolean).join(", ")),name:hit.name,place:f.place,lat:+hit.lat.toFixed(6),lng:+hit.lng.toFixed(6),acc:f.acc,src:"gps"}}}
     if(!l&&LOC.mySpot(f)){const m=LOC.mySpot(f);l={label:m.label,lat:m.lat,lng:m.lng,acc:f.acc,src:"gps"}}
     if(!l)l={label:[f.road,f.place].filter(Boolean).join(", "),place:f.place,lat:f.lat,lng:f.lng,acc:f.acc,src:"gps"};
     if(cur&&cur.label===l.label)return;cur=l;if(document.activeElement!==inp)inp.value=l.label;row.classList.remove("auto");void row.offsetWidth;row.classList.add("auto")};
@@ -3033,7 +3036,7 @@ function mlCapHTML(t){return '<b>'+esc(t.merchant||"Purchase")+' · '+money(+t.a
    iPhone only lets a page copy during the tap itself, so the lookup is handed to the clipboard as a promise. */
 function mlAddr(t){const l=t.loc||{};const done=road=>{const parts=[];if(l.name)parts.push(l.name);if(road)parts.push(road);
     const town=l.place||(locText(l).split(",").slice(-2).join(",").trim());if(town&&!parts.some(p=>p===town))parts.push(town);
-    return parts.length?parts.join(", "):(l.lat!=null?l.lat.toFixed(6)+", "+l.lng.toFixed(6):locText(l))};
+    return parts.length?addrDedupe(parts.join(", ")):(l.lat!=null?l.lat.toFixed(6)+", "+l.lng.toFixed(6):locText(l))};
   if(l.lat==null)return Promise.resolve(done(""));
   return LOC.place({lat:l.lat,lng:l.lng}).then(pl=>done(pl&&pl.road||"")).catch(()=>done(""))}
 function mlCopyAddr(){const t=(IS.mapPts||[])[IS.mapActive];if(!t)return;try{haptic()}catch(_){}

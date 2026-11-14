@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 13, 2026 (build "Nov 13, 11:20 PM", sw `pb-2026-11-13c`)_
+_Last updated: Nov 13, 2026 (build "Nov 13, 11:25 PM", sw `pb-2026-11-13d`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
@@ -25,7 +25,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-13d`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-13e`, or `pb-<new date>a` on a new day).
 4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
 5. `git add index.html sw.js && git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -57,12 +57,14 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
   - Range picker top right: `AVR` (Last month, 3, 6, 12, 36, 120 = "All time"), stored in `localStorage["pb.avr"]`. Empty months are skipped.
   - The mortgage (item or merchant matching `/mortgage/i`) is hidden by default. The toggle is `[data-avmort]`, stored in `localStorage["pb.avmort"]`.
   - Tapping a group drills into its items (`IS.group`). Items aren't tappable.
+- `addrDedupe()` / `addrKey()`: remove repeated address parts (ignoring case, dots, Northeast/NE, Avenue/Ave). Used in `locText()`, `mlAddr()` (Copy address) and when the GPS label is built.
 - Insights → Calendar: days where refunds exceed spending get the `.cd.gain` class (solid green, "+$X") and a green "+" total in the day panel.
 
 ## Design tokens
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–13, 2026 (newest first)
+- Addresses no longer repeat the street ("2944 Gerald Ave NE, 2944 Gerald Ave NE, …") on Map rows, the map card and Copy address
 - FAB also comes back once scrolling stops, not only on scroll up
 - UX pass 2 (Laws of UX): collapsible groups, automatic sheet sync, FAB tucks on scroll
 - UX pass 1: single add button, consistent "left" meters, "Days left" label, quiet "not synced" and "+ Add item", save screen shows what's left in the item
@@ -71,6 +73,7 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 - Calendar shows net-refund days as green "+$" days
 
 ## Known follow-ups / ideas
+- More Laws of UX ideas offered, not yet built: merchant→item auto-pick (Tesler), top-4 item chips (Hick), forgiving amount input (Postel), "Almost out" chip (Von Restorff), end-of-month countdown (Goal-Gradient), month wrap-up on the 1st (Peak-End), "needs an item" nudge (Zeigarnik).
 - On the Calendar, net-refund days still count toward "$0 days" and the streak (the owner was asked; no decision yet).
 - iOS location prompts can't be fixed in code. The owner was pointed to Settings → Apps → Safari → Location.
 - The mortgage matcher is only `/mortgage/i`. If the owner's mortgage is logged under a lender name, extend `isM` in `avgViewHTML()`.
