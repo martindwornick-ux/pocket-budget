@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 14, 1:30 PM"</script>
+<script>window.PB_BUILD="Nov 14, 2:20 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1033,6 +1033,17 @@ body.mpk-open{overflow:hidden}
 .cd:active{transform:scale(.94)}
 .cal2.anim .cd:not(.out){animation:cdin .5s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:calc(var(--i)*14ms)}
 @keyframes cdin{from{opacity:0;transform:scale(.6)}}
+.cal2{touch-action:pan-y}
+.cd .cw{display:none}
+.cal2.c3d{transform:perspective(820px) rotateX(var(--rx,0deg)) rotateZ(var(--rz,0deg));transform-style:preserve-3d;transform-origin:50% 60%;position:relative;z-index:2;-webkit-user-select:none;user-select:none}
+.cal2.c3d .cd{transform-style:preserve-3d;transform:translateZ(calc(var(--z,0) * var(--lift,0) * 88px + .5px))!important;animation:none!important;transition:none!important;border-radius:calc(10px - 6px * var(--lift,0))}
+.cal2.c3d .cd .cw{display:block;position:absolute;pointer-events:none;--wh:calc(var(--z,0) * var(--lift,0) * 88px + .5px);background:linear-gradient(rgba(0,0,0,var(--sh)),rgba(0,0,0,var(--sh))),var(--bg)}
+.cal2.c3d .cw1{left:0;right:0;top:100%;height:var(--wh);transform-origin:50% 0;transform:rotateX(-90deg);--sh:.2}
+.cal2.c3d .cw2{left:0;right:0;bottom:100%;height:var(--wh);transform-origin:50% 100%;transform:rotateX(90deg);--sh:.36}
+.cal2.c3d .cw3{top:0;bottom:0;left:100%;width:var(--wh);transform-origin:0 50%;transform:rotateY(90deg);--sh:.3}
+.cal2.c3d .cw4{top:0;bottom:0;right:100%;width:var(--wh);transform-origin:100% 50%;transform:rotateY(-90deg);--sh:.12}
+.cal2.c3d .cd.sel{box-shadow:inset 0 0 0 2px #fff}
+
 .calleg{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;font-size:13px;color:var(--muted)}
 .calleg .scale{display:inline-flex;align-items:center;gap:3px}
 .calleg i{width:13px;height:13px;border-radius:4px;background:var(--bg)}
@@ -2913,6 +2924,35 @@ const CALHINT='<p class="note dhint">Tap a day to see what you bought.</p>';
 // flame colors for spending days: pale yellow → orange → red → deep red
 const FLAME=[[0,[255,241,196]],[.22,[255,214,102]],[.45,[255,159,67]],[.66,[255,107,53]],[.84,[229,57,53]],[1,[160,20,30]]];
 function flame(x){x=Math.max(0,Math.min(1,x));for(let i=1;i<FLAME.length;i++)if(x<=FLAME[i][0]){const [a,ca]=FLAME[i-1],[b,cb]=FLAME[i],t=(x-a)/(b-a);return"rgb("+ca.map((c,k)=>Math.round(c+(cb[k]-c)*t)).join(",")+")"}return"rgb(160,20,30)"}
+// 3D calendar: swipe sideways on the grid to tilt it and raise each spending day as a column (height ~ amount); letting go springs it back flat.
+const CW3='<i class="cw cw1" aria-hidden="true"></i><i class="cw cw2" aria-hidden="true"></i><i class="cw cw3" aria-hidden="true"></i><i class="cw cw4" aria-hidden="true"></i>';
+const C3={p:{rx:0,rz:0,l:0},v:{rx:0,rz:0,l:0},t:{rx:0,rz:0,l:0},drag:null,raf:0,eat:0};
+function c3Frame(){
+  C3.raf=0;const el=document.querySelector("#main .cal2");
+  if(!el){C3.drag=null;C3.p={rx:0,rz:0,l:0};C3.v={rx:0,rz:0,l:0};C3.t={rx:0,rz:0,l:0};return}
+  const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;let moving=false;
+  for(const k of["rx","rz","l"]){const p=C3.p,v=C3.v,t=C3.t;
+    if(reduce){p[k]=t[k];v[k]=0;continue}
+    v[k]=(v[k]+(t[k]-p[k])*(k==="l"?.09:.11))*.76;p[k]+=v[k];
+    const eps=k==="l"?.0006:.02;if(Math.abs(v[k])>eps||Math.abs(t[k]-p[k])>eps)moving=true;else{p[k]=t[k];v[k]=0}}
+  const live=!!(C3.drag&&C3.drag.on),flat=!live&&!moving&&C3.p.l<=0;
+  el.classList.toggle("c3d",!flat);
+  if(flat){el.style.removeProperty("--rx");el.style.removeProperty("--rz");el.style.removeProperty("--lift");return}
+  el.style.setProperty("--rx",C3.p.rx.toFixed(2)+"deg");el.style.setProperty("--rz",C3.p.rz.toFixed(2)+"deg");el.style.setProperty("--lift",Math.max(0,C3.p.l).toFixed(4));
+  if(moving||live)C3.raf=requestAnimationFrame(c3Frame);
+}
+function c3Kick(){if(!C3.raf)C3.raf=requestAnimationFrame(c3Frame)}
+function c3Move(e){const d=C3.drag;if(!d||e.pointerId!==d.id)return;const dx=e.clientX-d.x,dy=e.clientY-d.y;
+  if(!d.on){if(Math.abs(dx)<10)return;if(Math.abs(dy)>Math.abs(dx)){c3Up(e);return}d.on=true;d.x=e.clientX;d.y=e.clientY;
+    try{d.el.setPointerCapture(d.id)}catch(_){}C3.t={rx:52,rz:0,l:1};try{haptic()}catch(_){}c3Kick();return}
+  e.preventDefault();C3.t.rz=Math.max(-160,Math.min(160,dx*.45));C3.t.rx=Math.max(14,Math.min(74,52-dy*.3));c3Kick()}
+function c3Up(e){const d=C3.drag;if(!d||(e&&e.pointerId!==d.id))return;C3.drag=null;
+  removeEventListener("pointermove",c3Move,{passive:false});removeEventListener("pointerup",c3Up);removeEventListener("pointercancel",c3Up);
+  if(d.on){C3.eat=performance.now();C3.t={rx:0,rz:0,l:0};c3Kick()}}
+$("#main").addEventListener("pointerdown",e=>{const el=e.target.closest(".cal2");if(!el||C3.drag||(e.pointerType==="mouse"&&e.button))return;
+  C3.drag={id:e.pointerId,x:e.clientX,y:e.clientY,el,on:false};
+  addEventListener("pointermove",c3Move,{passive:false});addEventListener("pointerup",c3Up);addEventListener("pointercancel",c3Up)});
+$("#main").addEventListener("click",e=>{if(performance.now()-C3.eat<450&&e.target.closest(".cal2")){e.preventDefault();e.stopPropagation()}},true);
 function calendarCard(fh){
   const ym=S.ym,[y,m]=ym.split("-").map(Number),td=today(),cur=ymOf(td);
   const fx=fixedSkip(ym),match=t=>t.type!=="income"&&!(fx&&fx.has(t.itemId))&&(!IS.group||groupNameOf(t,ym)===IS.group)&&(!IS.item||itemNameOf(t,ym)===IS.item);
@@ -2933,7 +2973,7 @@ function calendarCard(fh){
     if(n<1||n>dim){g+='<div class="cd out"></div>';continue}
     const v=day[n]||0,iso=ym+"-"+pad(n),fut=n>lastDay,hh=v>0?heatOf(v):0;
     const cls=["cd"];if(iso===td)cls.push("today");if(fut)cls.push("fut");const gain=!fut&&v<-.005;if(gain)cls.push("gain");else if(!fut&&!(v>0))cls.push("zero");if(n===big&&v>0)cls.push("big");if(IS.calSel===iso)cls.push("sel");if(v>0&&!fut&&hh>.6)cls.push("dark");
-    g+='<button class="'+cls.join(" ")+'" data-cday="'+iso+'" style="--h:'+hh.toFixed(3)+';--i:'+c+(v>0&&!fut?';--bg:'+flame(hh):'')+'" aria-label="'+esc(fmtLong(iso))+(v>0?", "+money(round2(v)):gain?", came out ahead "+money(round2(-v)):fut?"":", no spending")+'"><span class="n">'+n+'</span>'+(v>0?'<b class="num">'+kfmt(v)+'</b>':gain?'<b class="num">+'+kfmt(-v)+'</b>':(!fut?'<em aria-hidden="true">✓</em>':''))+'</button>'}
+    g+='<button class="'+cls.join(" ")+'" data-cday="'+iso+'" style="--h:'+hh.toFixed(3)+';--i:'+c+(v>0&&!fut?';--bg:'+flame(hh)+';--z:'+(.08+.92*Math.sqrt(v/max)).toFixed(3):'')+'" aria-label="'+esc(fmtLong(iso))+(v>0?", "+money(round2(v)):gain?", came out ahead "+money(round2(-v)):fut?"":", no spending")+'"><span class="n">'+n+'</span>'+(v>0&&!fut?CW3:'')+(v>0?'<b class="num">'+kfmt(v)+'</b>':gain?'<b class="num">+'+kfmt(-v)+'</b>':(!fut?'<em aria-hidden="true">✓</em>':''))+'</button>'}
   g+='</div>';
   let h='<section class="card calcard"><div class="chead"><h2>Daily spending</h2><div class="cnav"><button data-cmon="-1" aria-label="Previous month">‹</button><span class="lbl">'+MONTHS[m-1].slice(0,3)+' '+y+'</span><button data-cmon="1" aria-label="Next month"'+(ym>=nextYm?" disabled":"")+'>›</button></div></div>'+fh+fixedChip(ym,fx);
   h+='<div class="cchips'+(anim?' anim':'')+'"><div><small>Per day</small><b class="num">'+(lastDay?money(round2(tot/lastDay)):"—")+'</b></div><div><small>$0 days</small><b class="num">'+(lastDay?ns:"—")+'</b></div><div><small>Streak</small><b class="num">'+(lastDay?best+" day"+(best===1?"":"s"):"—")+'</b></div>'+
