@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 13, 2026 (build "Nov 13, 11:25 PM", sw `pb-2026-11-13d`)_
+_Last updated: Nov 13, 2026 (build "Nov 13, 11:45 PM", sw `pb-2026-11-13e`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
@@ -10,8 +10,8 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 - **Backend**: Firebase Firestore (project `pocket-budget-bc452`). Transactions are at `tx/{id}`, budgets at `budgets/{ym}`, and pre-Oct-2026 EveryDollar history at `hist/{ym}`.
 - **Platform layer**: `platform.js` provides `window.claude.use("db" | "user" | "mcp" | "downloads")` on top of Firebase plus the Google Apps Script sheet bridge (`mcp.pbAppend`, `mcp.pbCheck`)
 - **Hosting**: GitHub Pages, `main` branch
-- **Service worker**: `sw.js` with a version-keyed cache
-- **Font**: Hanken Grotesk
+- **Service worker**: `sw.js` with a version-keyed cache. App files are **cache-first** (instant launch) and refreshed in the background. A new `VERSION` installs a fresh copy, and the page shows an "Update ready · Tap to refresh" pill (`#updpill`, `controllerchange` listener at the end of `index.html`).
+- **Font**: Hanken Grotesk variable font, self-hosted as `hanken-grotesk.woff2` (from `@fontsource-variable/hanken-grotesk`), preloaded and in the SW shell. There is no Google Fonts request any more.
 
 ## Files
 | File | Role |
@@ -21,13 +21,14 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 | `config.js` | **SECRET**: Firebase config and Apps Script key. Never commit, print or expose it |
 | `platform.js` | Firebase, sign-in and sheet bridge |
 | `manifest.webmanifest`, `icon-*.png` | PWA bits |
+| `hanken-grotesk.woff2` | Self-hosted font (in the SW `SHELL` list) |
 
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-13e`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-13f`, or `pb-<new date>a` on a new day).
 4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
-5. `git add index.html sw.js && git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
+5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
 ## Hard rules
 - **Never force-push** or overwrite other sessions' commits.
@@ -58,12 +59,19 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
   - The mortgage (item or merchant matching `/mortgage/i`) is hidden by default. The toggle is `[data-avmort]`, stored in `localStorage["pb.avmort"]`.
   - Tapping a group drills into its items (`IS.group`). Items aren't tappable.
 - `addrDedupe()` / `addrKey()`: remove repeated address parts (ignoring case, dots, Northeast/NE, Avenue/Ave). Used in `locText()`, `mlAddr()` (Copy address) and when the GPS label is built.
+- **Past months**: `fetchMonth(ym)` is the one loader (used by `loadHist`, `merchLoad`, `txForMonth`). Results are kept on the phone in IndexedDB `pb-hist` (`HDB`) and preloaded into `IS.hist` at start. `IS.fresh[ym]` marks months re-checked this launch. A failed fetch keeps the saved copy.
+- **Skeletons**: `SKEL` (shimmer line) and `SKEL_BARS` replace all "Loading earlier months…" text.
+- **Fixed bills on Pace and Calendar**: `fixedSkip(ym)` returns the fixed item ids (`isFixed`) to leave out. It returns null when one item is picked or the picked group is all bills. `fixedChip()` draws "Bills left out · $X · Include" (`[data-nofixed]`, `localStorage["pb.nofixed"]`). The Calendar day panel adds "Plus $X in bills, left out above." Pace planned and the group pacing list exclude them too.
+- Collapsed group cards hide their ••• (`.gcard:not(.open) .dots`) so long names fit. `body` has 170px bottom padding so the FAB never covers the last card.
+- Transactions shortcuts are a slim `.qlinks` pill row (Finance Tracker, Venmo).
+- Merchant → item auto-pick already exists: `autoCat()` in the tx sheet uses `merchIndex()` history, then `catGuess()`.
 - Insights → Calendar: days where refunds exceed spending get the `.cd.gain` class (solid green, "+$X") and a green "+" total in the day panel.
 
 ## Design tokens
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–13, 2026 (newest first)
+- Polish pass: instant cache-first launch with Update ready pill, past months saved on the phone, self-hosted font, skeleton placeholders, bills left out of Pace/Calendar (with toggle), full group names when collapsed, room below the FAB, slim shortcut row
 - Addresses no longer repeat the street ("2944 Gerald Ave NE, 2944 Gerald Ave NE, …") on Map rows, the map card and Copy address
 - FAB also comes back once scrolling stops, not only on scroll up
 - UX pass 2 (Laws of UX): collapsible groups, automatic sheet sync, FAB tucks on scroll
@@ -73,7 +81,7 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 - Calendar shows net-refund days as green "+$" days
 
 ## Known follow-ups / ideas
-- More Laws of UX ideas offered, not yet built: merchant→item auto-pick (Tesler), top-4 item chips (Hick), forgiving amount input (Postel), "Almost out" chip (Von Restorff), end-of-month countdown (Goal-Gradient), month wrap-up on the 1st (Peak-End), "needs an item" nudge (Zeigarnik).
+- More Laws of UX ideas offered, not yet built: top-4 item chips (Hick), forgiving amount input (Postel), "Almost out" chip (Von Restorff), end-of-month countdown (Goal-Gradient), month wrap-up on the 1st (Peak-End), "needs an item" nudge (Zeigarnik).
 - On the Calendar, net-refund days still count toward "$0 days" and the streak (the owner was asked; no decision yet).
 - iOS location prompts can't be fixed in code. The owner was pointed to Settings → Apps → Safari → Location.
 - The mortgage matcher is only `/mortgage/i`. If the owner's mortgage is logged under a lender name, extend `isM` in `avgViewHTML()`.
