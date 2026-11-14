@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 13, 2026 (build "Nov 14, 12:30 PM", sw `pb-2026-11-14b`)_
+_Last updated: Nov 13, 2026 (build "Nov 14, 1:00 PM", sw `pb-2026-11-14c`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
@@ -26,7 +26,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14c`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14d`, or `pb-<new date>a` on a new day).
 4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -78,12 +78,21 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
   - **Long-press peek** on `.txrow`: 430 ms hold opens `.txpeek` (details plus a static Leaflet map). Lifting the finger closes it, and the following click is swallowed (`PEEK.eat`).
   - **Empty states**: `EMPTY_ART` (receipt, cal, piggy) SVGs.
   - Digits in Hanken Grotesk are already equal-width (checked), so numbers line up without `tnum`. iPhone home-screen web apps can't switch app icons, so custom icons were skipped.
+- **Performance notes (Nov 14 pass, no behaviour changes; every screen's HTML was checked byte-identical before and after on 2 years of test data)**:
+  - Use `money()`, `NF0`, `dfmt(opts)` (cached `Intl.DateTimeFormat`) instead of `toLocaleString`/`toLocaleDateString` with options. Building formatters per call was the top render cost.
+  - `fmtDay()` memoizes per date (reset when the day changes). `addrKey()` is memoized (`AKC`). `glOK()` runs its WebGL check once (it used to create a GL context on every Map render).
+  - `patchMain` skips the `outerHTML` snapshots on Insights (they were never used there).
+  - `mlSnapVar` only writes `--mlmaph` when it changes and keeps one ResizeObserver per map element.
+  - Map list rows use `content-visibility:auto; contain-intrinsic-size:auto 38px` (rows are 60px with 22px padding), so off-screen rows skip layout. Row positions were verified identical. If `.mlrow` padding or height changes, update the 38px.
+  - The `dock()` scroll handler exits early unless the Totals wheel view is showing. The Map `mlStuck` scroll handler is rAF-throttled.
+  - Measured with 1,250 map rows: Map render 152 → 34 ms, Transactions 12.7 → 9 ms, Budget 3 → 1.7 ms, Totals (3 yr) 17 → 10 ms (desktop CPU; phones are roughly 3–5× slower).
 - Insights → Calendar: days where refunds exceed spending get the `.cd.gain` class (solid green, "+$X") and a green "+" total in the day panel.
 
 ## Design tokens
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–14, 2026 (newest first)
+- Performance pass: cached number/date formatters, memoized address and GL checks, lighter Map layout and scroll handlers (no visible changes)
 - Premium pass: grow-from-row sheets, springier sheets, save fly-in, haptic rhythms, optional sounds, real true-black dark mode (opt-in), greeting line, month-change doodle swap, long-press peek, illustrated empty states, Settings → Personal touches (name, appearance, sounds)
 - November doodle is now a turkey (Google-colour tail feathers) instead of a pie; moods are strutting, sweating, roasted
 - Header doodle reacts to the month: warm and steaming on track, sweating ahead of pace, burnt and smoking when over

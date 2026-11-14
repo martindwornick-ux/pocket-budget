@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 14, 12:30 PM"</script>
+<script>window.PB_BUILD="Nov 14, 1:00 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1271,6 +1271,8 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 .txs .cplace+.trow,.txs .csug+.cplace+.trow{border-top:1px solid var(--line)}
 .txs .msug .mc{flex:none;max-width:45%;text-align:right;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* perf: map list rows are all the same height, so the browser can skip laying out the ones off screen until you scroll near them */
+#main .mllist .mlrow{content-visibility:auto;contain-intrinsic-size:auto 38px}
 /* premium pass Nov 14 */
 .greet{margin:2px 4px 12px;font-size:16px;color:var(--muted);font-weight:500}.greet b{color:var(--fg);font-weight:700}.greet .neg{color:var(--over);font-weight:700}
 .eart{display:block;width:72px;height:72px;margin:0 auto 10px}.empty.mini{padding:10px 0 2px}.empty.mini .eart{width:56px;height:56px;margin-bottom:4px}.empty.mini .note{margin:0}
@@ -1344,7 +1346,10 @@ html[data-theme="dark"]{background:#000}
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const money=n=>(n<0?"-":"")+"$"+Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+/* perf: formatters are expensive to create, so each one is built once and reused (same output as toLocaleString) */
+const NF2=new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),NF0=new Intl.NumberFormat("en-US");
+const DFC={};function dfmt(o){const k=JSON.stringify(o);return DFC[k]||(DFC[k]=new Intl.DateTimeFormat("en-US",o))}
+const money=n=>(n<0?"-":"")+"$"+NF2.format(Math.abs(n));
 const pad=n=>String(n).padStart(2,"0");
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
 const ymOf=d=>d.slice(0,7);
@@ -1821,7 +1826,7 @@ function isFixed(it,g){if(typeof it.fixed==="boolean")return it.fixed;return FIX
 function dateCardHTML(itot,t0){
   const aside=t0.a||0,rem=round2(itot-t0.s-aside),td=today(),cur=ymOf(td),[y,m]=S.ym.split("-").map(Number),dim=new Date(y,m,0).getDate(),d=daysLeftAfterToday(S.ym);
   const isCur=S.ym===cur,past=S.ym<cur,over=rem<0;
-  const title=isCur?(n=>new Date(td+"T12:00:00").toLocaleDateString("en-US",{weekday:"long"})+" the "+n+(n%100>=11&&n%100<=13?"th":["th","st","nd","rd"][n%10]||"th"))(+td.slice(8)):MONTHS[m-1]+" "+y;
+  const title=isCur?(n=>dfmt({weekday:"long"}).format(new Date(td+"T12:00:00"))+" the "+n+(n%100>=11&&n%100<=13?"th":["th","st","nd","rd"][n%10]||"th"))(+td.slice(8)):MONTHS[m-1]+" "+y;
   const side=isCur?"":past?"Month is over":"Starts "+MONTHS[m-1].slice(0,3)+" 1";
   const inc=incomeFor(S.ym),ed=PAD&&PAD.kind==="income"&&inc.length===1&&PAD.id===inc[0].id;
   const plan=inc.length===1?'<button class="eqpl num'+(ed?" editing":"")+'" data-iplan="'+esc(inc[0].id)+'" aria-label="Planned '+money(itot)+'. Tap to change">'+money(itot)+PENCIL+'</button>':inc.length?'<span class="eqpl num">'+money(itot)+'</span>':'<button class="eqpl" id="addIncome">Set amount'+PENCIL+'</button>';
@@ -1998,7 +2003,8 @@ function renderBudget(groups,sm){
   return h;
 }
 function txLabel(t,groups){if(t.type==="income"){const x=incomeFor(S.ym).find(i=>i.id===t.itemId);return"Income · "+(x?x.name:(t.itemName||"Income"))}const f=findItem(groups,t.itemId);const nm=f?itemLbl(f.it):(t.itemName?t.itemName+" (removed)":"Uncategorized");return isMisc(t)&&t.sub?nm+" · "+t.sub:nm}
-function fmtDay(d){const dt=new Date(d+"T12:00:00");const td=today();if(d===td)return"Today";const y=new Date();y.setDate(y.getDate()-1);if(d===y.getFullYear()+"-"+pad(y.getMonth()+1)+"-"+pad(y.getDate()))return"Yesterday";return dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}
+const FD={td:"",m:{}};
+function fmtDay(d){const td=today();if(FD.td!==td){FD.td=td;FD.m={}}const c=FD.m[d];if(c!==undefined)return c;let r;const dt=new Date(d+"T12:00:00");if(d===td)r="Today";else{const y=new Date();y.setDate(y.getDate()-1);r=d===y.getFullYear()+"-"+pad(y.getMonth()+1)+"-"+pad(y.getDate())?"Yesterday":dfmt({weekday:"short",month:"short",day:"numeric"}).format(dt)}return FD.m[d]=r}
 function sortedTx(){return S.tx.slice().sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.createdAt||"").localeCompare(a.createdAt||""))}
 function renderTx(groups){
   if(!S.txLoaded&&S.dbState!=="none")return '<div class="empty">Loading…</div>';
@@ -2160,7 +2166,8 @@ const LOC={
 /* A location is {label, name?, place?, lat?, lng?, src}. label is what you see ("Dog River Coffee, Hood River, OR"
    or just "Hood River, OR"); name is the business, place is the town. Older saves without a label still read fine. */
 /* Aesthetic-usability: drop repeated pieces of an address ("2944 Gerald Ave NE, 2944 Gerald Ave NE, …"), ignoring case, dots and Northeast/NE spellings */
-function addrKey(x){return String(x).toLowerCase().replace(/[.#]/g,"").replace(/\b(north|south)(east|west)\b/g,(m,a,b)=>a[0]+b[0]).replace(/\b(north|south|east|west)\b/g,m=>m[0]).replace(/\bavenue\b/g,"ave").replace(/\bstreet\b/g,"st").replace(/\broad\b/g,"rd").replace(/\bdrive\b/g,"dr").replace(/\s+/g," ").trim()}
+const AKC=new Map();function addrKey(x){const k=String(x);let v=AKC.get(k);if(v===undefined){if(AKC.size>4000)AKC.clear();v=addrKey0(k);AKC.set(k,v)}return v}
+function addrKey0(x){return String(x).toLowerCase().replace(/[.#]/g,"").replace(/\b(north|south)(east|west)\b/g,(m,a,b)=>a[0]+b[0]).replace(/\b(north|south|east|west)\b/g,m=>m[0]).replace(/\bavenue\b/g,"ave").replace(/\bstreet\b/g,"st").replace(/\broad\b/g,"rd").replace(/\bdrive\b/g,"dr").replace(/\s+/g," ").trim()}
 function addrDedupe(str){const seen=new Set();return String(str||"").split(",").map(x=>x.trim()).filter(x=>{const k=addrKey(x);if(!k||seen.has(k))return false;seen.add(k);return true}).join(", ")}
 function locText(l){if(!l)return"";if(l.label)return addrDedupe(l.label);return l.place||l.road||(l.lat!=null?l.lat.toFixed(4)+", "+l.lng.toFixed(4):"")}
 function locShort(l){if(!l)return"";if(l.name)return l.name;const t=locText(l);return l.place&&t===l.place?l.place.replace(/,\s*[A-Z]{2}$/,""):t.split(",")[0]}
@@ -2604,7 +2611,7 @@ function dPanelHTML(k){
   if(n>=2)h+='<div class="dspark" role="img" aria-label="Monthly amounts">'+d.series.map((x,i)=>'<div title="'+esc(d.mLabel(d.months[i]))+' · '+money(x)+'"><i style="height:'+Math.max(x>0?6:2,x/mx*100).toFixed(1)+'%;--d:'+(i*0.04).toFixed(2)+'s"></i><span>'+esc(shortM(d.months[i]).slice(0,1))+'</span></div>').join("")+'</div>';
   if(d.parts.length){const pm=d.parts[0][1];
     h+='<div class="dparts"><h5>'+(IS.group?"Top merchants":"Biggest items")+'</h5>'+d.parts.map(([nm,v],i)=>'<div class="dpart"><span class="pn">'+esc(nm)+'</span><span class="pb"><i style="width:'+Math.max(3,v/pm*100).toFixed(1)+'%;--d:'+(0.1+i*0.05).toFixed(2)+'s"></i></span><b class="num">'+money(v)+'</b></div>').join("")+'</div>'}
-  if(d.big)h+='<p class="dbig">Biggest purchase: <b>'+esc(d.big.m)+'</b> · <span class="num">'+money(d.big.a)+'</span> · '+esc(new Date(d.big.d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}))+'</p>';
+  if(d.big)h+='<p class="dbig">Biggest purchase: <b>'+esc(d.big.m)+'</b> · <span class="num">'+money(d.big.a)+'</span> · '+esc(dfmt({month:"short",day:"numeric",year:"numeric"}).format(new Date(d.big.d+"T12:00:00")))+'</p>';
   h+='<div class="btnrow">'+(IS.group?'':'<button class="btn" data-ddrill="'+esc(k)+'">Break down '+esc(k)+'</button>')+'<button class="btn sec" data-dtrend="'+esc(k)+'">Month by month</button></div></div>';
   return h;
 }
@@ -2735,7 +2742,8 @@ function dbarEl(){
   document.body.appendChild(el);DBAR.el=el;return el;
 }
 function dock(){
-  DBAR.raf=0;const w=document.querySelector("#main .dwrap"),el=dbarEl();
+  DBAR.raf=0;if(S.tab!=="insights"||IS.sub!=="totals"||IS.tview!=="wheel"){if(DBAR.el)DBAR.el.classList.remove("on");return}
+  const w=document.querySelector("#main .dwrap"),el=dbarEl();
   const d=IS.sel&&IS.dd&&IS.dd[IS.sel];
   const hh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120;
   const show=!!(w&&d&&S.tab==="insights"&&IS.sub==="totals"&&IS.tview==="wheel"&&w.getBoundingClientRect().bottom<hh+24);
@@ -2787,7 +2795,7 @@ $("#main").addEventListener("pointermove",e=>{const svg=e.target.closest("#paceS
 /* top of the chart sits just above the highest point drawn; gridlines on round steps below it */
 function paceTop(v){return Math.max(v*1.06,50)}
 function paceStep(top){const st0=top/4,p10=Math.pow(10,Math.floor(Math.log10(st0)));for(const f of [1,2,2.5,5,10])if(f*p10>=st0*0.8)return f*p10;return 10*p10}
-const yfmt=(v,st)=>st>=1000||v<1000?kfmt(v):"$"+Math.round(v).toLocaleString("en-US");
+const yfmt=(v,st)=>st>=1000||v<1000?kfmt(v):"$"+NF0.format(Math.round(v));
 function paceInner(p,a,b,ys,st){
   const {dim,dayNow,planned,max,W,H,L,R,T,B,cum,proj,ym,cur}=p,pw=W-L-R,ph=H-T-B,span=b-a;
   const ylo=0,yhi=max;st=paceStep(max);
@@ -2935,7 +2943,7 @@ function calPanelHTML(iso){
   const fx=fixedSkip(ym),all0=txOf(ym).filter(t=>t.date===iso&&t.type!=="income"&&(!IS.group||groupNameOf(t,ym)===IS.group)&&(!IS.item||itemNameOf(t,ym)===IS.item));
   const all=all0.filter(t=>!(fx&&fx.has(t.itemId))),bills=round2(all0.filter(t=>fx&&fx.has(t.itemId)).reduce((a,t)=>a+sAmt(t),0));
   const spent=round2(all.reduce((a,t)=>a+sAmt(t),0));
-  let h='<div class="calp"><div class="calph"><b>'+esc(new Date(iso+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"}))+'</b><b class="num"'+(spent<0?' style="color:var(--ok)"':'')+'>'+(spent<0?"+"+money(-spent):money(spent))+'</b></div>';
+  let h='<div class="calp"><div class="calph"><b>'+esc(dfmt({weekday:"long",month:"long",day:"numeric"}).format(new Date(iso+"T12:00:00")))+'</b><b class="num"'+(spent<0?' style="color:var(--ok)"':'')+'>'+(spent<0?"+"+money(-spent):money(spent))+'</b></div>';
   if(!all.length)h+='<p class="calnone">'+(iso>td?"Nothing scheduled yet.":"No spending — nice! 🎉")+'</p>';
   else h+=all.map((t,i)=>{const ref=t.type==="refund";return '<button class="txrow" data-ctx="'+esc(t.id)+'" style="--d:'+(i*0.04).toFixed(2)+'s"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.note?" · "+esc(t.note):"")+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'}).join("");
   if(bills>0)h+='<p class="note" style="margin:8px 0 0">Plus '+money(bills)+' in bills, left out above.</p>';
@@ -3045,7 +3053,7 @@ function wdPanelHTML(w){
   h+='<div class="dstats"><div><small>Avg / day</small><b class="num">'+money(round2(avg))+'</b></div><div><small>Purchases</small><b class="num">'+per.toFixed(1)+'</b><span>per '+WD_SHORT[w]+'</span></div><div><small>'+WD_SHORT[w]+'s counted</small><b class="num">'+D.days[w]+'</b></div></div>';
   if(c.length)h+='<div class="dparts"><h5>Top '+(IS.group?"items":"categories")+'</h5>'+bars(c)+'</div>';
   if(mm.length)h+='<div class="dparts"><h5>Top merchants</h5>'+bars(mm)+'</div>';
-  if(b)h+='<p class="dbig">Biggest '+WD_LONG[w]+': <b class="num">'+money(round2(b[1]))+'</b> on '+esc(new Date(b[0]+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}))+'</p>';
+  if(b)h+='<p class="dbig">Biggest '+WD_LONG[w]+': <b class="num">'+money(round2(b[1]))+'</b> on '+esc(dfmt({month:"short",day:"numeric",year:"numeric"}).format(new Date(b[0]+"T12:00:00")))+'</p>';
   return h+'</div>';
 }
 
@@ -3092,7 +3100,7 @@ const ML={map:null,pin:null,dots:[],raf:0,gl:false,noGL:false};
 const GLV="4.7.1",GL_STYLE=window.PB_MAP_STYLE||"https://tiles.openfreemap.org/styles/positron";
 const GLLIB={p:null},RMOT=window.matchMedia?matchMedia("(prefers-reduced-motion: reduce)"):{matches:false};
 const glEase=t=>(1-Math.cos(Math.PI*t))/2; // ease-in-out-sine: gentle start/stop, low peak speed
-function glOK(){try{const c=document.createElement("canvas");return !!(window.WebGLRenderingContext&&(c.getContext("webgl2")||c.getContext("webgl")))}catch(_){return false}}
+let GLOK;function glOK(){if(GLOK===undefined){try{const c=document.createElement("canvas");GLOK=!!(window.WebGLRenderingContext&&(c.getContext("webgl2")||c.getContext("webgl")))}catch(_){GLOK=false}}return GLOK}
 function loadMapGL(){if(window.maplibregl&&window.maplibregl.Map)return Promise.resolve();if(!glOK())return Promise.reject(new Error("webgl"));
   return GLLIB.p||(GLLIB.p=new Promise((res,rej)=>{const base="https://unpkg.com/maplibre-gl@"+GLV+"/dist/maplibre-gl.";
     if(!document.querySelector('link[data-mlgl]')){const l=document.createElement("link");l.rel="stylesheet";l.href=base+"css";l.setAttribute("data-mlgl","");document.head.appendChild(l)}
@@ -3191,7 +3199,7 @@ function mlGo(i){const r=document.querySelector('#main .mlrow[data-mi="'+i+'"]')
   r.classList.remove("flash");void r.offsetWidth;r.classList.add("flash")}
 /* Only cover what's behind the glass header once the map is actually pinned (otherwise it would hide the card title) */
 function mlStuck(){const m=document.querySelector("#main .mlmap");const on=!!m&&m.getBoundingClientRect().top<=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hh"))||120)-2;document.documentElement.classList.toggle("mlstuck",on)}
-addEventListener("scroll",()=>{if(S.tab==="insights"&&IS.sub==="map")mlStuck();else document.documentElement.classList.remove("mlstuck")},{passive:true});
+let MLS=0;addEventListener("scroll",()=>{if(S.tab==="insights"&&IS.sub==="map"){if(!MLS)MLS=requestAnimationFrame(()=>{MLS=0;mlStuck()})}else document.documentElement.classList.remove("mlstuck")},{passive:true});
 /* "N without a spot": one opens that transaction to add a location; several open a short list */
 function mlMissing(){const L=IS.mapMiss||[];if(!L.length)return;const open=t=>isHist(t)?histSheet(t):txSheet(t);if(L.length===1){open(L[0]);return}
   openSheet('<h3>Without a map spot</h3><p class="note" style="margin:-4px 0 10px">Open one and tap 🗺 next to Location to place it.</p>'+L.map(t=>'<button class="txrow" data-mt="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(fmtDay(t.date))+'</div></div><div class="a num">'+money(+t.amount||0)+'</div></button>').join(""),
@@ -3241,9 +3249,9 @@ function mlSetActive(i,force){
 /* The pinned date sits exactly under the map: worked out live in CSS from the header height (--hh) and the map's height,
    so it stays right even when the header changes size (banner text, safe area). */
 let mlRO=null;
-function mlSnapVar(){const m=document.querySelector("#main .mlmap");if(!m)return;const de=document.documentElement;
-  de.style.setProperty("--mlmaph",m.offsetHeight+"px");de.style.setProperty("--mlsnap","calc(var(--hh,120px) - 4px + var(--mlmaph,340px))");
-  if(window.ResizeObserver){if(mlRO)mlRO.disconnect();mlRO=new ResizeObserver(()=>{if(m.isConnected)de.style.setProperty("--mlmaph",m.offsetHeight+"px")});mlRO.observe(m)}}
+function mlSnapVar(){const m=document.querySelector("#main .mlmap");if(!m)return;const de=document.documentElement,setH=v=>{if(de.style.getPropertyValue("--mlmaph")!==v)de.style.setProperty("--mlmaph",v)};
+  if(window.ResizeObserver){if(mlRO&&mlRO._m===m)return;if(mlRO)mlRO.disconnect();mlRO=new ResizeObserver(()=>{if(m.isConnected)setH(m.offsetHeight+"px")});mlRO._m=m;mlRO.observe(m)}
+  setH(m.offsetHeight+"px");if(!de.style.getPropertyValue("--mlsnap"))de.style.setProperty("--mlsnap","calc(var(--hh,120px) - 4px + var(--mlmaph,340px))")}
 function mlPick(){const rows=document.querySelectorAll("#main .mlrow");if(!rows.length)return null;const line=mlLine()-28;
   if(rows[0].getBoundingClientRect().top>line+24)return -1;
   let best=-1,bd=1e9;for(const r of rows){const d=Math.abs(r.getBoundingClientRect().top-line);if(d<bd){bd=d;best=+r.dataset.mi}else if(d>bd)break}
@@ -3443,7 +3451,7 @@ function renderInsights(groups,sm){
    blocks whose HTML differs. Unchanged cards stay put (no flicker, open states and animations survive).
    Insights (charts, map) always redraws fully. */
 function patchMain(m,html,key){
-  if(m.dataset.pk!==key||S.tab==="insights"){m.innerHTML=html;m.dataset.pk=key;[...m.children].forEach(c=>c._h=c.outerHTML);return}
+  if(m.dataset.pk!==key||S.tab==="insights"){m.innerHTML=html;m.dataset.pk=key;if(S.tab!=="insights")[...m.children].forEach(c=>c._h=c.outerHTML);return}
   const t=document.createElement("template");t.innerHTML=html;const nw=[...t.content.children],old=[...m.children];
   if(nw.length!==old.length){m.innerHTML=html;[...m.children].forEach(c=>c._h=c.outerHTML);return}
   nw.forEach((n,i)=>{const h=n.outerHTML,o=old[i];if(o._h===h)return;n._h=h;m.replaceChild(n,o)})}
@@ -3669,7 +3677,7 @@ function tKey(T,k){const cc=()=>T.cur===""?0:+T.cur;
   else if(k==="C"){T.cur="";T.ops=[];T.fresh=false}
   else if(OPS[k]){T.fresh=false;if(T.cur===""&&T.ops.length)T.ops[T.ops.length-1][1]=k;else{T.ops.push([cc(),k]);T.cur=""}}
   else if(k==="="){const v=tVal(T);T.ops=[];T.cur=v?String(v):"";T.fresh=false}}
-function fmtLong(d){return new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}
+function fmtLong(d){return dfmt({month:"long",day:"numeric",year:"numeric"}).format(new Date(d+"T12:00:00"))}
 const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
 function logStats(){
   const loc=iso=>{const d=new Date(iso);return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
@@ -3785,7 +3793,7 @@ function txLayoutA(s,existing){try{
   const pn=document.createElement("div");pn.className="txpanel";pn.dataset.pp="n";pn.hidden=true;pn.append(noteCard);panels.append(pn);
   firstCard.remove();
   const rb=q("#f-rb"),ven=q("#f-venmo"),note=q("#f-note"),dIn=q("#f-date"),loc=q("#f-loc");
-  const short=d=>{const td=today();if(d===td)return"Today";const y=new Date(td+"T12:00:00");y.setDate(y.getDate()-1);const ys=y.getFullYear()+"-"+pad(y.getMonth()+1)+"-"+pad(y.getDate());if(d===ys)return"Yesterday";return new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})};
+  const short=d=>{const td=today();if(d===td)return"Today";const y=new Date(td+"T12:00:00");y.setDate(y.getDate()-1);const ys=y.getFullYear()+"-"+pad(y.getMonth()+1)+"-"+pad(y.getDate());if(d===ys)return"Yesterday";return dfmt({month:"short",day:"numeric"}).format(new Date(d+"T12:00:00"))};
   function refresh(){const lv=(loc.value||"").trim();
     const L={d:short(dIn.value||today()),v:"Venmo",r:"Paid back",n:note.value.trim()?"Note ✓":"Note"};
 
@@ -4289,7 +4297,7 @@ function plannedSheet(){
   V.fwd=round2(ahIn.reduce((a,z)=>a+(+z.it.planned||0),0));V.fwm=V.fwd>0?0:(pt&&+pt.fwm||0);const showFwm=!V.fwd&&(ahNow.length||V.fwm);
   const ahNowT=round2(ahNow.reduce((a,z)=>a+(+z.it.planned||0),0)),NXM=MONTHS[+ymAdd(ym,1).slice(5)-1];
   const fresh=!pt&&!sched;let totOverride=fresh&&total0?total0:null;
-  const td=today(),fmtD=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
+  const td=today(),fmtD=d=>d?dfmt({month:"short",day:"numeric"}).format(new Date(d+"T12:00:00")):"";
   const vb=(f,l,sub,cls)=>'<div class="plf'+(cls?" "+cls:"")+'"><label>'+l+(sub?'<small>'+sub+'</small>':'')+'</label><button type="button" class="plv num" data-f="'+f+'"></button></div>';
   const payRow=(p,i)=>vb("p"+i,"Paycheck "+(i+1),'<span class="plds"><span class="pldt" data-dt="'+i+'"></span><input type="date" class="pld" data-pd="'+i+'" value="'+esc(p.d)+'" aria-label="Paycheck '+(i+1)+' date"></span>');
   openSheet('<h3>Planned for '+MONTHS[m-1]+'</h3>'+(V.pays.length>=3?'<p class="plbadge">3 paychecks this month</p>':'')+(sched?'<p class="note" style="margin:-4px 0 6px">Paydays filled in from your every-2-weeks schedule.</p>':'')+
