@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 13, 11:45 PM"</script>
+<script>window.PB_BUILD="Nov 13, 11:50 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2046,7 +2046,14 @@ const LOC={
   spots(){try{return JSON.parse(ls.get("pb.mySpots")||"[]")}catch(e){return[]}},
   learn(label,fix){if(!label||!fix||fix.lat==null)return;const L=this.spots().filter(x=>locDist(x,fix)>60&&x.label!==label);
     L.unshift({label,lat:+fix.lat.toFixed(6),lng:+fix.lng.toFixed(6),at:today()});ls.set("pb.mySpots",JSON.stringify(L.slice(0,40)))},
-  mySpot(fix){const r=Math.max(80,Math.min(150,(fix.acc||0)+40));let best=null;this.spots().forEach(x=>{const d=locDist(x,fix);if(d<=r&&(!best||d<best.d))best={d,x}});return best&&best.x},
+  mySpot(fix){const r=Math.max(120,Math.min(220,(fix.acc||0)+80));let best=null;this.spots().forEach(x=>{const d=locDist(x,fix);if(d<=r&&(!best||d<best.d))best={d,x}});return best&&best.x||this.pastSpot(fix)},
+  /* A street address you typed or picked yourself on earlier purchases near here (e.g. "2944 Gerald Ave NE" at home).
+     Comes from your saved transactions, so it works on every device. Wins over the map's nearest-house guess, which drifts indoors. */
+  pastSpot(fix){if(!fix||fix.lat==null)return null;const r=Math.max(120,Math.min(220,(fix.acc||0)+80)),by={};
+    try{txPool().forEach(t=>{const l=t.loc;if(!l||l.lat==null||l.src==="gps"||l.name)return;const lab=addrDedupe(locText(l));if(!/^\d+\s+\S/.test(lab))return;
+      const d=locDist(l,fix);if(d>r)return;const k=addrKey(lab.split(",")[0]);const e=by[k]||(by[k]={n:0,d:1e9,label:lab,lat:l.lat,lng:l.lng,at:""});e.n++;
+      if((t.date||"")>=e.at){e.at=t.date||"";e.label=lab}if(d<e.d)e.d=d})}catch(_){return null}
+    const best=Object.values(by).sort((a,b)=>b.n-a.n||a.d-b.d)[0];return best?{label:best.label,lat:best.lat,lng:best.lng}:null},
   pack(v){const o={lat:v.lat,lng:v.lng,acc:v.acc||0,at:v.at||new Date().toISOString()};if(v.place)o.place=v.place;if(v.poi)o.poi=v.poi;if(v.road)o.road=v.road;return o},
   // past merchants logged within ~200 m, closest and most used first, plus the place you're standing in
   nearby(v){
