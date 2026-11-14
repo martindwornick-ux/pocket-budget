@@ -1,9 +1,9 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 14, 2026 (live build "Nov 14, 2:58 PM", sw `pb-2026-11-14i`; preview build "Nov 14, 2:58 PM · preview 2", sw `pb-2026-11-14i-p2`)_
+_Last updated: Nov 14, 2026 (live build "Nov 14, 3:05 PM", sw `pb-2026-11-14j`; preview build "Nov 14, 3:05 PM · preview 3", sw `pb-2026-11-14j-p3`)_
 
 ## What this is
-A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
+A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic is one page, `index.html` (about 4,780 lines). Its source is split by screen under `src/` and assembled by `tools/build.py` (see Files). The owner uses it on an iPhone from the home screen.
 
 ## Stack
 - **Frontend**: vanilla JS in one `index.html`, wrapped in a closure (functions are not on `window`)
@@ -16,12 +16,16 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Files
 | File | Role |
 |------|------|
-| `index.html` | Entire app: HTML, CSS, JS |
+| `src/` | **Where the app page is edited.** `src/index.html` plus `css/` and `js/` pieces; `src/README.md` says what's in each. `python3 tools/build.py` pastes them together into `preview/index.html`, byte for byte |
+| `index.html` | The live app page (HTML, CSS, JS). Only changes by `tools/preview.sh promote` plus the live build label |
 | `sw.js` | Service worker. `VERSION` is on line 2 |
 | `config.js` | Firebase web config. It is published with the site (it has to be) and is not a password: the data is protected by the Firestore rules, not by hiding this file. Still: don't edit it or paste its contents anywhere |
 | `preview/` | **Preview copy** of the app files, served at `…/pocket-budget/preview/`. Changes go here first (see Preview process) |
 | `tools/check.py` | Release checks (see Release process) |
-| `tools/preview.sh` | `promote` (preview → live), `reset` (live → preview), `status` |
+| `tools/preview.sh` | `promote` (preview → live), `status`. To drop a preview change, `git revert` its commits |
+| `tools/build.py` | Builds `preview/index.html` from `src/`; `--check` verifies they match |
+| `vendor/` | Map and receipt-scan libraries hosted with the app (exact pinned versions, SHA-256 in `vendor/README.md`, `tools/vendor_hashes.py --check`). Shared by both copies |
+| `tools/fake_firebase.js` | Test-only in-memory Firebase used by `tools/check.py` (never shipped) |
 | `firestore.rules` | The database rules that should be published in Firebase (owner-only access to `users/{uid}/…`) |
 | `.github/workflows/check.yml` | Runs `tools/check.py` on both copies on every push |
 | `platform.js` | Firebase, sign-in and sheet bridge |
@@ -29,19 +33,24 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 | `hanken-grotesk.woff2` | Self-hosted font (in the SW `SHELL` list) |
 
 ## Preview process (use this for anything the owner will see or feel)
-1. Make the change in `preview/` only. Bump the preview's `PB_BUILD` (suffix `· preview N`) and `preview/sw.js` `VERSION` (suffix `-pN`).
+1. Make the change in the preview only: the page in `src/` (then `python3 tools/build.py`), other files in `preview/`. Bump the preview's `PB_BUILD` (in `src/index.html`, suffix `· preview N`) and `preview/sw.js` `VERSION` (suffix `-pN`).
 2. `python3 tools/check.py preview`, commit, push to `main`. Send the owner the link `martindwornick-ux.github.io/pocket-budget/preview/` and a screenshot. The preview shows an orange "Preview" badge.
-3. Owner says yes → `tools/preview.sh promote`, then do the Release process below for the live copy. Owner says no → `tools/preview.sh reset` (and bump the preview version so phones pick it up).
+3. Owner says yes → `tools/preview.sh promote`, then do the Release process below for the live copy. Owner says no → `git revert` the preview commits (bump the preview version so phones pick it up).
 - The preview is the same site, so it uses the owner's **real sign-in and real data**. Anything saved in the preview is really saved. Don't preview risky data migrations there.
 - `sw.js` is the same file in both copies. It detects the preview by its scope, keeps a separate cache (`pv-` prefix) and only deletes its own old caches; the live worker ignores `/preview/` requests. Keep that logic identical in both copies.
 - Tiny fixes and non-visible changes (docs, tools, tests) can still go straight to live.
-- **Waiting in preview now**: Settings → Privacy check → "Check database lock" (`lockCheck()` in `preview/platform.js`). Read-only: it confirms a signed-out visitor and a different account are both refused. Promote once the owner has tried it.
+- **Waiting in preview now** (promote together once the owner has tried them):
+  - Settings → Privacy check → "Check database lock" (`lockCheck()` in `preview/platform.js`). Read-only: it confirms a signed-out visitor and a different account are both refused.
+  - **Copies on this phone** (`preview/platform.js`): `autoBackup()` replaces `autoDrive()`. About once a day (20 h) it reads the account once (`buildBackup`, now also returns `count`) and saves a gzipped copy in IndexedDB `pb-backups` (store `snaps`, keyed per uid, last 7 `daily` kept), and reuses that read for the weekly Drive backup (`driveBackup(pre)`). Also runs when the app becomes visible. Settings → Backup → On this phone lists copies with Save file / Restore (two taps). `restoreFrom()` always saves a `before-restore` safety copy first (last 3 kept) and refuses to restore if it can't; file restores go through it too. Restore = same import as before: records in the copy are put back, newer ones stay.
+  - **Drive warning**: `staleWarn()` toasts (6.5 s, at most every 3 days) when Drive backup is set up but hasn't succeeded for 14 days. `toast(msg, ms)` takes an optional duration.
+  - **Hosted libraries**: Leaflet, leaflet.heat, MapLibre and Tesseract (with its worker, core and English data) load from `vendor/` via `VEND` (in `src/js/location.js`), never from cdnjs/unpkg/jsdelivr. `Tesseract.recognize` gets `workerPath`, `workerBlobURL:false`, `corePath`, `langPath`. `preview/sw.js` keeps `/vendor/` files in a long-lived `pb-vendor` cache (filled on first use, kept across releases, shared by both copies), so the map code and receipt scanning work offline after first use. Tested offline with the server stopped. Map **tiles** and place search still need a connection. Before promotion, the scanner's worker is served by the live worker's normal cache (it's under the live scope); that's fine online.
+  - The app page is now built from `src/` (byte-identical to before the split).
 
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
 3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14j`, or `pb-<new date>a` on a new day).
-4. Run the checks: `python3 tools/check.py` (and `python3 tools/check.py preview` if the preview changed). It checks that all scripts parse, loads every screen on sample data with no sign-in, and compares the money shown (remaining, per day, spent of planned, refunds, calendar totals, bills left out) with figures worked out separately. All lines must say `ok`. `PB_SHOTS=/some/folder` also saves screenshots. When a change adds money logic, add a check for it. The same checks run on GitHub after every push (Actions tab).
+4. Run the checks: `python3 tools/check.py` (and `python3 tools/check.py preview` if the preview changed). Part 4 of the checks runs the real `platform.js` (sign-in, Settings gear, backups, restore, Drive warning, privacy check) against `tools/fake_firebase.js`, which enforces the same owner-only rule as `firestore.rules`; it takes ~25 s. It checks that all scripts parse, loads every screen on sample data with no sign-in, and compares the money shown (remaining, per day, spent of planned, refunds, calendar totals, bills left out) with figures worked out separately. All lines must say `ok`. `PB_SHOTS=/some/folder` also saves screenshots. When a change adds money logic, add a check for it. The same checks run on GitHub after every push (Actions tab).
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
 ## Hard rules
@@ -113,6 +122,8 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–14, 2026 (newest first)
+- Fix (live): the Settings gear had stopped appearing on Nov 13. `addGear()` placed it beside the header "+", which the UX pass removed. It now goes at the end of the header row (44px). The new sign-in checks caught it
+- Preview: copies on the phone + safety copy before restore + Drive warning, libraries hosted in `vendor/` and cached for offline, app page split into `src/`
 - Safety nets: release checks (`tools/check.py`, also on GitHub), a preview copy at `/preview/`, `firestore.rules` saved in the repo, and a Privacy check button waiting in the preview
 - A 3D swipe-to-tilt calendar was shipped (sw f) and removed at the owner's request (sw g); don't re-add it unless asked
 - Fix: scrolling Transactions opened the row on iPhone (switch overlays were draggable). Overlays are now labels pointing at one hidden switch
@@ -133,7 +144,10 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 
 ## Known follow-ups / ideas
 - Database lock: the published Firestore rules could not be read from a Claude session. The owner should run the Privacy check (preview) and, in Firebase → Authentication → Settings → User actions, turn off "Enable create (sign-up)" so no new accounts can be made.
-- From the Nov 14 review, not yet built: hidden error log in Settings (about 96 silent `catch` blocks, no global error handler), Undo for deletes, automatic backup + restore, saving map/receipt-scan libraries for offline use with pinned versions, splitting `index.html` by screen, recurring bills.
+- From the Nov 14 review, not yet built: hidden error log in Settings (about 96 silent `catch` blocks, no global error handler), Undo for deletes, recurring bills. (Backups, hosted libraries and the split are in the preview.)
+- The Firebase SDK still loads from gstatic (pinned `FB_VER`, cached by the worker). Hosting it too is possible but it's large and Firebase needs the network anyway.
+- Drive backup has never been confirmed working (`pb.driveAt` unknown); the new warning will say so on the phone after 14 days.
+- `pb-vendor` cache is never pruned; when a library version changes, old files stay until the app is removed. Fine at ~12 MB; add pruning if versions churn.
 - More Laws of UX ideas offered, not yet built: top-4 item chips (Hick), forgiving amount input (Postel), "Almost out" chip (Von Restorff), end-of-month countdown (Goal-Gradient), month wrap-up on the 1st (Peak-End), "needs an item" nudge (Zeigarnik).
 - On the Calendar, net-refund days still count toward "$0 days" and the streak (the owner was asked; no decision yet).
 - iOS location prompts can't be fixed in code. The owner was pointed to Settings → Apps → Safari → Location.

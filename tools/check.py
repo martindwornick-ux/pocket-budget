@@ -7,6 +7,8 @@ Runs the app in a headless phone-sized browser on made-up sample data (no sign-i
   1. every inline script parses
   2. each screen opens without a JavaScript error
   3. the money math on screen matches totals worked out independently here
+  4. with the real sign-in layer (platform.js) on an in-memory stand-in for Firebase (tools/fake_firebase.js):
+     daily copies on the phone, restore with a safety copy first, the Drive warning, and the privacy check
 Needs: node, python3, `pip install playwright`, `playwright install chromium`.
 """
 import http.server, json, os, re, shutil, socketserver, subprocess, sys, tempfile, threading
@@ -40,6 +42,23 @@ for name in ("platform.js", "sw.js"):
     r = subprocess.run(["node", "--check", os.path.join(APP, name)], capture_output=True, text=True)
     ok(r.returncode == 0, "%s parses %s" % (name, r.stderr.strip()[:200]))
 
+if os.path.abspath(APP) == os.path.join(ROOT, "preview"):
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "build.py"), "--check"], capture_output=True, text=True)
+    ok(r.returncode == 0, "preview/index.html is exactly what src/ builds (edit src/, then run tools/build.py)")
+r = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "vendor_hashes.py"), "--check"], capture_output=True, text=True)
+ok(r.returncode == 0, "hosted libraries match vendor/README.md " + r.stdout.strip()[:200])
+for v in sorted(set(re.findall(r'VEND\+"([^"]+)"', html))):
+    if v.startswith("maplibre-gl-"):
+        continue  # built from GLV below
+    t = os.path.join(ROOT, "vendor", v)
+    ok(os.path.exists(t) or os.path.exists(t + ".js"), "hosted library exists: vendor/" + v)
+glv = re.search(r'const GLV="([^"]+)"', html)
+if glv and "VEND+" in html:
+    for ext in ("js", "css"):
+        ok(os.path.exists(os.path.join(ROOT, "vendor", "maplibre-gl-%s" % glv.group(1), "maplibre-gl." + ext)), "hosted library exists: maplibre-gl %s .%s" % (glv.group(1), ext))
+if "VEND+" in html:
+    ok(not re.search(r'https://(cdnjs\.cloudflare\.com|unpkg\.com|cdn\.jsdelivr\.net)/', html), "no code loads from outside library sites")
+
 build = re.search(r'window\.PB_BUILD="([^"]+)"', html)
 ver = re.search(r'const VERSION = "([^"]+)"', open(os.path.join(APP, "sw.js")).read())
 ok(bool(build), "PB_BUILD is set (%s)" % (build.group(1) if build else "missing"))
@@ -68,6 +87,8 @@ groc_spent = sum(GROC.values())                 # 371.25
 fun_spent = 103 - 25                            # 78.00
 flex_total = groc_spent + fun_spent             # bills (Rent) are left out of the calendar by default
 per_day = round(flex_total / TODAY_DAY + 1e-9, 2)
+income = 2000
+left = income - (groc_spent + fun_spent + 1200)
 top_day = max(GROC.values())
 
 # ---------- serve a copy with sign-in switched off ----------
@@ -129,7 +150,6 @@ with sync_playwright() as p:
     shot("budget")
     ok("Groceries" in t and "Going out" in t and "Rent" in t, "all three budget items are listed")
     planned, income = 600 + 200 + 1200, 2000
-    left = income - (groc_spent + fun_spent + 1200)
     days_left = 30 - TODAY_DAY + 1
     ok("%s remaining of %s" % (money(left), money(income)) in t, "Today card: %s remaining of %s" % (money(left), money(income)))
     ok("Days left %d" % days_left in t, "Today card: %d days left" % days_left)
@@ -170,6 +190,131 @@ with sync_playwright() as p:
     ok(not errs, "no errors on any screen" + (": " + " | ".join(errs)[:400] if errs else ""))
     br.close()
 
+# ---------- 4. real platform.js on a fake Firebase ----------
+print("Sign-in layer, backups and restore (fake Firebase)")
+plat = os.path.join(tmp, "plat")
+os.makedirs(plat)
+for f in os.listdir(APP):
+    q = os.path.join(APP, f)
+    if os.path.isfile(q) and not f.endswith(".md"):
+        shutil.copy(q, plat)
+open(os.path.join(plat, "config.js"), "w").write('window.PB_FIREBASE_CONFIG={apiKey:"test-key",authDomain:"x",projectId:"pb-test",appId:"1:1:web:1"};\n')
+FAKE = open(os.path.join(ROOT, "tools", "fake_firebase.js")).read()
+seed = {"users/test-user/budgets/" + YM: cache["budgets"][YM]}
+for t in tx:
+    seed["users/test-user/tx/" + t["id"]] = {k: v for k, v in t.items() if k != "id"}
+
+
+class H2(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *a, **k):
+        super().__init__(*a, directory=plat, **k)
+
+    def log_message(self, *a):
+        pass
+
+
+srv2 = socketserver.TCPServer(("127.0.0.1", 0), H2)
+threading.Thread(target=srv2.serve_forever, daemon=True).start()
+URL2 = "http://127.0.0.1:%d/index.html" % srv2.server_address[1]
+
+
+def outside(route):
+    u = route.request.url
+    if "gstatic.com/firebasejs" in u:  # the Firebase SDK: answer with the stand-in (only the first file needs it)
+        return route.fulfill(status=200, content_type="text/javascript", body=FAKE if "firebase-app-compat" in u else "")
+    if "firestore.googleapis.com" in u:  # signed-out read for the privacy check: refused, like the real rules
+        return route.fulfill(status=403, content_type="application/json", body='{"error":{"code":403,"status":"PERMISSION_DENIED"}}')
+    return route.abort()
+
+
+HAS_SNAP = "snapUI" in open(os.path.join(APP, "platform.js")).read()
+HAS_LOCK = "lockCheck" in open(os.path.join(APP, "platform.js")).read()
+
+
+def idb_snaps():
+    return pg.evaluate("""new Promise(ok=>{const r=indexedDB.open("pb-backups");r.onsuccess=()=>{const db=r.result;
+      if(!db.objectStoreNames.contains("snaps")){ok([]);return}
+      const q=db.transaction("snaps").objectStore("snaps").getAll();q.onsuccess=()=>ok(q.result.map(s=>({kind:s.kind,count:s.count,gz:s.gz,uid:s.uid})))}})""")
+
+
+def store_keys():
+    return pg.evaluate("Object.keys(__fs.store())")
+
+
+with sync_playwright() as p:
+    br = p.chromium.launch()
+    ctx = br.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, service_workers="block")
+    ctx.add_init_script("window.__FAKE_SEED=%s;" % json.dumps(seed))
+    ctx.route(lambda u: not u.startswith("http://127.0.0.1"), outside)
+    pg = ctx.new_page()
+    errs = []
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.clock.set_fixed_time("%s-%02dT14:00:00" % (YM, TODAY_DAY))
+    pg.goto(URL2)
+    pg.wait_for_timeout(1500)
+    pg.click("nav.tabs [data-tab=budget]")
+    pg.wait_for_timeout(500)
+    ok("%s remaining of %s" % (money(left), money(income)) in text(), "signed in on the fake database, Budget shows the same %s remaining" % money(left))
+    ok(pg.locator("#pbx-gear").count() == 1, "the Settings gear is in the header")
+
+    if HAS_SNAP:
+        # the daily phone copy is made ~12 s after opening
+        pg.wait_for_timeout(13500)
+        snaps = idb_snaps()
+        ok(len(snaps) == 1 and snaps[0]["kind"] == "daily" and snaps[0]["uid"] == "test-user", "a daily copy was saved on the phone after opening")
+        ok(bool(snaps) and snaps[0]["count"] == len(seed), "the copy holds all %d records" % len(seed))
+        ok(bool(snaps) and snaps[0]["gz"], "the copy is stored compressed")
+
+        # lose a record, then restore it from the phone copy
+        pg.evaluate("__fs.del('users/test-user/tx/fun5')")
+        pg.wait_for_timeout(400)
+        pg.click("#pbx-gear")
+        pg.wait_for_timeout(600)
+        rows = pg.locator("[data-snaprest]")
+        ok(rows.count() == 1, "Settings → Backup lists the copy on this phone")
+        rows.first.click()
+        ok(rows.first.inner_text() == "Tap to confirm", "Restore asks for a second tap first")
+        ok("users/test-user/tx/fun5" not in store_keys(), "(the record is gone before restoring)")
+        rows.first.click()
+        pg.wait_for_timeout(1500)
+        ok("users/test-user/tx/fun5" in store_keys(), "restoring the copy put the lost transaction back")
+        kinds = pg.evaluate("[...document.querySelectorAll('.pbx-snap span')].map(e=>e.textContent)")
+        ok(len(kinds) == 2 and "Safety copy before a restore" in kinds[0], "a safety copy was made before the restore and is listed first")
+        ok("Put back %d records" % len(seed) in pg.inner_text(".pbx-scrim"), "Settings confirms how many records were put back")
+        pg.locator("[data-pbx-snaps]").scroll_into_view_if_needed()
+        shot("settings-backup-after-restore")
+
+        # restore from a backup file (same format as Save a backup)
+        backup = {"app": "pocket-budget", "version": 2, "exported": "2026-11-14", "collections": {"tx": {"filefix": {"date": YM + "-13", "amount": 4.5, "type": "expense", "itemId": "i-groc", "merchant": "From file"}}}}
+        bf = os.path.join(tmp, "pocket-budget-backup-test.json")
+        open(bf, "w").write(json.dumps(backup))
+        pg.set_input_files("[data-pbx-file]", bf)
+        pg.wait_for_timeout(1500)
+        ok("users/test-user/tx/filefix" in store_keys(), "restoring from a backup file brings its records in")
+        ok(pg.locator("[data-snaprest]").count() == 3, "restoring from a file also made a safety copy first")
+        pg.click("#pbx-close")
+
+    if HAS_LOCK:
+        # privacy check: a signed-out visitor and a different account must both be refused
+        pg.click("#pbx-gear")
+        pg.wait_for_timeout(400)
+        pg.click("#pbx-lock")
+        pg.wait_for_timeout(1200)
+        ok(pg.inner_text("[data-pbx-lock]").startswith("Locked."), "privacy check reports Locked when outsiders are refused")
+        pg.click("#pbx-close")
+
+    if HAS_SNAP:
+        # Drive backup set up but failing for 15 days: a warning appears
+        pg.evaluate("""localStorage.setItem("pb.sheetUrl","https://script.google.com/macros/s/x/exec");localStorage.setItem("pb.sheetKey","k");
+          localStorage.setItem("pb.driveAt",String(Date.now()-15*864e5));localStorage.setItem("pb.driveTry",String(Date.now()));localStorage.removeItem("pb.staleWarnAt")""")
+        pg.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+        pg.wait_for_timeout(4800)
+        toasts = pg.evaluate("[...document.querySelectorAll('.toast')].map(t=>t.textContent).join(' | ')")
+        ok("Google Drive backup hasn't worked since Oct 30" in toasts, "a stale Google Drive backup shows a warning")
+
+    ok(not errs, "no errors with the sign-in layer" + (": " + " | ".join(errs)[:400] if errs else ""))
+    br.close()
+srv2.shutdown()
 srv.shutdown()
 shutil.rmtree(tmp, ignore_errors=True)
 print()

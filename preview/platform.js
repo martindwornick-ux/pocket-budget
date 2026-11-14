@@ -44,6 +44,10 @@ const css=`
 .pbx-pill.on{background:rgba(24,128,56,.12);color:#188038}.pbx-pill.off{background:rgba(60,64,67,.08);color:#5f6368}
 .pbx-prog{height:6px;border-radius:6px;background:rgba(60,64,67,.1);overflow:hidden;margin:10px 0 0}
 .pbx-prog i{display:block;height:100%;width:0;background:#1a73e8;transition:width .2s}
+.pbx-snap{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid rgba(60,64,67,.1)}.pbx-snap:first-child{border-top:0}
+.pbx-snapl{flex:1;min-width:0}.pbx-snapl b{display:block;font-size:15px}.pbx-snapl span{display:block;font-size:13px;color:#5f6368}
+.pbx-mini{flex:none;min-height:36px;padding:0 12px;border-radius:10px;border:0;font:inherit;font-size:14px;font-weight:600;background:rgba(60,64,67,.07);color:#202124;cursor:pointer}
+.pbx-mini.warn{color:#c5221f}.pbx-mini.warn[data-armed]{background:#c5221f;color:#fff}.pbx-mini:disabled{opacity:.5}
 `;
 function addStyle(){const s=document.createElement("style");s.textContent=css;document.head.appendChild(s)}
 
@@ -223,28 +227,102 @@ async function buildBackup(){
   const B=base(),out={};
   for(const c of COLLS){const s=await B.collection(c).get();out[c]={};s.docs.forEach(d=>out[c][d.id]=d.data())}
   const d=new Date(),stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-  return {name:"pocket-budget-backup-"+stamp+".json",json:JSON.stringify({app:"pocket-budget",version:2,exported:stamp,collections:out})};
+  const count=COLLS.reduce((a,c)=>a+Object.keys(out[c]).length,0);
+  return {name:"pocket-budget-backup-"+stamp+".json",json:JSON.stringify({app:"pocket-budget",version:2,exported:stamp,collections:out}),count};
 }
 async function exportBackup(){const b=await buildBackup();await saveFile(b.name,b.json,"application/json")}
 /* ---------- weekly backup to Google Drive, through the same Apps Script as sheet sync ---------- */
 const DRIVE_EVERY=7*864e5;
-async function driveBackup(){const b=await buildBackup();const j=await callScript({action:"backup",name:b.name,data:b.json});
+async function driveBackup(pre){const b=pre||await buildBackup();const j=await callScript({action:"backup",name:b.name,data:b.json});
   LS.set("pb.driveAt",String(Date.now()));LS.set("pb.driveUrl",j.url||"");LS.set("pb.driveErr",null);return j}
 function driveStatus(){const at=+LS.get("pb.driveAt")||0,err=LS.get("pb.driveErr");
   if(err==="script")return "Your sheet script needs the backup update (see the note from Claude).";
   if(err)return "Last try didn't work. It'll try again tomorrow.";
   if(!at)return "No Drive backup yet.";
   const d=new Date(at);return "Last backup "+d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" · next one about "+new Date(at+DRIVE_EVERY).toLocaleDateString("en-US",{month:"short",day:"numeric"})}
-async function autoDrive(){try{const c=sheetCfg();if(!c.url||!c.key)return;const at=+LS.get("pb.driveAt")||0,tr=+LS.get("pb.driveTry")||0,now=Date.now();
-  if(now-at<DRIVE_EVERY||now-tr<864e5)return;LS.set("pb.driveTry",String(now));await driveBackup()}
-  catch(e){LS.set("pb.driveErr",e&&e.message==="unknown_action"?"script":"fail")}}
+/* ---------- copies kept on this phone (IndexedDB "pb-backups"), independent of Google ----------
+   A full copy is saved about once a day when the app opens (the last 7 are kept), and a safety copy
+   is saved before every restore (the last 3 are kept). Stored gzipped. Restore uses the same import
+   as a backup file: records in the copy are put back, anything added since stays. */
+const SNAP_EVERY=20*36e5,SNAP_KEEP={daily:7,"before-restore":3},STALE_DRIVE=14*864e5;
+function snapDB(){return new Promise((ok,no)=>{if(!window.indexedDB){no(new Error("This browser can't keep copies."));return}
+  const r=indexedDB.open("pb-backups",1);r.onupgradeneeded=()=>{const s=r.result.createObjectStore("snaps",{keyPath:"id"});s.createIndex("uid","uid")};
+  r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error||new Error("Couldn't open the phone's storage."))})}
+function snapReq(mode,fn){return snapDB().then(db=>new Promise((ok,no)=>{const t=db.transaction("snaps",mode);let out;
+  const r=fn(t.objectStore("snaps"));if(r)r.onsuccess=()=>{out=r.result};
+  t.oncomplete=()=>{db.close();ok(out)};t.onerror=t.onabort=()=>{db.close();no(t.error||new Error("The phone's storage refused the copy (it may be full)."))}}))}
+async function packJSON(s){
+  if(window.CompressionStream)try{const ab=await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer();return{gz:true,data:ab}}catch(e){}
+  return{gz:false,data:s}}
+async function unpackJSON(rec){return rec.gz?new Response(new Blob([rec.data]).stream().pipeThrough(new DecompressionStream("gzip"))).text():rec.data}
+async function snapList(){if(!P.user)return[];const all=await snapReq("readonly",st=>st.index("uid").getAll(P.user.uid));return(all||[]).sort((a,b)=>b.at-a.at||(b.kind==="before-restore")-(a.kind==="before-restore"))}
+async function snapSave(kind,b){
+  const uid=P.user.uid,at=Date.now(),pk=await packJSON(b.json);
+  await snapReq("readwrite",st=>st.put({id:uid+":"+at+":"+Math.random().toString(36).slice(2,8),uid,kind,at,count:b.count,bytes:b.json.length,gz:pk.gz,data:pk.data}));
+  const old=(await snapList()).filter(s=>s.kind===kind).slice(SNAP_KEEP[kind]||7);
+  if(old.length)await snapReq("readwrite",st=>{old.forEach(s=>st.delete(s.id))});
+}
+// Every restore makes a safety copy of what's in the account first. If that copy can't be made (offline, storage full), nothing is changed.
+async function restoreFrom(text,onProgress){
+  let safe;try{safe=await buildBackup()}catch(e){throw new Error("Couldn't make a safety copy first, so nothing was changed. Check your connection and try again.")}
+  try{await snapSave("before-restore",safe)}catch(e){throw new Error("Couldn't save a safety copy on this phone first, so nothing was changed. ("+(e.message||e)+")")}
+  return importBackup({text:async()=>text},onProgress);
+}
+// Runs when the app opens or comes back to the screen. Reads the account once and uses it for both the phone copy and the weekly Drive copy.
+let backupBusy=false;
+async function autoBackup(){
+  if(!P.user||backupBusy||navigator.onLine===false)return;
+  const uid=P.user.uid,now=Date.now(),c=sheetCfg();
+  const snapDue=now-(+LS.get("pb.snapAt:"+uid)||0)>=SNAP_EVERY;
+  const driveDue=!!(c.url&&c.key)&&now-(+LS.get("pb.driveAt")||0)>=DRIVE_EVERY&&now-(+LS.get("pb.driveTry")||0)>=864e5;
+  if(snapDue||driveDue){backupBusy=true;try{
+    const b=await buildBackup();
+    if(snapDue)try{await snapSave("daily",b);LS.set("pb.snapAt:"+uid,String(now));LS.set("pb.snapErr",null)}catch(e){LS.set("pb.snapErr",String(e&&e.message||e))}
+    if(driveDue){LS.set("pb.driveTry",String(now));try{await driveBackup(b)}catch(e){LS.set("pb.driveErr",e&&e.message==="unknown_action"?"script":"fail")}}
+  }catch(e){}finally{backupBusy=false}}
+  staleWarn();
+}
+// Drive backups fail quietly (an old sheet script, an expired Google login). Say so on screen, at most every 3 days.
+function staleWarn(){const c=sheetCfg();if(!(c.url&&c.key))return;
+  const at=+LS.get("pb.driveAt")||0,since=+LS.get("pb.driveSince")||0,now=Date.now();
+  if(!since)LS.set("pb.driveSince",String(now));            // when Drive backup was first expected on this phone
+  const ref=at||since||now;if(now-ref<STALE_DRIVE||now-(+LS.get("pb.staleWarnAt")||0)<3*864e5)return;
+  LS.set("pb.staleWarnAt",String(now));
+  toast(at?"Google Drive backup hasn't worked since "+new Date(at).toLocaleDateString("en-US",{month:"short",day:"numeric"})+". Copies on this phone are still kept. See Settings → Backup.":"Google Drive backup hasn't worked yet. Copies on this phone are still kept. See Settings → Backup.",6500)}
+function fmtWhen(at){const d=new Date(at),td=new Date();const day=d.toDateString()===td.toDateString()?"Today":d.toDateString()===new Date(td-864e5).toDateString()?"Yesterday":d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+  return day+", "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
+async function snapUI(sc){
+  const box=sc.querySelector("[data-pbx-snaps]");if(!box)return;
+  let list;try{list=await snapList()}catch(e){box.innerHTML='<p class="pbx-err">'+esc(e.message||"Couldn't read the copies on this phone.")+'</p>';return}
+  const err=LS.get("pb.snapErr");
+  if(!list.length){box.innerHTML='<p class="pbx-note" style="margin:0">No copies on this phone yet. The first one is made a few seconds after the app opens online.'+(err?'<br><span class="pbx-err">Last try didn\'t work: '+esc(err)+'</span>':'')+'</p><button class="pbx-btn sec" data-snapnow style="margin-top:10px">Make a copy now</button>';}
+  else box.innerHTML=(err?'<p class="pbx-err" style="margin:0 0 8px">Last daily copy didn\'t save: '+esc(err)+'</p>':'')+list.map(s=>'<div class="pbx-snap"><div class="pbx-snapl"><b>'+esc(fmtWhen(s.at))+'</b><span>'+(s.kind==="before-restore"?"Safety copy before a restore · ":"")+(s.count!=null?Number(s.count).toLocaleString("en-US")+" records · ":"")+Math.max(1,Math.round(s.bytes/1024)).toLocaleString("en-US")+' KB</span></div>'+
+      '<button class="pbx-mini" data-snapsave="'+esc(s.id)+'">Save file</button><button class="pbx-mini warn" data-snaprest="'+esc(s.id)+'">Restore</button></div>').join("")+
+      '<button class="pbx-btn sec" data-snapnow style="margin-top:10px">Make a copy now</button><p class="pbx-note" data-snapstat></p>';
+  const say=(t,ok)=>{const st=box.querySelector("[data-snapstat]");if(st){st.className=ok===true?"pbx-ok":ok===false?"pbx-err":"pbx-note";st.textContent=t}else toast(t)};
+  const now=box.querySelector("[data-snapnow]");if(now)now.onclick=async()=>{now.disabled=true;now.textContent="Making a copy…";
+    try{const b=await buildBackup();await snapSave("daily",b);LS.set("pb.snapAt:"+P.user.uid,String(Date.now()));LS.set("pb.snapErr",null);await snapUI(sc)}
+    catch(e){now.disabled=false;now.textContent="Make a copy now";say(navigator.onLine===false?"You're offline. Copies need a connection to read your account.":"Couldn't make a copy: "+(e.message||e),false)}};
+  box.querySelectorAll("[data-snapsave]").forEach(b=>b.onclick=async()=>{const s=list.find(x=>x.id===b.dataset.snapsave);if(!s)return;
+    try{const d=new Date(s.at),stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");await saveFile("pocket-budget-backup-"+stamp+".json",await unpackJSON(s),"application/json")}
+    catch(e){say("Couldn't save that copy: "+(e.message||e),false)}});
+  box.querySelectorAll("[data-snaprest]").forEach(b=>b.onclick=async()=>{const s=list.find(x=>x.id===b.dataset.snaprest);if(!s)return;
+    // two taps: the first one asks
+    if(!b.dataset.armed){box.querySelectorAll("[data-snaprest]").forEach(x=>{delete x.dataset.armed;x.textContent="Restore"});b.dataset.armed="1";b.textContent="Tap to confirm";
+      say("Restoring puts back everything in the "+fmtWhen(s.at)+" copy. Anything added since stays. A safety copy of how things are now is saved first.",null);
+      setTimeout(()=>{if(b.dataset.armed){delete b.dataset.armed;b.textContent="Restore"}},6000);return}
+    delete b.dataset.armed;box.querySelectorAll("button").forEach(x=>x.disabled=true);b.textContent="Restoring…";
+    try{const n=await restoreFrom(await unpackJSON(s),(d,t)=>say("Making the safety copy, then putting back "+d+" of "+t+" records…",null));
+      await snapUI(sc);say("Put back "+Number(n).toLocaleString("en-US")+" records from the "+fmtWhen(s.at)+" copy. A safety copy of how things were is at the top of this list.",true)}
+    catch(e){box.querySelectorAll("button").forEach(x=>x.disabled=false);b.textContent="Restore";say(e.code==="permission-denied"?"Your database refused access.":e.message||"Restore failed.",false)}});
+}
 function importUI(root,{onDone}){
   root.querySelector("[data-pbx-file]").addEventListener("change",async e=>{
     const f=e.target.files&&e.target.files[0];if(!f)return;
     const st=root.querySelector("[data-pbx-status]"),pr=root.querySelector("[data-pbx-prog]"),btn=root.querySelector("[data-pbx-pick]");
     btn.disabled=true;st.className="pbx-note";st.textContent="Reading "+f.name+"…";pr.hidden=false;
-    try{const n=await importBackup(f,(d,t)=>{pr.firstChild.style.width=(d/t*100).toFixed(0)+"%";st.textContent="Copied "+d+" of "+t+" records…"});
-      st.className="pbx-ok";st.textContent="Brought in "+n+" records.";onDone&&onDone(n)}
+    try{st.textContent="Saving a safety copy of how things are now…";const n=await restoreFrom(await f.text(),(d,t)=>{pr.firstChild.style.width=(d/t*100).toFixed(0)+"%";st.textContent="Copied "+d+" of "+t+" records…"});
+      st.className="pbx-ok";st.textContent="Brought in "+n+" records. A safety copy of how things were is under On this phone.";onDone&&onDone(n);const sc2=root.querySelector("[data-pbx-snaps]");if(sc2)snapUI(root)}
     catch(x){st.className="pbx-err";st.textContent=(x.code==="permission-denied"?"Your database refused access. Publish the Firestore rules, then try again.":x.message||"Import failed.");btn.disabled=false;pr.hidden=true}
     e.target.value="";
   });
@@ -299,6 +377,7 @@ function openSettings(){
       '<p data-pbx-mstat class="pbx-note" style="margin:0 0 10px"></p><div class="pbx-row" style="margin-top:0"><button class="pbx-btn" id="pbx-msave">Save</button></div></section>'+
     '<section class="pbx-sec"><h3>Backup</h3><p>Save a copy of everything, or bring in a backup file. Importing replaces records with the same month or ID and keeps the rest.</p>'+
       '<button class="pbx-btn sec" id="pbx-exp">Save a backup</button><div style="height:10px"></div>'+importBlock+
+      '<h3 style="margin-top:16px">On this phone</h3><p>A full copy is also kept on this phone every day, even without Google. The last 7 are kept, plus a safety copy made before every restore. They stay if the account is changed or emptied, but not if the app is deleted from the phone.</p><div data-pbx-snaps><p class="pbx-note" style="margin:0">Loading…</p></div>'+
       '<h3 style="margin-top:16px">Google Drive</h3><p>Every week a backup is saved automatically to the <b>Pocket Budget Backups</b> folder in your Google Drive. The last 8 are kept.</p><p data-pbx-dstat class="pbx-note" style="margin:0 0 10px">'+esc(driveStatus())+'</p>'+
       '<div class="pbx-row" style="margin-top:0"><button class="pbx-btn sec" id="pbx-drive">Back up to Drive now</button>'+(LS.get("pb.driveUrl")?'<a class="pbx-btn sec" style="text-align:center;text-decoration:none" href="'+esc(LS.get("pb.driveUrl"))+'" target="_blank" rel="noopener">Open latest</a>':'')+'</div></section>'+
     '<section class="pbx-sec"><h3>Notifications <span class="pbx-pill" data-pbx-npill></span></h3><p>Check that Pocket Budget can show notifications on this phone.</p>'+
@@ -345,7 +424,7 @@ function openSettings(){
     try{await driveBackup();ds.className="pbx-ok";ds.textContent="Saved to Google Drive · "+driveStatus().replace(/^Last backup [^·]+· /,"")}
     catch(x){LS.set("pb.driveErr",x.message==="unknown_action"?"script":x.code==="not_configured"?null:"fail");ds.className="pbx-err";ds.textContent=x.message==="unknown_action"?"Your sheet script needs the backup update first.":x.code==="not_configured"?"Set up Google Sheet sync above first.":x.code==="network"?"Couldn't reach your script. Check your connection.":"Couldn't save: "+x.message}
     b.disabled=false;b.textContent="Back up to Drive now"};
-  importUI(sc,{});
+  importUI(sc,{});snapUI(sc);
   sc.querySelector("#pbx-out").onclick=async()=>{closeSettings();await P.auth.signOut();location.reload()};
   sc.querySelector("#pbx-close").onclick=closeSettings;
   notifyUI(sc);
@@ -379,13 +458,14 @@ function notifyUI(sc){
   sc.querySelector("#pbx-ntest").onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{await sendTestNotice(0);draw("Sent. Look for it at the top of the screen.",true)}catch(x){draw(x.message,false)}b.disabled=false};
   sc.querySelector("#pbx-nlater").onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{await sendTestNotice(10000);draw("Coming in 10 seconds. Go to your Home Screen to see it arrive.",true)}catch(x){draw(x.message,false)}b.disabled=false};
 }
-function toast(msg){const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+function toast(msg,ms){const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),ms||2200)}
 function addGear(){
-  const row=document.querySelector("header .hrow"),plus=document.getElementById("addBtnTop");if(!row||!plus||document.getElementById("pbx-gear"))return;
+  // The gear sits at the right end of the header row. (It used to sit beside the header "+", which was removed on Nov 13, so it had stopped appearing.)
+  const row=document.querySelector("header .hrow");if(!row||document.getElementById("pbx-gear"))return;
   const b=document.createElement("button");b.className="iconbtn";b.id="pbx-gear";b.setAttribute("aria-label","Settings");
   b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
   b.onclick=e=>{e.stopPropagation();openSettings()};
-  row.insertBefore(b,plus);
+  b.style.marginLeft="auto";b.style.width=b.style.height="44px";row.appendChild(b);
 }
 
 /* ---------- start ---------- */
@@ -412,7 +492,8 @@ async function start(){
     let empty=false;
     if(!LS.get("pb.firstRunDone:"+u.uid))try{const s=await base().collection("budgets").limit(1).get();empty=s.empty}
     catch(e){const c=e&&e.code;showGate('<h1>Almost there</h1><p class="pbx-err">'+(c==="permission-denied"?"Your database refused access. In Firebase, open Firestore → Rules, paste firestore.rules and Publish.":"Couldn't reach your database: "+esc(e.message||c))+'</p><button class="pbx-btn" onclick="location.reload()">Try again</button>');return}
-    hideGate();addGear();dbResolve(DB);setTimeout(autoDrive,12000);
+    hideGate();addGear();dbResolve(DB);setTimeout(autoBackup,12000);
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")setTimeout(autoBackup,4000)});
     if(empty&&!LS.get("pb.firstRunDone:"+u.uid))firstRunScreen();
   });
 }

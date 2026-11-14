@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 14, 2:58 PM · preview 2"</script>
+<script>window.PB_BUILD="Nov 14, 3:05 PM · preview 3"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2254,9 +2254,11 @@ function locCandidates(merchant,date,selfId){
 /* ---------- pick a location on a map ----------
    Leaflet + OpenStreetMap tiles, loaded the first time the map opens. Drag the map under the pin;
    the spot is looked up (business + town) and you choose the business or just the town. */
+// Map and receipt-scan libraries are hosted with the app (vendor/, exact pinned versions; see vendor/README.md).
+const VEND=new URL((/\/preview\//.test(location.pathname)?"../":"")+"vendor/",location.href).href;
 const MAPLIB={p:null};
 function loadLeaflet(){if(window.L&&window.L.map)return Promise.resolve();
-  return MAPLIB.p||(MAPLIB.p=new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";s.onload=()=>res();s.onerror=()=>{MAPLIB.p=null;rej(new Error("map"))};document.head.appendChild(s)}))}
+  return MAPLIB.p||(MAPLIB.p=new Promise((res,rej)=>{const s=document.createElement("script");s.src=VEND+"leaflet-1.9.4/leaflet.js";s.onload=()=>res();s.onerror=()=>{MAPLIB.p=null;rej(new Error("map"))};document.head.appendChild(s)}))}
 const MAP_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg>';
 function mapPicker(start,onPick,preQ){
   const ov=document.createElement("div");ov.className="mpk";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("aria-label","Pick a location on the map");
@@ -3065,7 +3067,7 @@ function wdPanelHTML(w){
 /* ---------- Insights · Map: a heat map of where you spend ----------
    Uses transactions that have a map spot (GPS, a map pick, or a searched place). Brighter = more. */
 const HEAT={p:null};
-function loadHeat(){return loadLeaflet().then(()=>window.L.heatLayer?null:(HEAT.p||(HEAT.p=new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js";s.onload=()=>res();s.onerror=()=>{HEAT.p=null;rej(new Error("heat"))};document.head.appendChild(s)}))))}
+function loadHeat(){return loadLeaflet().then(()=>window.L.heatLayer?null:(HEAT.p||(HEAT.p=new Promise((res,rej)=>{const s=document.createElement("script");s.src=VEND+"leaflet.heat-0.2.0/leaflet-heat.js";s.onload=()=>res();s.onerror=()=>{HEAT.p=null;rej(new Error("heat"))};document.head.appendChild(s)}))))}
 IS.hmMode=ls.get("pb.hm")||"amt";
 function heatData(months){
   const all=[],pts=[];
@@ -3107,7 +3109,7 @@ const GLLIB={p:null},RMOT=window.matchMedia?matchMedia("(prefers-reduced-motion:
 const glEase=t=>(1-Math.cos(Math.PI*t))/2; // ease-in-out-sine: gentle start/stop, low peak speed
 let GLOK;function glOK(){if(GLOK===undefined){try{const c=document.createElement("canvas");GLOK=!!(window.WebGLRenderingContext&&(c.getContext("webgl2")||c.getContext("webgl")))}catch(_){GLOK=false}}return GLOK}
 function loadMapGL(){if(window.maplibregl&&window.maplibregl.Map)return Promise.resolve();if(!glOK())return Promise.reject(new Error("webgl"));
-  return GLLIB.p||(GLLIB.p=new Promise((res,rej)=>{const base="https://unpkg.com/maplibre-gl@"+GLV+"/dist/maplibre-gl.";
+  return GLLIB.p||(GLLIB.p=new Promise((res,rej)=>{const base=VEND+"maplibre-gl-"+GLV+"/maplibre-gl.";
     if(!document.querySelector('link[data-mlgl]')){const l=document.createElement("link");l.rel="stylesheet";l.href=base+"css";l.setAttribute("data-mlgl","");document.head.appendChild(l)}
     const s=document.createElement("script");s.src=base+"js";const to=setTimeout(()=>fail(),9000);
     const fail=()=>{clearTimeout(to);GLLIB.p=null;rej(new Error("map"))};
@@ -3742,7 +3744,7 @@ function reimbFroms(){const seen={};txPool().forEach(t=>{if(t.reimbFrom)seen[t.r
 /* ---------- receipt scanning (on the phone, with Tesseract.js; nothing is uploaded) ---------- */
 let TESS=null;
 function loadTess(){if(window.Tesseract)return Promise.resolve();if(TESS)return TESS;
-  TESS=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";sc.onload=ok;sc.onerror=()=>{TESS=null;no(new Error("load"))};document.head.appendChild(sc)});return TESS}
+  TESS=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src=VEND+"tesseract.js-5.1.1/tesseract.min.js";sc.onload=ok;sc.onerror=()=>{TESS=null;no(new Error("load"))};document.head.appendChild(sc)});return TESS}
 function receiptCanvas(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,1700/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
   const x=c.getContext("2d");x.drawImage(im,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height),a=d.data;
   for(let i=0;i<a.length;i+=4){let g=.299*a[i]+.587*a[i+1]+.114*a[i+2];g=Math.max(0,Math.min(255,(g-128)*1.5+140));a[i]=a[i+1]=a[i+2]=g}x.putImageData(d,0,0);URL.revokeObjectURL(u);ok(c)};im.onerror=()=>{URL.revokeObjectURL(u);no(new Error("image"))};im.src=u})}
@@ -3769,7 +3771,7 @@ async function scanReceipt(file,sheet){
   const ov=document.createElement("div");ov.className="rscan";ov.innerHTML='<div class="rsc"><div class="rsb"><i></i></div><b>Reading receipt…</b><span>Stays on your phone. First scan downloads the reader.</span></div>';sheet.appendChild(ov);
   const bar=ov.querySelector(".rsb i"),lab=ov.querySelector("b");
   try{const [c]=await Promise.all([receiptCanvas(file),loadTess()]);
-    const res=await Tesseract.recognize(c,"eng",{logger:m=>{if(m&&m.status==="recognizing text"){bar.style.width=Math.round(m.progress*100)+"%";lab.textContent="Reading receipt… "+Math.round(m.progress*100)+"%"}else if(m&&m.status){lab.textContent=/load|init/i.test(m.status)?"Getting the reader ready…":"Reading receipt…"}}});
+    const res=await Tesseract.recognize(c,"eng",{workerPath:VEND+"tesseract.js-5.1.1/worker.min.js",workerBlobURL:false,corePath:VEND+"tesseract.js-core-5.1.1",langPath:VEND+"tesseract-eng-4.0.0_best_int",logger:m=>{if(m&&m.status==="recognizing text"){bar.style.width=Math.round(m.progress*100)+"%";lab.textContent="Reading receipt… "+Math.round(m.progress*100)+"%"}else if(m&&m.status){lab.textContent=/load|init/i.test(m.status)?"Getting the reader ready…":"Reading receipt…"}}});
     return parseReceipt(res&&res.data&&res.data.text,merchIndex().map(e=>e.name))}
   catch(e){toast(e&&e.message==="load"?"Couldn't load the receipt reader. Check your connection":"Couldn't read that photo");return null}
   finally{ov.classList.add("out");setTimeout(()=>ov.remove(),250)}

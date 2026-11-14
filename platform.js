@@ -355,11 +355,12 @@ function notifyUI(sc){
 }
 function toast(msg){const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
 function addGear(){
-  const row=document.querySelector("header .hrow"),plus=document.getElementById("addBtnTop");if(!row||!plus||document.getElementById("pbx-gear"))return;
+  // The gear sits at the right end of the header row. (It used to sit beside the header "+", which was removed on Nov 13, so it had stopped appearing.)
+  const row=document.querySelector("header .hrow");if(!row||document.getElementById("pbx-gear"))return;
   const b=document.createElement("button");b.className="iconbtn";b.id="pbx-gear";b.setAttribute("aria-label","Settings");
   b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
   b.onclick=e=>{e.stopPropagation();openSettings()};
-  row.insertBefore(b,plus);
+  b.style.marginLeft="auto";b.style.width=b.style.height="44px";row.appendChild(b);
 }
 
 /* ---------- start ---------- */
