@@ -1,5 +1,5 @@
 /* Pocket Budget service worker: opens offline, picks up updates when online. */
-const VERSION = "pb-2026-11-14h-p1";
+const VERSION = "pb-2026-11-14i-p2";
 const SHELL = ["./", "./index.html", "./platform.js", "./config.js", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png", "./hanken-grotesk.woff2"];
 const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 // The preview copy (./preview/) runs this same file with its own scope. Each copy keeps its own cache
