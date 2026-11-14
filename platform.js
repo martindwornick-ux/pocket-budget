@@ -19,7 +19,7 @@ const css=`
 .pbx-box p{margin:0 0 16px;font-size:16px;line-height:1.45;color:#5f6368}
 .pbx-f{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
 .pbx-f label{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#5f6368;font-weight:600}
-.pbx-f input,.pbx-f textarea{font:inherit;font-size:17px;padding:13px 14px;border-radius:12px;border:1px solid rgba(60,64,67,.2);background:rgba(255,255,255,.85);color:#202124;width:100%;min-width:0}
+.pbx-f input,.pbx-f textarea,.pbx-f select{font:inherit;font-size:17px;padding:13px 14px;border-radius:12px;border:1px solid rgba(60,64,67,.2);background:rgba(255,255,255,.85);color:#202124;width:100%;min-width:0}
 .pbx-f textarea{font-family:ui-monospace,Menlo,monospace;font-size:13px;min-height:150px;resize:vertical}
 .pbx-f input:focus,.pbx-f textarea:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.18)}
 .pbx-btn{display:block;width:100%;padding:14px 16px;border-radius:14px;border:0;font:inherit;font-size:17px;font-weight:600;background:linear-gradient(150deg,#4285f4,#1a73e8);color:#fff;cursor:pointer;box-shadow:0 6px 18px rgba(26,115,232,.28)}
@@ -283,10 +283,16 @@ function openSettings(){
     '<section class="pbx-sec"><h3>Notifications <span class="pbx-pill" data-pbx-npill></span></h3><p>Check that Pocket Budget can show notifications on this phone.</p>'+
       '<p data-pbx-nstat class="pbx-note" style="margin:0 0 10px"></p>'+
       '<div class="pbx-row" style="margin-top:0"><button class="pbx-btn sec" id="pbx-ntest">Send test now</button><button class="pbx-btn sec" id="pbx-nlater">Test in 10 sec</button></div></section>'+
+    '<section class="pbx-sec"><h3>Personal touches</h3><div class="pbx-f"><label for="pbx-name">Your first name</label><input id="pbx-name" autocomplete="given-name" placeholder="Shown in the greeting" value="'+esc(localStorage.getItem("pb.name")||"")+'"></div>'+
+      '<div class="pbx-f"><label for="pbx-theme">Appearance</label><select id="pbx-theme">'+[["light","Light"],["dark","Dark (true black)"],["auto","Match iPhone"]].map(o=>'<option value="'+o[0]+'"'+((localStorage.getItem("pb.theme")||"light")===o[0]?" selected":"")+'>'+o[1]+'</option>').join("")+'</select></div>'+
+      '<label style="display:flex;align-items:center;gap:10px;font-size:16px;margin:4px 0 0"><input type="checkbox" id="pbx-snd" style="width:22px;height:22px"'+(localStorage.getItem("pb.sounds")==="1"?" checked":"")+'> Soft sounds when saving and deleting</label></section>'+
     '<section class="pbx-sec"><h3>Account</h3><p>Signed in as <b>'+esc(P.user&&P.user.email)+'</b></p><button class="pbx-btn danger" id="pbx-out">Sign out</button></section>'+
     '<p class="pbx-note" style="text-align:center;margin:0 0 12px">App version: '+esc(window.PB_BUILD||"unknown")+'</p><button class="pbx-btn sec" id="pbx-close">Done</button></div>';
   document.body.appendChild(sc);document.body.style.overflow="hidden";
   sc.addEventListener("click",e=>{if(e.target===sc)closeSettings()});
+  sc.querySelector("#pbx-name").addEventListener("change",e=>{const v=e.target.value.trim();if(v)localStorage.setItem("pb.name",v);else localStorage.removeItem("pb.name");if(window.PB_RENDER)window.PB_RENDER()});
+  sc.querySelector("#pbx-theme").addEventListener("change",e=>{const v=e.target.value;localStorage.setItem("pb.theme",v);const d=v==="dark"||(v==="auto"&&matchMedia("(prefers-color-scheme:dark)").matches);document.documentElement.setAttribute("data-theme",d?"dark":"light");const mt=document.querySelector('meta[name="theme-color"]');if(mt&&mt.dataset.light)mt.setAttribute("content",d?"#000000":mt.dataset.light)});
+  sc.querySelector("#pbx-snd").addEventListener("change",e=>{localStorage.setItem("pb.sounds",e.target.checked?"1":"0");if(e.target.checked&&window.PB_SND)window.PB_SND.play("coin")});
   const st=sc.querySelector("[data-pbx-sstat]"),val=()=>({url:sc.querySelector("#pbx-url").value.trim(),key:sc.querySelector("#pbx-key").value.trim()});
   const say=(t,ok)=>{st.className=ok===true?"pbx-ok":ok===false?"pbx-err":"pbx-note";st.style.margin="0 0 10px";st.textContent=t};
   sc.querySelector("#pbx-test").onclick=async()=>{const v=val();if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(v.url)){say("Paste the Web app URL from Apps Script. It starts with https://script.google.com and ends in /exec.",false);return}

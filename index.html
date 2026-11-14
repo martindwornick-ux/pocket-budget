@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 14, 11:30 AM"</script>
+<script>window.PB_BUILD="Nov 14, 12:30 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1270,6 +1270,44 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 .txs .ccancel{margin-top:10px;font-size:14px;color:var(--muted)}
 .txs .cplace+.trow,.txs .csug+.cplace+.trow{border-top:1px solid var(--line)}
 .txs .msug .mc{flex:none;max-width:45%;text-align:right;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* premium pass Nov 14 */
+.greet{margin:2px 4px 12px;font-size:16px;color:var(--muted);font-weight:500}.greet b{color:var(--fg);font-weight:700}.greet .neg{color:var(--over);font-weight:700}
+.eart{display:block;width:72px;height:72px;margin:0 auto 10px}.empty.mini{padding:10px 0 2px}.empty.mini .eart{width:56px;height:56px;margin-bottom:4px}.empty.mini .note{margin:0}
+.sheet{box-shadow:0 -10px 40px rgba(0,0,0,.14),0 120px 0 0 var(--card)}
+.flychip{position:fixed;left:0;top:0;z-index:300;pointer-events:none;padding:8px 14px;border-radius:20px;background:#1a73e8;color:#fff;font-weight:700;font-size:17px;box-shadow:0 8px 22px rgba(26,115,232,.35);will-change:transform,opacity}
+.landed{animation:landed .9s cubic-bezier(.2,.9,.3,1)}
+@keyframes landed{0%{box-shadow:0 0 0 0 rgba(66,133,244,0);transform:scale(1)}25%{box-shadow:0 0 0 6px rgba(66,133,244,.28);transform:scale(1.025);background-color:rgba(66,133,244,.10)}100%{box-shadow:0 0 0 0 rgba(66,133,244,0);transform:scale(1)}}
+.doodle{position:relative}.doodle .dbye{position:absolute;inset:2px;animation:dbye .5s cubic-bezier(.5,0,.75,0) forwards}.doodle svg.dhi{animation:dhi .7s cubic-bezier(.3,1.5,.5,1),dbob 3.2s ease-in-out .7s infinite}
+@keyframes dbye{0%{transform:rotate(0)}25%{transform:rotate(-16deg)}50%{transform:rotate(14deg) translateY(-2px)}100%{transform:translateY(-46px) scale(.6);opacity:0}}
+@keyframes dhi{0%{transform:translateY(-40px) scale(.7);opacity:0}60%{transform:translateY(3px) scale(1.06);opacity:1}100%{transform:none}}
+#main .txrow{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.txpeek{position:fixed;inset:0;z-index:250;display:grid;place-items:center;padding:24px;background:rgba(10,14,12,0);-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);transition:background .2s,backdrop-filter .2s,-webkit-backdrop-filter .2s;pointer-events:none}
+.txpeek.on{background:rgba(10,14,12,.28);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.txpeek .pk{width:min(360px,100%);border-radius:22px;background:var(--card);color:var(--fg);padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,.3);transform:scale(.88);opacity:0;transition:transform .32s cubic-bezier(.3,1.4,.5,1),opacity .18s}
+.txpeek.on .pk{transform:none;opacity:1}
+.pkh{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.pkm{font-size:20px;font-weight:700}.pkc{color:var(--muted);font-size:15px;margin-top:2px}.pka{font-size:22px;font-weight:800}.pka.pos{color:var(--ok)}
+.pkd{margin-top:10px;font-size:15px}.pkn{margin-top:6px;font-size:15px;color:var(--muted)}.pkl{margin-top:10px;font-size:15px;color:var(--link)}
+.pkmap{height:150px;border-radius:14px;overflow:hidden;margin-top:10px;background:var(--line)}
+/* Dark appearance (Settings → Personal touches). Comes after the Google light layer, so it re-sets its colours. True black for OLED iPhones. */
+:root[data-theme="dark"]{color-scheme:dark;--g-blue:#8ab4f8;--brand:#8ab4f8;--brand-deep:#669df6;--brand-ink:#0b1b33;
+  --bg:#000;--fg:#f1f3f4;--muted:#9aa0a6;--line:rgba(255,255,255,.10);--card:#151917;
+  --bar:#8ab4f8;--link:#8ab4f8;--over:#f28b82;--ok:#81c995;--prog:#81c995;--trk:rgba(255,255,255,.10);
+  --nav:#000;--sel:rgba(138,180,248,.22);--done:#8ab4f8;--done-ink:#0b1b33;
+  --glass:rgba(32,36,34,.62);--glass-strong:rgba(26,30,28,.92);--glass-edge:rgba(255,255,255,.08);
+  --glass-shade:0 10px 30px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);
+  --brand-glass:rgba(0,0,0,.66);--key:rgba(255,255,255,.09);--keyop:rgba(138,180,248,.18)}
+html[data-theme="dark"]{background:#000}
+:root[data-theme="dark"] body::after{background:radial-gradient(38% 28% at 8% 6%,rgba(66,133,244,.16),transparent 70%),radial-gradient(34% 26% at 96% 18%,rgba(234,67,53,.10),transparent 70%),radial-gradient(40% 30% at 88% 82%,rgba(52,168,83,.12),transparent 70%),radial-gradient(36% 26% at 6% 70%,rgba(251,188,4,.10),transparent 70%),#000!important}
+:root[data-theme="dark"] main .card,:root[data-theme="dark"] main .tile,:root[data-theme="dark"] main .search,:root[data-theme="dark"] main.peek .card,:root[data-theme="dark"] .txs .tcard{background:rgba(24,28,26,.86);border-color:rgba(255,255,255,.07)}
+:root[data-theme="dark"] header{border-bottom-color:rgba(255,255,255,.06);box-shadow:none}
+:root[data-theme="dark"] header .seg{background:rgba(255,255,255,.08);box-shadow:none}
+:root[data-theme="dark"] header .seg button[aria-pressed="true"]{background:#2b312e;color:#8ab4f8;box-shadow:none}
+:root[data-theme="dark"] #hsearch .search{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.06)}
+:root[data-theme="dark"] .card.acard{background:#1b4fa0}
+:root[data-theme="dark"] .txpeek .pk{background:#1b1f1d}
+:root[data-theme="dark"] .eart path[fill="#fff"],:root[data-theme="dark"] .eart rect[fill="#fff"]{fill:#2a2f2d}
+@media (prefers-reduced-motion:reduce){.landed,.doodle .dbye,.doodle svg.dhi{animation:none}.txpeek .pk{transition:none}}
 </style>
 
 <header>
@@ -1299,7 +1337,9 @@ body{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 <div id="padRoot"></div>
 
 <script>
-document.documentElement.setAttribute("data-theme","light");
+/* Appearance (Settings → Personal touches): light (default), dark, or match the iPhone ("auto") */
+(function(){const m=localStorage.getItem("pb.theme")||"light",q=matchMedia("(prefers-color-scheme:dark)"),set=()=>{const d=m==="dark"||(m==="auto"&&q.matches);document.documentElement.setAttribute("data-theme",d?"dark":"light");const mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute("content",d?"#000000":mt.dataset.light||mt.getAttribute("content"))};
+  const mt=document.querySelector('meta[name="theme-color"]');if(mt&&!mt.dataset.light)mt.dataset.light=mt.getAttribute("content");set();if(m==="auto")q.addEventListener("change",set)})();
 (function(){
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const $=s=>document.querySelector(s);
@@ -1567,12 +1607,33 @@ function doodleMood(){try{const td=today(),cur=ymOf(td),ym=S.ym;if(ym>cur)return
   const sp=S.tx.filter(t=>t.type!=="income"&&!fx.has(t.itemId)&&(t.date||"")<=td).reduce((a,t)=>a+sAmt(t),0),r=sp/p;
   if(r>1.0001)return"over";if(ym<cur)return"good";const [y,m]=ym.split("-").map(Number),mp=+td.slice(8,10)/new Date(y,m,0).getDate();return r>mp+.08?"warn":"good"}catch(_){return""}}
 const MOOD_MSG={good:["Right on track","On track, the turkey's strutting"],warn:["A bit ahead of pace","Careful, the turkey's sweating"],over:["Over budget this month","Over budget, the turkey got roasted"]};
-function renderDoodle(){const b=$("#doodle");if(!b)return;const m=+S.ym.slice(5)-1,mood=doodleMood(),k=m+"|"+mood;if(b.dataset.m===k)return;b.dataset.m=k;const [t,svg]=DOODLES[m];
+function renderDoodle(){const b=$("#doodle");if(!b)return;const m=+S.ym.slice(5)-1,mood=doodleMood(),k=m+"|"+mood;if(b.dataset.m===k)return;
+  const prevM=b.dataset.m?b.dataset.m.split("|")[0]:null,swap=prevM!==null&&prevM!==String(m)&&!matchMedia("(prefers-reduced-motion:reduce)").matches;b.dataset.m=k;const [t,svg]=DOODLES[m];
+  /* month change: the old doodle waves goodbye and the new one drops in. First open in a new calendar month also says hello. */
+  if(swap){const old=b.querySelector("svg");if(old){const g=old.cloneNode(true);g.classList.add("dbye");b.appendChild(g);setTimeout(()=>g.remove(),520)}}
+  {const cur=ymOf(today());if(S.ym===cur&&localStorage.getItem("pb.seenYm")!==cur){const first=localStorage.getItem("pb.seenYm");localStorage.setItem("pb.seenYm",cur);if(first)setTimeout(()=>{toast("Hello "+MONTHS[m]+"! "+t+".");try{hapticN(2,120)}catch(_){}},900)}}
   const extra=mood==="warn"?'<path class="dsweat"'+(m===10?' transform="translate(-5.5 5.5)"':'')+' d="M28.5 3.5c0 1.6-1 2.6-2.1 2.6s-2.1-1-2.1-2.6S26.4 0 26.4 0s2.1 1.9 2.1 3.5z" fill="#4285f4"/>':
     mood==="over"?'<g class="dsmoke" fill="#80868b"><circle cx="12" cy="6" r="2.4"/><circle cx="17" cy="4" r="2.8"/><circle cx="22" cy="6.5" r="2.2"/></g>':'';
   b.className="doodle"+(mood?" m-"+mood:"");
-  b.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><g class="dbody">'+svg+'</g>'+extra+'</svg>';
+  const bye=b.querySelector(".dbye");b.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"'+(swap?' class="dhi"':'')+'><g class="dbody">'+svg+'</g>'+extra+'</svg>';if(bye)b.appendChild(bye);
   const msg=mood?MOOD_MSG[mood][m===10?1:0]:"";b.dataset.msg=msg;b.setAttribute("aria-label",t+(msg?". "+msg:""));b.title=t}
+/* Long-press a transaction to peek at it (details + little map) without opening it; let go to close. */
+const PEEK={t:0,x:0,y:0,row:null,el:null,eat:false,map:null};
+function peekClose(){clearTimeout(PEEK.t);PEEK.row=null;const el=PEEK.el;PEEK.el=null;if(PEEK.map){try{PEEK.map.remove()}catch(_){}PEEK.map=null}if(!el)return;el.classList.remove("on");setTimeout(()=>el.remove(),220)}
+function peekOpen(row){const id=row.dataset.tx,t=S.tx.find(x=>x.id===id)||txPool().find(x=>x.id===id);if(!t)return;PEEK.eat=true;haptic();
+  const groups=groupsFor(ymOf(t.date)||S.ym),l=t.loc,sign=t.type==="income"||t.type==="refund"?"+":"";
+  const el=document.createElement("div");el.className="txpeek";el.setAttribute("role","dialog");el.setAttribute("aria-label","Preview of "+(t.merchant||"purchase"));
+  el.innerHTML='<div class="pk"><div class="pkh"><div><div class="pkm">'+esc(t.merchant||"Purchase")+'</div><div class="pkc">'+esc(txLabel(t,groups))+'</div></div><div class="pka num'+(sign?" pos":"")+'">'+sign+money(sAmt(t)||+t.amount||0)+'</div></div>'+
+    '<div class="pkd">'+esc(fmtLong(t.date))+(t.person?" · "+esc(t.person):"")+'</div>'+(t.note?'<div class="pkn">'+esc(t.note)+'</div>':'')+
+    (l?'<div class="pkl">'+esc(addrDedupe(locText(l)))+'</div>'+(l.lat!=null?'<div class="pkmap"></div>':''):'')+'</div>';
+  document.body.appendChild(el);PEEK.el=el;requestAnimationFrame(()=>el.classList.add("on"));
+  if(l&&l.lat!=null)loadLeaflet().then(()=>{if(PEEK.el!==el)return;const box=el.querySelector(".pkmap");const mp=L.map(box,{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,touchZoom:false,tap:false}).setView([l.lat,l.lng],16);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19}).addTo(mp);L.circleMarker([l.lat,l.lng],{radius:8,color:"#fff",weight:3,fillColor:"#ea4335",fillOpacity:1}).addTo(mp);PEEK.map=mp}).catch(()=>{const b=el.querySelector(".pkmap");if(b)b.remove()})}
+document.addEventListener("touchstart",e=>{if(e.touches.length!==1)return;const row=e.target.closest&&e.target.closest("#main .txrow[data-tx]");if(!row)return;const p=e.touches[0];PEEK.x=p.clientX;PEEK.y=p.clientY;PEEK.row=row;clearTimeout(PEEK.t);PEEK.t=setTimeout(()=>{if(PEEK.row===row)peekOpen(row)},430)},{passive:true});
+document.addEventListener("touchmove",e=>{if(!PEEK.row||PEEK.el)return;const p=e.touches[0];if(Math.abs(p.clientX-PEEK.x)>8||Math.abs(p.clientY-PEEK.y)>8){clearTimeout(PEEK.t);PEEK.row=null}},{passive:true});
+["touchend","touchcancel"].forEach(ev=>document.addEventListener(ev,()=>{clearTimeout(PEEK.t);if(PEEK.el)peekClose();PEEK.row=null},{passive:true}));
+document.addEventListener("click",e=>{if(PEEK.eat){PEEK.eat=false;if(e.target.closest&&e.target.closest(".txrow")){e.preventDefault();e.stopPropagation()}}},true);
+document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest("#main .txrow"))e.preventDefault()});
 $("#nowBar").addEventListener("click",()=>{S.ym=ymOf(today());S.upcoming=false;IS.calSel=null;S.flash=null;try{haptic()}catch(_){}subscribeTx();render();window.scrollTo(0,0)});
 $("#doodle").addEventListener("click",e=>{e.stopPropagation();const b=e.currentTarget;b.classList.remove("wig");void b.offsetWidth;b.classList.add("wig");try{haptic()}catch(_){};toast(b.title+"!"+(b.dataset.msg?" "+b.dataset.msg+".":""))});
 /* ---------- swipe left on a transaction to reveal Delete ---------- */
@@ -1610,7 +1671,7 @@ function confirmDelete(id){
   root.querySelector("#dk").onclick=()=>{done();if(SW.openRow)swClose(SW.openRow)};
   root.querySelector("#dy").onclick=async()=>{const b=root.querySelector("#dy");b.disabled=true;
     if(!S.db||S.readOnly){toast("Saving isn't available here");b.disabled=false;return}
-    Promise.resolve(S.db.doc("tx/"+id).delete()).catch(()=>toast("Couldn't delete. Try again."));SW.openRow=null;done();toast("Deleted")};
+    Promise.resolve(S.db.doc("tx/"+id).delete()).catch(()=>toast("Couldn't delete. Try again."));SW.openRow=null;done();SND.play("swish");toast("Deleted")};
   root.querySelector("#dy").focus();
   return;
   openSheet('<h3>Delete transaction?</h3><p style="margin:0 0 6px;font-size:17px">Do you want to delete <b>'+esc(t.merchant||"Purchase")+'</b> for <b class="num">'+money(+t.amount||0)+'</b> on '+esc(fmtLong(t.date))+'?</p>'+
@@ -1619,7 +1680,7 @@ function confirmDelete(id){
     s=>{s.querySelector("#dk").onclick=()=>{closeSheet();if(SW.openRow)swClose(SW.openRow)};
       s.querySelector("#dy").onclick=async()=>{const b=s.querySelector("#dy");b.disabled=true;
         if(!S.db||S.readOnly){toast("Saving isn't available here");b.disabled=false;return}
-        Promise.resolve(S.db.doc("tx/"+id).delete()).catch(()=>toast("Couldn't delete. Try again."));SW.openRow=null;closeSheet();toast("Deleted")}});
+        Promise.resolve(S.db.doc("tx/"+id).delete()).catch(()=>toast("Couldn't delete. Try again."));SW.openRow=null;closeSheet();SND.play("swish");toast("Deleted")}});
 }
 const ISUBS=[["totals","Totals"],["cal","Calendar"],["pace","Pace"]].concat(window.top===window?[["map","Map"]]:[]);
 function goMonth(ym,flashId,quiet){
@@ -1725,6 +1786,11 @@ function itemComboHTML(it,sm,solo){
   return '<div class="item citem"><button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm'+(solo?" solo":"")+'">'+(solo&&!it.ahead&&!it.from?(over?"Over":"Left"):itemNmHTML(it))+'</span><span class="v num'+(over?" neg":"")+'"><span data-roll="it:'+esc(it.id)+'" data-v="'+rem+'">'+money(rem)+'</span></span></button><button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true">'+bar+'</button>'+
     '<div class="icap"><span class="num'+(over?" neg":"")+'">'+money(spent)+' spent</span><span>of</span><button class="capb num'+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Planned for '+esc(it.name)+', '+money(planned)+'. Tap to change">'+money(planned)+PENCIL+'</button></div></div>';
 }
+/* little Google-palette illustrations for empty screens */
+const EMPTY_ART={
+ receipt:'<svg class="eart" viewBox="0 0 64 64" aria-hidden="true"><path d="M17 8h30v48l-5-3.5-5 3.5-5-3.5-5 3.5-5-3.5-5 3.5z" fill="#fff" stroke="#dadce0" stroke-width="2" stroke-linejoin="round"/><path d="M23 19h18M23 26h12M23 33h15" stroke="#4285f4" stroke-width="3" stroke-linecap="round"/><path d="M23 43h8" stroke="#34a853" stroke-width="3" stroke-linecap="round"/><circle cx="48" cy="14" r="8" fill="#fbbc04"/><path d="M48 10v8M44 14h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>',
+ cal:'<svg class="eart" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="13" width="44" height="40" rx="7" fill="#fff" stroke="#dadce0" stroke-width="2"/><path d="M10 20a7 7 0 017-7h30a7 7 0 017 7v5H10z" fill="#ea4335"/><path d="M22 8v9M42 8v9" stroke="#5f6368" stroke-width="3" stroke-linecap="round"/><g fill="#e8eaed"><rect x="17" y="31" width="7" height="6" rx="1.5"/><rect x="28.5" y="31" width="7" height="6" rx="1.5"/><rect x="17" y="41" width="7" height="6" rx="1.5"/><rect x="28.5" y="41" width="7" height="6" rx="1.5"/></g><rect x="40" y="31" width="7" height="6" rx="1.5" fill="#34a853"/></svg>',
+ piggy:'<svg class="eart" viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="31" cy="36" rx="19" ry="15" fill="#f6aea9"/><circle cx="48" cy="34" r="6" fill="#f28b82"/><circle cx="47" cy="33" r="1.1" fill="#202124"/><circle cx="50" cy="33" r="1.1" fill="#202124"/><path d="M20 24l-2-7 8 4" fill="#f28b82"/><circle cx="38" cy="30" r="1.6" fill="#202124"/><path d="M22 49v5M38 49v5" stroke="#f28b82" stroke-width="5" stroke-linecap="round"/><rect x="26" y="20" width="10" height="3" rx="1.5" fill="#202124" opacity=".55"/><circle cx="31" cy="11" r="6" fill="#fbbc04"/><path d="M31 8v6" stroke="#e37400" stroke-width="2" stroke-linecap="round"/></svg>'};
 const PENCIL='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
 function daysLeftAfterToday(ym){
   const [y,m]=ym.split("-").map(Number);const dim=new Date(y,m,0).getDate();
@@ -1879,10 +1945,18 @@ async function planNextSheet(){
       catch(x){b.disabled=false;b.textContent="Start "+MONTHS[+nx.slice(5)-1];toast("Couldn't save. Check your connection.")}};
   });
 }
+/* Greeting line at the top of Budget (this month only): "Good morning, Martin · $43 for today" */
+function myName(){const n=(localStorage.getItem("pb.name")||"").trim();if(n)return n;try{const u=window.firebase&&firebase.auth&&firebase.auth().currentUser;return u&&u.displayName?u.displayName.split(" ")[0]:""}catch(_){return""}}
+function greetHTML(itot,t0){if(S.ym!==ymOf(today())||!itot)return"";const hr=new Date().getHours(),nm=myName();
+  const hi=hr<4?"Up late":hr<12?"Good morning":hr<17?"Good afternoon":hr<22?"Good evening":"Up late";
+  const rem=round2(itot-t0.s-(t0.a||0)),d=daysLeftAfterToday(S.ym),pd=rem>0&&d?round2(rem/d):0;
+  const tail=rem<0?'<span class="neg">'+money(-rem)+'</span> over this month':pd>0?'<b>'+money(pd)+'</b> for today':'Nothing left to spend this month';
+  return '<p class="greet">'+hi+(nm?", "+esc(nm):"")+' · <span class="num">'+tail+'</span></p>'}
 function renderBudget(groups,sm){
   if(!S.budgetsLoaded&&S.dbState!=="none")return '<div class="empty">Loading…</div>';
   let h=historyCardHTML()+planBannerHTML();
   const inc=incomeFor(S.ym), itot=incomeTotal(inc), t0=totals(groups,sm), rm=receivedMap();
+  h+=greetHTML(itot,t0);
   const v=COMBINED?"remaining":S.view;
   const sumLabel=v==="planned"?"Planned Income":v==="spent"?"Spent So Far":"Remaining to Spend";
   const sumVal=v==="planned"?itot:v==="spent"?t0.s:round2(itot-t0.s-(t0.a||0));
@@ -1935,13 +2009,13 @@ function renderTx(groups){
   let h=historyCardHTML();
   if(S.upcoming){const td=today();list=list.filter(t=>t.date>td&&t.type!=="income"&&!isHist(t)).reverse();
     h+='<div class="fchip"><span>Upcoming after today · <b class="num">'+money(round2(list.reduce((a,t)=>a+sAmt(t),0)))+'</b></span><button id="clrUp">Show all</button></div>';
-    if(!list.length)return h+'<div class="card empty"><h3>Nothing scheduled</h3>No transactions are dated after today this month.</div>'}
+    if(!list.length)return h+'<div class="card empty">'+EMPTY_ART.cal+'<h3>Nothing scheduled</h3>No transactions are dated after today this month.</div>'}
   if(q)h+='<p class="note" style="margin:-6px 4px 0">'+list.length+' match'+(list.length===1?"":"es")+' · '+money(round2(list.reduce((a,t)=>a+sAmt(t),0)))+' spent</p>';
   h+='<div class="qlinks"><a href="'+SHEET_URL+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></svg>Finance Tracker</a><a href="venmo://" id="openVenmo" aria-label="Open Venmo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>Venmo</a></div>';
   const stuck=pending.length&&(AS.fail||AS.auto===false);
   if(stuck)h+='<div class="card" style="padding:14px 18px"><div class="irow" style="font-size:16px"><span class="nm"><b>'+(AS.fail?'Couldn\'t send '+pending.length+' to your sheet':pending.length+' not in your sheet yet')+'</b></span><button class="addlink" style="padding:0" id="syncAll">'+(AS.fail?'Try again':'Send to sheet')+'</button></div><p class="note" style="margin:6px 0 0">'+esc(AS.fail||(pending.find(t=>t.sheetMsg)||{}).sheetMsg||"")+'</p></div>';
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
-  if(!list.length)return h+'<div class="card empty"><h3>No transactions this month</h3>Tap + to log a purchase. It takes about five seconds.</div>';
+  if(!list.length)return h+'<div class="card empty">'+EMPTY_ART.receipt+'<h3>No transactions this month</h3>Tap + to log a purchase. It takes about five seconds.</div>';
   const td0=today();
   const fut=(!q&&!S.upcoming)?list.filter(t=>t.date>td0):[];
   if(fut.length){
@@ -2781,7 +2855,7 @@ function daySheet(iso){
   const shown=all.filter(match),hidden=all.length-shown.length;
   const spent=round2(shown.filter(t=>t.type!=="income").reduce((a,t)=>a+sAmt(t),0));
   let h='<h3>'+esc(fmtLong(iso))+'</h3><p class="note" style="margin:-8px 0 8px">'+esc(IS.item||IS.group||"All spending")+' · '+money(spent)+' spent</p>';
-  if(!shown.length)h+='<p class="note">No transactions'+(IS.group||IS.item?" for this filter":"")+' on this day.</p>';
+  if(!shown.length)h+='<div class="empty mini">'+EMPTY_ART.piggy+'<p class="note">'+(iso<=today()&&!(IS.group||IS.item)?"A $0 day. Nice!":"No transactions"+(IS.group||IS.item?" for this filter":"")+" on this day.")+'</p></div>';
   h+=shown.map(t=>{const ref=t.type==="refund"||t.type==="income";return '<button class="txrow" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.note?" · "+esc(t.note):"")+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'}).join("");
   if(hidden>0)h+='<p class="note" style="margin:10px 0 0">'+hidden+' other transaction'+(hidden===1?"":"s")+' that day '+(hidden===1?"is":"are")+' outside this filter.</p>';
   openSheet(h,s=>s.querySelectorAll("[data-tx]").forEach(b=>b.onclick=()=>{const t=all.find(x=>x.id===b.dataset.tx);if(t)isHist(t)?histSheet(t):txSheet(t)}));
@@ -3428,14 +3502,25 @@ function openSheet(html,bind){
 }
 // Open: start fully below the screen with a clear scrim, then glide up on the same
 // iOS-style curve the drag-to-dismiss uses, so opening and closing feel like one motion.
-const SHEET_EASE="cubic-bezier(.32,.72,0,1)",SHEET_IN=300;
+const SHEET_EASE="cubic-bezier(.32,.72,0,1)",SHEET_IN=300,SPRING="cubic-bezier(.34,1.32,.64,1)";
+/* Shared-element open: a sheet opened by tapping a row grows out of that row (clip + slide), so you see where it came from. */
+let ORIGIN=null;
+document.addEventListener("pointerdown",e=>{const r=e.target.closest&&e.target.closest("#main [data-item],#main [data-tx],#main [data-income],#main .txrow");if(r){const b=r.getBoundingClientRect();ORIGIN={r:b,t:Date.now()}}},true);
+function growIn(sc,sh,o){const s=sh.getBoundingClientRect(),r=o.r;if(!s.height||r.bottom<0||r.top>innerHeight)return false;
+  const ty=Math.round(r.top-s.top),L=Math.max(0,r.left-s.left),R=Math.max(0,s.right-r.right),B=Math.max(0,s.height-r.height);
+  sh.style.transition="none";sc.style.transition="none";sh.style.transform="translateY("+ty+"px)";sh.style.clipPath="inset(0 "+R+"px "+B+"px "+L+"px round 14px)";sc.style.background="rgba(5,15,10,0)";
+  void sh.offsetHeight;sh._opening=true;
+  requestAnimationFrame(()=>{sh.style.transition="transform 420ms "+SHEET_EASE+",clip-path 420ms "+SHEET_EASE;sc.style.transition="background 320ms ease-out";
+    sh.style.transform="";sh.style.clipPath="inset(0 0 0 0 round 24px 24px 0 0)";sc.style.background="";
+    setTimeout(()=>{if(sh._opening){sh._opening=false;sh.style.transition="";sc.style.transition=""}sh.style.clipPath=""},460)});return true}
 function slideIn(sc,sh){
   if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+  const o=ORIGIN;ORIGIN=null;if(o&&Date.now()-o.t<700&&growIn(sc,sh,o))return;
   sh.style.transition="none";sc.style.transition="none";
   sh.style.transform="translateY(100%)";sc.style.background="rgba(5,15,10,0)";
   void sh.offsetHeight;// commit the off-screen start position before animating
   requestAnimationFrame(()=>{
-    sh.style.transition="transform "+SHEET_IN+"ms "+SHEET_EASE;sc.style.transition="background "+SHEET_IN+"ms ease-out";
+    sh.style.transition="transform "+(SHEET_IN+80)+"ms cubic-bezier(.22,1.08,.36,1)";sc.style.transition="background "+SHEET_IN+"ms ease-out";
     sh.style.transform="";sc.style.background="";sh._opening=true;
     // clear only if nothing (a drag or a close) has taken over the sheet since
     setTimeout(()=>{if(sh._opening){sh._opening=false;sh.style.transition="";sc.style.transition=""}},SHEET_IN+40);
@@ -3446,17 +3531,18 @@ function dragSheet(sc,sh){
   const scrolledAbove=el=>{for(;el&&el!==sh.parentNode;el=el.parentNode){if(el.scrollTop>0)return true}return false};
   sh.addEventListener("touchstart",e=>{if(e.touches.length!==1){mode=-1;return}const t=e.touches[0];y0=t.clientY;x0=t.clientX;dy=0;t0=Date.now();pts=[[t0,y0]];mode=scrolledAbove(e.target)?-1:0},{passive:true});
   sh.addEventListener("touchmove",e=>{if(mode===-1)return;const t=e.touches[0],d=t.clientY-y0;
-    if(mode===0){if(Math.abs(t.clientX-x0)>Math.abs(d)&&Math.abs(t.clientX-x0)>8){mode=-1;return}if(d>8){mode=1;sh._opening=false;sh.style.transition="none";sh.style.animation="none";if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}else if(d<-4){mode=-1;return}else return}
+    if(mode===0){if(Math.abs(t.clientX-x0)>Math.abs(d)&&Math.abs(t.clientX-x0)>8){mode=-1;return}if(d>8){mode=1;sh._opening=false;sh.style.transition="none";sh.style.animation="none";if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}else if(d<-4){if(sh.scrollHeight<=sh.clientHeight+1){mode=2;sh._opening=false;sh.style.transition="none"}else{mode=-1;return}}else return}
+    if(mode===2){e.preventDefault();const up=Math.min(28,Math.pow(Math.max(0,-d),.62));sh.style.transform="translateY("+(-up)+"px)";return}
     e.preventDefault();dy=Math.max(0,d-8);sh.style.transform="translateY("+dy+"px)";sc.style.background="rgba(5,15,10,"+(0.45*Math.max(0,1-dy/(sh.offsetHeight||1))).toFixed(3)+")";
     const now=Date.now();pts.push([now,t.clientY]);while(pts.length>2&&now-pts[0][0]>100)pts.shift()},{passive:false});
-  const end=()=>{if(mode!==1){mode=0;return}mode=0;
+  const end=()=>{if(mode===2){mode=0;sh.style.transition="transform .5s "+SPRING;sh.style.transform="";setTimeout(()=>{sh.style.transition=""},520);return}if(mode!==1){mode=0;return}mode=0;
     const a=pts[0],b=pts[pts.length-1],v=b&&a&&b[0]>a[0]?(b[1]-a[1])/(b[0]-a[0]):0;
     /* a flick closes it at the speed of your finger */
-    const snap=()=>{sh.style.transition="transform .32s "+SHEET_EASE;sc.style.transition="background .28s";sh.style.transform="";sc.style.background="";setTimeout(()=>{sh.style.transition="";sc.style.transition=""},300)};
+    const snap=()=>{sh.style.transition="transform .48s "+SPRING;sc.style.transition="background .28s";sh.style.transform="";sc.style.background="";setTimeout(()=>{sh.style.transition="";sc.style.transition=""},300)};
     const shut=v>0.45||dy>Math.min(120,sh.offsetHeight*0.25);
     /* a sheet with unsaved input springs back and asks first, so a stray swipe can't lose it */
     if(shut&&sh._dirty&&sh._dirty()){snap();askDiscard(sc,sh)}
-    else if(v>0.45)closeSheet(Math.max(110,Math.min(240,(sh.offsetHeight-dy)/v)));else if(shut)closeSheet();else snap()};
+    else if(v>0.45){haptic();closeSheet(Math.max(110,Math.min(240,(sh.offsetHeight-dy)/v)))}else if(shut){haptic();closeSheet()}else snap()};
   sh.addEventListener("touchend",end);sh.addEventListener("touchcancel",end);
 }
 /* iOS keeps a shrunken layout after the keyboard closes, so fixed bars (tab bar, + button) float mid-screen.
@@ -3603,7 +3689,8 @@ function celebrate(amount,merchant,kind,left){
   document.body.appendChild(el);
   requestAnimationFrame(()=>el.classList.add("in"));
   // haptics: a quick double tick
-  haptic();setTimeout(haptic,140);setTimeout(haptic,360);
+  haptic();setTimeout(haptic,140);setTimeout(haptic,360);SND.play(kind==="income"||kind==="refund"?"chime":"coin");
+  if(left&&left.v<0)setTimeout(()=>hapticN(2,90),700);
   // count-up amount
   const amtEl=el.querySelector(".camt"),t0=performance.now(),dur=reduce?1:650,pre=kind==="refund"?"+":"";
   (function tick(now){const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);amtEl.textContent=pre+money(round2(amount*e));if(k<1)requestAnimationFrame(tick)})(t0);
@@ -3615,9 +3702,29 @@ function celebrate(amount,merchant,kind,left){
       P.forEach(p=>{p.vy+=.32;p.vx*=.985;p.vy*=.985;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;if(t>1100)p.o-=.03;if(p.o<=0||p.y>H+20)return;live++;
         c.save();c.globalAlpha=Math.max(0,p.o);c.translate(p.x,p.y);c.rotate(p.r);c.fillStyle=p.c;if(p.circ){c.beginPath();c.arc(0,0,p.w/2.4,0,7);c.fill()}else c.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.r*2)));c.restore()});
       if(live&&el.isConnected)requestAnimationFrame(fr)})(s0)}
-  let gone=false;const close=()=>{if(gone)return;gone=true;el.classList.remove("in");el.classList.add("out");setTimeout(()=>el.remove(),350)};
+  let gone=false;const close=()=>{if(gone)return;gone=true;el.classList.remove("in");el.classList.add("out");setTimeout(()=>el.remove(),350);setTimeout(flyIn,140)};
   el.addEventListener("click",close);setTimeout(close,reduce?1400:2100);
 }
+/* Satisfying save: after the celebration, the amount flies into its budget item (or the Budget tab), which glows as its number rolls down. */
+let FLY=null;
+function flyIn(){const f=FLY;FLY=null;if(!f||matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+  const vis=el=>{if(!el)return false;const r=el.getBoundingClientRect();return r.height>0&&r.bottom>60&&r.top<innerHeight-90};
+  const row=f.item&&[...document.querySelectorAll('#main [data-item="'+CSS.escape(f.item)+'"]')].find(vis);
+  const card=row&&(row.closest(".item")||row),dest=vis(card)?(card.querySelector(".v")||card):document.querySelector('nav.tabs [data-tab="'+(S.tab==="budget"?"budget":"tx")+'"]');if(!dest)return;
+  const d=dest.getBoundingClientRect(),chip=document.createElement("div");chip.className="flychip num";chip.textContent=(f.kind==="expense"?"−":"+")+money(f.amt);document.body.appendChild(chip);
+  const c=chip.getBoundingClientRect(),x0=innerWidth/2-c.width/2,y0=innerHeight/2-40,x1=d.left+d.width/2-c.width/2,y1=d.top+d.height/2-c.height/2;
+  const a=chip.animate([{transform:"translate("+x0+"px,"+y0+"px) scale(1.15)",opacity:0},{transform:"translate("+x0+"px,"+(y0-14)+"px) scale(1.15)",opacity:1,offset:.18},
+    {transform:"translate("+((x0+x1)/2)+"px,"+(Math.min(y0,y1)-60)+"px) scale(.9)",opacity:1,offset:.6},{transform:"translate("+x1+"px,"+y1+"px) scale(.45)",opacity:0}],{duration:720,easing:"cubic-bezier(.45,0,.25,1)",fill:"forwards"});
+  a.onfinish=()=>{chip.remove();haptic();const t=vis(card)?card:dest;t.classList.remove("landed");void t.offsetWidth;t.classList.add("landed");setTimeout(()=>t.classList.remove("landed"),900);if(f.over)setTimeout(()=>hapticN(2,90),120)}}
+/* Optional sounds (Settings → Personal touches, off by default): soft synthesized coin, chime and swish. */
+const SND={ctx:null,on(){return localStorage.getItem("pb.sounds")==="1"},
+  play(k){if(!this.on())return;try{const C=this.ctx||(this.ctx=new (window.AudioContext||window.webkitAudioContext)());if(C.state==="suspended")C.resume();const t=C.currentTime,out=C.createGain();out.gain.value=.16;out.connect(C.destination);
+    const tone=(f,at,dur,type)=>{const o=C.createOscillator(),g=C.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f,t+at);g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(1,t+at+.008);g.gain.exponentialRampToValueAtTime(.001,t+at+dur);o.connect(g);g.connect(out);o.start(t+at);o.stop(t+at+dur+.02)};
+    if(k==="coin"){tone(1318.5,0,.12);tone(1975.5,.075,.32)}
+    else if(k==="chime"){tone(1046.5,0,.35);tone(1318.5,.09,.35);tone(1568,.18,.5)}
+    else if(k==="swish"){const n=C.sampleRate*.28,b=C.createBuffer(1,n,C.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/n);
+      const src=C.createBufferSource(),bp=C.createBiquadFilter();bp.type="bandpass";bp.Q.value=1.4;bp.frequency.setValueAtTime(2400,t);bp.frequency.exponentialRampToValueAtTime(500,t+.28);src.buffer=b;src.connect(bp);bp.connect(out);src.start(t)}}catch(_){}}};
+window.PB_SND=SND;window.PB_RENDER=()=>render();
 function reimbFroms(){const seen={};txPool().forEach(t=>{if(t.reimbFrom)seen[t.reimbFrom]=(seen[t.reimbFrom]||0)+1});return Object.keys(seen).sort((a,b)=>seen[b]-seen[a]).slice(0,12)}
 /* ---------- receipt scanning (on the phone, with Tesseract.js; nothing is uploaded) ---------- */
 let TESS=null;
@@ -4008,6 +4115,7 @@ function txSheetCore(existing){
           ls.set("pb.lastItem",itemId);closeSheet();
           const moved=ymOf(date)!==S.ym;
           if(!existing){let left=null;try{if(body.type!=="income"&&ymOf(body.date)===S.ym){const f=findItem(groupsFor(S.ym),itemId);if(f&&+f.it.planned>0){const sp=S.tx.filter(t=>t.itemId===itemId&&!(ref&&t.id===ref.id)).reduce((x,t)=>x+sAmt(t),0)+sAmt(body);left={n:f.it.name,v:round2(+f.it.planned-sp)}}}}catch(_){}
+            FLY={item:body.type==="income"?null:itemId,amt:rOn?round2(a-rAmt):a,kind:body.type,over:!!(left&&left.v<0)};
             setTimeout(()=>celebrate(rOn?round2(a-rAmt):a,body.merchant,body.type,left),180)}else if(!moved)toast("Saved");
           if(moved)goMonth(ymOf(date),existing?existing.id:ref.id,!existing);
           let rref=null,rbodyDoc=null;
@@ -4359,6 +4467,9 @@ $("#seg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)
 const haptic=(()=>{let lab=null;return()=>{try{if(navigator.vibrate&&navigator.vibrate(8))return;
   if(!lab){lab=document.createElement("label");lab.className="pbhap";lab.setAttribute("aria-hidden","true");lab.style.cssText="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0";const i=document.createElement("input");i.type="checkbox";i.setAttribute("switch","");i.tabIndex=-1;lab.appendChild(i);document.body.appendChild(lab)}
   lab.click()}catch(e){}}})();
+/* tuned haptics: n quick taps (iPhone web apps get one tap style, so strength comes from rhythm) */
+const hapticN=(n,gap)=>{for(let i=0;i<n;i++)setTimeout(haptic,i*(gap||100))};
+$("#fab").addEventListener("pointerdown",()=>haptic(),{passive:true});
 document.addEventListener("click",e=>{const b=e.target.closest("#seg button,[data-isub],#f-kind button");if(b&&b.getAttribute("aria-pressed")!=="true")haptic()},true);
 document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(S.tab!==b.dataset.tab)haptic();S.tab=b.dataset.tab;S.upcoming=false;render();window.scrollTo(0,0)});
 $("#monthBtn").onclick=monthSheet;

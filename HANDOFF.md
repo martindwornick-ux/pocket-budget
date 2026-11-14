@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 13, 2026 (build "Nov 14, 11:30 AM", sw `pb-2026-11-14a`)_
+_Last updated: Nov 13, 2026 (build "Nov 14, 12:30 PM", sw `pb-2026-11-14b`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
@@ -26,7 +26,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14b`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14c`, or `pb-<new date>a` on a new day).
 4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -67,12 +67,24 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 - Merchant → item auto-pick already exists: `autoCat()` in the tx sheet uses `merchIndex()` history, then `catGuess()`.
 - **Home / regular-spot address**: `LOC.mySpot(fix)` first checks hand-corrected spots on this phone (`pb.mySpots`, set by `LOC.learn`), then `LOC.pastSpot(fix)`. That looks at your saved transactions (synced) for street addresses you typed or picked (`loc.src!=="gps"`, no business name) within 120–220 m and picks the most used one. This fixes GPS drift at home showing a neighbour's number (e.g. 2976 instead of 2944 Gerald Ave NE).
 - **Doodle mood** (header month doodle, e.g. November's turkey): `doodleMood()` compares flexible spending (fixed bills and set-aside groups left out) with the plan. It returns `good` (steam/sparkles), `warn` (ahead of the calendar by more than 8 points, blue sweat drop) or `over` (past plan: `.dbody` filtered to look burnt, grey smoke). Classes are `.doodle.m-*`. Tapping the doodle toasts `MOOD_MSG` (the turkey wording is used in November; its sweat drop is shifted beside the head).
+- **Premium pass (Nov 14)**:
+  - **Appearance**: `localStorage["pb.theme"]` is `light` (default), `dark` or `auto`. It's set by a tiny script right after `<div id="padRoot">` (it used to hard-code light because dark was broken). The dark layer is the `:root[data-theme="dark"]` block at the end of the last `<style>`. It must stay after the Google light layer, which re-sets the variables on `:root`. Settings → Personal touches has the picker (platform.js). The settings sheet itself stays light.
+  - **Grow-from-row sheets**: a capture `pointerdown` stores `ORIGIN` (row rect). `slideIn` calls `growIn()`, which animates `clip-path` + `translateY` from the row to the full sheet. It's used when a sheet opens within 700 ms of a row tap.
+  - **Springy sheets**: `SPRING` easing on snap-back. A rubber-band pull-up (mode 2) works when the sheet can't scroll. `.sheet` has a 120px `box-shadow` extension so an overshoot never shows a gap.
+  - **Save fly-in**: the save handler sets `FLY` and celebrate's close calls `flyIn()`. A `.flychip` flies to the item's value (or the tab) and the target gets `.landed`. Over budget adds a double buzz.
+  - **Haptics/sounds**: `hapticN(n,gap)` gives rhythm patterns. The + gives a tap on touch. Sheet dismiss gives a tap. `SND.play("coin"|"chime"|"swish")` is synthesized with WebAudio and only plays when `pb.sounds==="1"` (Settings toggle, off by default).
+  - **Greeting**: `greetHTML()` at the top of Budget (current month). The name comes from `pb.name` (Settings) or the Firebase displayName.
+  - **Month change**: `renderDoodle` clones the old svg as `.dbye` (waves and flies up) and the new one gets `.dhi` (drops in). The first open in a new calendar month toasts "Hello <Month>!" (`pb.seenYm`).
+  - **Long-press peek** on `.txrow`: 430 ms hold opens `.txpeek` (details plus a static Leaflet map). Lifting the finger closes it, and the following click is swallowed (`PEEK.eat`).
+  - **Empty states**: `EMPTY_ART` (receipt, cal, piggy) SVGs.
+  - Digits in Hanken Grotesk are already equal-width (checked), so numbers line up without `tnum`. iPhone home-screen web apps can't switch app icons, so custom icons were skipped.
 - Insights → Calendar: days where refunds exceed spending get the `.cd.gain` class (solid green, "+$X") and a green "+" total in the day panel.
 
 ## Design tokens
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–14, 2026 (newest first)
+- Premium pass: grow-from-row sheets, springier sheets, save fly-in, haptic rhythms, optional sounds, real true-black dark mode (opt-in), greeting line, month-change doodle swap, long-press peek, illustrated empty states, Settings → Personal touches (name, appearance, sounds)
 - November doodle is now a turkey (Google-colour tail feathers) instead of a pie; moods are strutting, sweating, roasted
 - Header doodle reacts to the month: warm and steaming on track, sweating ahead of pace, burnt and smoking when over
 - New transactions at home use the address you typed before (`pastSpot`), not the GPS nearest-house guess; the match radius is now 120–220 m
