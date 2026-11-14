@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 14, 2026 (build "Nov 14, 2:20 PM", sw `pb-2026-11-14f`)_
+_Last updated: Nov 14, 2026 (build "Nov 14, 2:25 PM", sw `pb-2026-11-14g`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic lives in `index.html` (about 4,550 lines). The owner uses it on an iPhone from the home screen.
@@ -26,7 +26,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files.
 2. Bump `window.PB_BUILD` (line 17 of `index.html`) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14g`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-14h`, or `pb-<new date>a` on a new day).
 4. Check that the JS parses: extract the inline `<script>` blocks and run `node --check` on each.
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -93,14 +93,13 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
   - `haptic()` skips its old trick for 150 ms after a real switch tap (avoids double taps on older iOS). Haptics fired from timers (celebration ticks, `hapticN`) only work on iOS < 26.5 or Android.
   - `#hisub` compares against `hs._want`, not its innerHTML (which now contains switches).
   - Add `class="nohap"` to any button that must not buzz.
-- **3D calendar** (Insights → Calendar): swiping sideways on the grid (`.cal2`, `touch-action:pan-y` so vertical swipes still scroll) tilts it into 3D and raises each spending day as a column. Height = `--z` (0.08 + 0.92·√(day/max), set in `calendarCard`) × `--lift` × 88px; walls are the four `CW3` `<i class="cw">` faces inside each spending `.cd`, hidden unless `.cal2.c3d`. `C3` holds spring state; `c3Frame()` sets `--rx`/`--rz`/`--lift` on `.cal2` each frame. Sideways drag spins, up/down changes tilt; letting go springs back to flat and the class is removed. The click right after a drag is swallowed (`C3.eat`, `performance.now()`), so a plain tap still opens the day panel. Reduced motion snaps instead of springing.
 - Insights → Calendar: days where refunds exceed spending get the `.cd.gain` class (solid green, "+$X") and a green "+" total in the day panel.
 
 ## Design tokens
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–14, 2026 (newest first)
-- Calendar goes 3D: swipe sideways on it to see each day as a column sized by spending; let go and it settles back flat
+- A 3D swipe-to-tilt calendar was shipped (sw f) and removed at the owner's request (sw g); don't re-add it unless asked
 - Fix: scrolling Transactions opened the row on iPhone (switch overlays were draggable). Overlays are now labels pointing at one hidden switch
 - Haptics now work on current iOS: invisible real switches over every button (no visual or behaviour change)
 - Performance pass: cached number/date formatters, memoized address and GL checks, lighter Map layout and scroll handlers (no visible changes)
