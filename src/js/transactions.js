@@ -708,9 +708,11 @@ function incomeSheet(id){
         c.querySelector("#cn").onclick=()=>c.innerHTML="";c.querySelector("#cy").onclick=async()=>{if(await saveGroups(JSON.parse(JSON.stringify(groupsFor(S.ym))),inc.filter(i=>i.id!==x.id))){closeSheet();toast("Removed")}}};
     });
 }
+/* How far ahead you can go: the month picker and the Calendar arrows reach December, FUTURE_YEARS years from now */
+const FUTURE_YEARS=5;function lastYm(){return (new Date().getFullYear()+FUTURE_YEARS)+"-12"}
 function monthSheet(){
   const now=new Date();
-  const cur=ymOf(today()),nextYm=(()=>{const d=new Date(now.getFullYear(),now.getMonth()+1,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)})();
+  const cur=ymOf(today()),nextYm=lastYm();
   const firstY=Math.min(H.meta&&H.meta.first?+H.meta.first.slice(0,4):now.getFullYear()-8,+S.ym.slice(0,4),...Object.keys(S.budgets).map(k=>+k.slice(0,4)).filter(n=>n>1990));
   const lastY=+nextYm.slice(0,4);let y=+S.ym.slice(0,4);
   const draw=s=>{

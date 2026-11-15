@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 14, 5:30 PM"</script>
+<script>window.PB_BUILD="Nov 15, 10:30 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2926,7 +2926,7 @@ function calendarCard(fh){
   let big=0;for(let d=1;d<=dim;d++)if((day[d]||0)>(day[big]||0))big=d;
   const key=[ym,IS.group,IS.item,Math.round(tot)].join("~"),anim=IS.calKey!==key;IS.calKey=key;
   if(IS.calSel&&ymOf(IS.calSel)!==ym)IS.calSel=null;
-  const nextYm=(()=>{const d=new Date();d.setMonth(d.getMonth()+1,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)})();
+  const nextYm=lastYm();
   const vals=Object.values(day).filter(x=>x>0).sort((a,b)=>a-b),lmax=Math.log(1+max);
   const heatOf=v=>{if(vals.length<2)return .5;let lo=0,hi=vals.length;while(lo<hi){const m=(lo+hi)>>1;if(vals[m]<v)lo=m+1;else hi=m}const rank=lo/(vals.length-1);return Math.min(1,.65*rank+.35*Math.log(1+v)/lmax)};
   let g='<div class="cal2'+(anim?' anim':'')+'">'+["S","M","T","W","T","F","S"].map(d=>'<div class="dow">'+d+'</div>').join("");
@@ -4451,9 +4451,11 @@ function incomeSheet(id){
         c.querySelector("#cn").onclick=()=>c.innerHTML="";c.querySelector("#cy").onclick=async()=>{if(await saveGroups(JSON.parse(JSON.stringify(groupsFor(S.ym))),inc.filter(i=>i.id!==x.id))){closeSheet();toast("Removed")}}};
     });
 }
+/* How far ahead you can go: the month picker and the Calendar arrows reach December, FUTURE_YEARS years from now */
+const FUTURE_YEARS=5;function lastYm(){return (new Date().getFullYear()+FUTURE_YEARS)+"-12"}
 function monthSheet(){
   const now=new Date();
-  const cur=ymOf(today()),nextYm=(()=>{const d=new Date(now.getFullYear(),now.getMonth()+1,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)})();
+  const cur=ymOf(today()),nextYm=lastYm();
   const firstY=Math.min(H.meta&&H.meta.first?+H.meta.first.slice(0,4):now.getFullYear()-8,+S.ym.slice(0,4),...Object.keys(S.budgets).map(k=>+k.slice(0,4)).filter(n=>n>1990));
   const lastY=+nextYm.slice(0,4);let y=+S.ym.slice(0,4);
   const draw=s=>{

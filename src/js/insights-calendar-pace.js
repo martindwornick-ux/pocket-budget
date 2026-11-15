@@ -14,7 +14,7 @@ function calendarCard(fh){
   let big=0;for(let d=1;d<=dim;d++)if((day[d]||0)>(day[big]||0))big=d;
   const key=[ym,IS.group,IS.item,Math.round(tot)].join("~"),anim=IS.calKey!==key;IS.calKey=key;
   if(IS.calSel&&ymOf(IS.calSel)!==ym)IS.calSel=null;
-  const nextYm=(()=>{const d=new Date();d.setMonth(d.getMonth()+1,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)})();
+  const nextYm=lastYm();
   const vals=Object.values(day).filter(x=>x>0).sort((a,b)=>a-b),lmax=Math.log(1+max);
   const heatOf=v=>{if(vals.length<2)return .5;let lo=0,hi=vals.length;while(lo<hi){const m=(lo+hi)>>1;if(vals[m]<v)lo=m+1;else hi=m}const rank=lo/(vals.length-1);return Math.min(1,.65*rank+.35*Math.log(1+v)/lmax)};
   let g='<div class="cal2'+(anim?' anim':'')+'">'+["S","M","T","W","T","F","S"].map(d=>'<div class="dow">'+d+'</div>').join("");
