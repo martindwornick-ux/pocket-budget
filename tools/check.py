@@ -219,6 +219,9 @@ if HAS_REP:
         seed["users/test-user/tx/prime" + y] = {"date": y + "-12-05", "amount": 139.0, "type": "expense", "merchant": "Amazon Prime", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": y + "-12-05T10:00:00Z"}
     for d in ("2025-12-20", "2026-09-08", "2026-10-11"):
         seed["users/test-user/tx/tgt" + d] = {"date": d, "amount": 42.0, "type": "expense", "merchant": "Target", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": d + "T10:00:00Z"}
+    # every 3 months: the water bill in Feb, May and Aug, so it's next due in November (not December)
+    for d, a in (("2026-02-20", 72.0), ("2026-05-21", 95.0), ("2026-08-19", 86.0)):
+        seed["users/test-user/tx/water" + d] = {"date": d, "amount": a, "type": "expense", "merchant": "City Water", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": d + "T10:00:00Z"}
     seed["users/test-user/tx/concert"] = {"date": "2026-09-21", "amount": 80.0, "type": "expense", "merchant": "Concert", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": "2026-09-21T10:00:00Z"}
 
 
@@ -341,6 +344,7 @@ with sync_playwright() as p:
         pg.wait_for_timeout(1800)
         names = pg.evaluate("[...document.querySelectorAll('.reprow:not(.yr) .rl b')].map(e=>e.textContent)")
         ok(sorted(names) == ["Planet Gym", "Spotify"], "Repeats finds Spotify and the gym, not groceries or the one-off (%s)" % ", ".join(names))
+        ok(pg.locator(".reprow.per").count() == 0, "the every-3-months water bill isn't offered for December")
         yearly = pg.evaluate("[...document.querySelectorAll('.reprow.yr')].map(e=>[e.querySelector('b').textContent,e.querySelector('input').checked])")
         ok(yearly == [["Amazon Prime", True], ["Ring", False]], "once a year: Amazon Prime (every December) ticked, Ring (once) suggested unticked, Target skipped (%s)" % yearly)
         shot("repeats-sheet")
@@ -367,7 +371,10 @@ with sync_playwright() as p:
         pg.wait_for_timeout(800)
         pg.click("#openRepeats")
         pg.wait_for_timeout(1800)
-        ok(pg.inner_text("#repAdd") == "Add 1 bill to November", "in November only the gym (15th) is still ahead: " + pg.inner_text("#repAdd"))
+        per = pg.evaluate("[...document.querySelectorAll('.reprow.per')].map(e=>[e.querySelector('b').textContent,e.querySelector('input').checked,e.querySelector('.ra').textContent,e.querySelector('small').textContent])")
+        ok(len(per) == 1 and per[0][0] == "City Water" and per[0][1] and per[0][2] == "$84.33" and "every 3 months, last Aug 2026" in per[0][3] and "amount varies" in per[0][3], "November: the water bill (every 3 months, last Aug) is offered and ticked at the $84.33 average (%s)" % per)
+        shot("repeats-november")
+        ok(pg.inner_text("#repAdd") == "Add 2 bills to November", "in November the gym (15th) and the water bill (~20th) are still ahead: " + pg.inner_text("#repAdd"))
         pg.keyboard.press("Escape")
         pg.wait_for_timeout(400)
 

@@ -44,6 +44,28 @@ function findYearly(byYear,recent,monthlyKeys){
       years:f.seen.map(x=>+x.date.slice(0,4)).sort(),sure:f.seen.length>=2,last:t.date})});
   return out.sort((a,b)=>b.sure-a.sure||a.day-b.day||a.merchant.localeCompare(b.merchant));
 }
+/* Every few months: a merchant charged at most once a month, on a steady gap of 2, 3, 4 or 6 months over the last
+   24 months (a water bill every 3 months…), still on schedule, whose next turn lands in the month on screen.
+   3+ charges on that gap = ticked; only 2 = suggested, unticked. Amount = average of the last 3 if it varies. */
+const ymIdx=ym=>+ym.slice(0,4)*12+ +ym.slice(5,7)-1;
+function findPeriodic(txs,skip,cur,tgt){
+  const by=new Map();txs.forEach(t=>{if(t.type!=="expense"||t.sched||!(+t.amount>=1)||!t.date)return;const k=repKey(t);if(!k||skip.has(k))return;let a=by.get(k);if(!a)by.set(k,a=[]);a.push(t)});
+  const out=[],ci=ymIdx(cur),ti=ymIdx(tgt);
+  by.forEach((arr,k)=>{
+    const perM=new Map();arr.forEach(t=>{const i=ymIdx(t.date.slice(0,7));perM.set(i,(perM.get(i)||[]).concat([t]))});
+    if([...perM.values()].some(a=>a.length>1))return;
+    const Ms=[...perM.keys()].sort((a,b)=>a-b);if(Ms.length<2)return;
+    const gaps=Ms.slice(1).map((m,i)=>m-Ms[i]),N=gaps[0];
+    if(![2,3,4,6].includes(N)||gaps.some(g=>g!==N))return;
+    const last=Ms[Ms.length-1];if(ci-last>N+1)return;
+    if(ti<=last||(ti-last)%N!==0)return;
+    const seen=Ms.map(m=>perM.get(m)[0]),amts=seen.map(t=>+t.amount),lo=Math.min(...amts),hi=Math.max(...amts),stable=hi<=lo*1.1+0.01;
+    const days=seen.map(t=>+t.date.slice(8,10)).sort((a,b)=>a-b),lastT=seen[seen.length-1],last3=amts.slice(-3);
+    out.push({k,merchant:lastT.merchant,itemId:lastT.itemId||"",itemName:lastT.itemName||"",groupName:lastT.groupName||"",sub:lastT.sub||"",
+      amount:stable?round2(+lastT.amount):round2(last3.reduce((a,x)=>a+x,0)/last3.length),day:days[Math.floor(days.length/2)],stable,periodic:N,sure:Ms.length>=3,last:lastT.date});
+  });
+  return out.sort((a,b)=>b.sure-a.sure||a.day-b.day||a.merchant.localeCompare(b.merchant));
+}
 function repDates(r,ym,have){const d=ym+"-"+pad(Math.min(r.day,dimYm(ym)));return d<=today()||have.has(ym+"|"+r.k)?[]:[d]}
 async function repLoad(){
   const cur=ymOf(today()),months=[];for(let i=REP_MONTHS;i>=1;i--)months.push(ymAdd(cur,-i));
@@ -55,11 +77,16 @@ async function repLoad(){
   const td=today(),reps=findRepeats(past,months);
   const have=new Set();ahead.forEach(t=>have.add(t.date.slice(0,7)+"|"+repKey(t)));
   const tgt=S.ym>cur?S.ym:cur,filled=ahead.filter(t=>t.rep&&t.date>td&&t.date.slice(0,7)===tgt);
+  /* the last 24 months (plus this month so far) for charges every few months */
+  const m24=[];for(let i=24;i>=1;i--)m24.push(ymAdd(cur,-i));
+  await Promise.all(m24.map(ym=>IS.fresh[ym]?null:fetchMonth(ym).catch(()=>null)));
+  const all24=[];m24.forEach(ym=>(IS.hist[ym]||[]).forEach(t=>all24.push(t)));ahead.forEach(t=>{if(t.date<=td&&t.date.slice(0,7)===cur)all24.push(t)});
+  const mKeys=new Set(reps.map(r=>r.k)),per=findPeriodic(all24,mKeys,cur,tgt);per.forEach(r=>mKeys.add(r.k));
   /* the same month one and two years back, for yearly charges */
   const yms=[ymAdd(tgt,-12),ymAdd(tgt,-24)].filter(ym=>ym<cur);
   await Promise.all(yms.map(ym=>IS.fresh[ym]?null:fetchMonth(ym).catch(()=>null)));
-  const yearly=findYearly(yms.map(ym=>({ym,tx:IS.hist[ym]||[]})),past,new Set(reps.map(r=>r.k)));
-  return{cur,tgt,months,reps:reps.concat(yearly),have,filled};
+  const yearly=findYearly(yms.map(ym=>({ym,tx:IS.hist[ym]||[]})),past,mKeys);
+  return{cur,tgt,months,reps:reps.concat(per,yearly),have,filled};
 }
 function repeatsSheet(){
   if(!S.db||S.readOnly){toast("Sign in to fill in repeating transactions");return}
@@ -68,16 +95,16 @@ function repeatsSheet(){
   const draw=s=>{
     if(!st){s.innerHTML='<div class="grab"></div><h3>Repeating transactions</h3><p class="note">Looking through your last '+REP_MONTHS+' months…</p>'+SKEL;return}
     const {reps,filled,tgt,have}=st,mName=MONTHS[+tgt.slice(5)-1];
-    if(!offInit){offInit=true;reps.forEach(r=>{if(r.yearly&&!r.sure)off.add(r.k)})}
-    const nM=reps.filter(r=>!r.yearly).length,nY=reps.length-nM;
+    if(!offInit){offInit=true;reps.forEach(r=>{if((r.yearly||r.periodic)&&!r.sure)off.add(r.k)})}
+    const nM=reps.filter(r=>!r.yearly&&!r.periodic).length,nP=reps.filter(r=>r.periodic).length,nY=reps.filter(r=>r.yearly).length;
     let n=0;reps.forEach(r=>{if(!off.has(r.k))n+=repDates(r,tgt,have).length});
     let h='<div class="grab"></div><h3>Repeating transactions</h3>';
     if(!reps.length)h+='<p class="note">Nothing in your last '+REP_MONTHS+' months repeats on a steady monthly schedule, and nothing once-a-year turned up for '+mName+'.</p>';
     else{
-      h+='<p class="note" style="margin:0 0 10px">Found '+(nM?nM+' that come back every month':'')+(nM&&nY?' and ':'')+(nY?nY+' that came in '+mName+' in an earlier year':'')+'. Untick any you don\'t want to add to '+mName+'. They go to your Finance Tracker sheet on their date, not before.</p>';
-      h+='<div class="replist">'+reps.map((r,i)=>{const c=repDates(r,tgt,have).length;const yh=r.yearly&&!(i&&reps[i-1].yearly)?'<div class="rephd">Once a year</div>':'';
-        const why=r.yearly?(r.sure?'every '+mName+' ('+r.years.join(', ')+')':'once, in '+mName+' '+r.years[0]+'. Tick if it renews yearly'):'seen '+r.hits+' of '+r.of+' months'+(r.stable?'':' · amount varies, using the average');
-        return yh+'<label class="reprow'+(r.yearly?' yr':'')+'"><input type="checkbox" data-rk="'+esc(r.k)+'"'+(off.has(r.k)?"":" checked")+'><span class="rl"><b>'+esc(r.merchant)+'</b><small>'+esc(r.itemName||"Uncategorized")+' · around the '+ordinal(r.day)+' · '+why+(c?'':have.has(tgt+"|"+r.k)?' · already in '+mName:' · already past this month')+'</small></span><span class="ra num">'+money(r.amount)+'</span></label>'}).join("")+'</div>';
+      h+='<p class="note" style="margin:0 0 10px">Found '+[nM?nM+' that come back every month':'',nP?nP+' due every few months':'',nY?nY+' that came in '+mName+' in an earlier year':''].filter(Boolean).join(', ').replace(/, ([^,]*)$/,' and $1')+'. Untick any you don\'t want to add to '+mName+'. They go to your Finance Tracker sheet on their date, not before.</p>';
+      h+='<div class="replist">'+reps.map((r,i)=>{const c=repDates(r,tgt,have).length;const yh=r.yearly&&!(i&&reps[i-1].yearly)?'<div class="rephd">Once a year</div>':r.periodic&&!(i&&reps[i-1].periodic)?'<div class="rephd">Every few months</div>':'';
+        const why=r.periodic?'every '+r.periodic+' months, last '+MONTHS[+r.last.slice(5,7)-1].slice(0,3)+' '+r.last.slice(0,4)+(r.sure?'':'. Tick if it\'s on a schedule')+(r.stable?'':' · amount varies, using the average'):r.yearly?(r.sure?'every '+mName+' ('+r.years.join(', ')+')':'once, in '+mName+' '+r.years[0]+'. Tick if it renews yearly'):'seen '+r.hits+' of '+r.of+' months'+(r.stable?'':' · amount varies, using the average');
+        return yh+'<label class="reprow'+(r.yearly?' yr':r.periodic?' per':'')+'"><input type="checkbox" data-rk="'+esc(r.k)+'"'+(off.has(r.k)?"":" checked")+'><span class="rl"><b>'+esc(r.merchant)+'</b><small>'+esc(r.itemName||"Uncategorized")+' · around the '+ordinal(r.day)+' · '+why+(c?'':have.has(tgt+"|"+r.k)?' · already in '+mName:' · already past this month')+'</small></span><span class="ra num">'+money(r.amount)+'</span></label>'}).join("")+'</div>';
       h+='<button class="btn" id="repAdd" style="margin-top:14px;width:100%"'+(n&&!busy?'':' disabled')+'>'+(busy?'Adding…':n?'Add '+n+' bill'+(n===1?'':'s')+' to '+mName:'Nothing new to add to '+mName)+'</button>';
     }
     if(filled.length)h+='<button class="addlink" id="repDel" style="margin:14px auto 0;display:block;color:var(--over)">Remove the '+filled.length+' filled in for '+mName+'</button>';
