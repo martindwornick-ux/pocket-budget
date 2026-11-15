@@ -433,7 +433,8 @@ function renderTx(groups){
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
   if(!list.length)return h+'<div class="card empty">'+EMPTY_ART.receipt+'<h3>No transactions this month</h3>Tap + to log a purchase. It takes about five seconds.</div>';
   const td0=today();
-  const fut=(!q&&!S.upcoming)?list.filter(t=>t.date>td0):[];
+  /* a future month is all "upcoming", so its transactions are listed by day right away instead of inside the collapsible Upcoming bar */
+  const fut=(!q&&!S.upcoming&&S.ym<=ymOf(td0))?list.filter(t=>t.date>td0):[];
   if(fut.length){
     const rest=list.filter(t=>t.date<=td0);
     const hid=ls.get("pb.futHide")==="1";

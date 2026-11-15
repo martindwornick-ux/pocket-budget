@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 15, 10:30 AM"</script>
+<script>window.PB_BUILD="Nov 15, 10:35 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -2028,7 +2028,8 @@ function renderTx(groups){
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
   if(!list.length)return h+'<div class="card empty">'+EMPTY_ART.receipt+'<h3>No transactions this month</h3>Tap + to log a purchase. It takes about five seconds.</div>';
   const td0=today();
-  const fut=(!q&&!S.upcoming)?list.filter(t=>t.date>td0):[];
+  /* a future month is all "upcoming", so its transactions are listed by day right away instead of inside the collapsible Upcoming bar */
+  const fut=(!q&&!S.upcoming&&S.ym<=ymOf(td0))?list.filter(t=>t.date>td0):[];
   if(fut.length){
     const rest=list.filter(t=>t.date<=td0);
     const hid=ls.get("pb.futHide")==="1";
