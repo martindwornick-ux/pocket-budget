@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 15, 2026 (build "Nov 15, 12:00 PM", sw `pb-2026-11-15d`)_
+_Last updated: Nov 15, 2026 (build "Nov 15, 12:10 PM", sw `pb-2026-11-15e`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic is one page, `index.html` (about 4,780 lines). Its source is split by screen under `src/` and assembled by `tools/build.py` (see Files). The owner uses it on an iPhone from the home screen.
@@ -37,7 +37,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files: the page under `src/` (see `src/README.md`), then `python3 tools/build.py` to rebuild `index.html`. `platform.js`, `sw.js` etc. are edited directly.
 2. Bump `window.PB_BUILD` (in `src/index.html`, near the top) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`, and rebuild.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-15e`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-15f`, or `pb-<new date>a` on a new day).
 4. Run the checks: `python3 tools/check.py`. Part 4 of the checks runs the real `platform.js` (sign-in, Settings gear, backups, restore, Drive warning, privacy check) against `tools/fake_firebase.js`, which enforces the same owner-only rule as `firestore.rules`; it takes ~25 s. It checks that all scripts parse, loads every screen on sample data with no sign-in, and compares the money shown (remaining, per day, spent of planned, refunds, calendar totals, bills left out) with figures worked out separately. All lines must say `ok`. `PB_SHOTS=/some/folder` also saves screenshots. When a change adds money logic, add a check for it. The same checks run on GitHub after every push (Actions tab).
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -110,8 +110,9 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–15, 2026 (newest first)
+- Repeats now fills **one month at a time** (owner's choice, Nov 15): the month on screen, or this month if a past month is showing (`tgt` in `repLoad`). The 3/6/12-month picker is gone. The button reads "Add 8 bills to December"; "Remove" only touches that month's filled-in ones
 - Fix: the Repeats list couldn't be scrolled on iPhone (an inner scroll box inside the sheet fought the sheet's drag handling). The whole sheet scrolls now and "Add" is sticky at the bottom. Keep long lists in sheets as plain content, not their own `overflow:auto` box
-- **Repeats** (Transactions tab → Repeats pill, `src/js/repeats.js`): `findRepeats()` looks at the last 6 finished months for expenses with the same merchant (`repKey`), at most once a month, in 3+ of the last 4 months, still seen in the last 2, on days within 6 of each other (median day; amount = latest if steady within 10%, else average of last 3). You review, untick, pick 3/6/12 months ahead (`pb.repAhead`), tap Add. Months that already have that merchant are skipped. New docs get `sched:true` and `rep:<key>`. `waitSheet(t)` (core.js) keeps sched transactions dated after today out of auto-send, the "not in your sheet" card and Send all, and labels them "scheduled". Editing one keeps `sched`/`rep`. "Remove filled-in" deletes future docs with `rep`. Release checks cover detection, dates, no doubles, and removal
+- **Repeats** (Transactions tab → Repeats pill, `src/js/repeats.js`): `findRepeats()` looks at the last 6 finished months for expenses with the same merchant (`repKey`), at most once a month, in 3+ of the last 4 months, still seen in the last 2, on days within 6 of each other (median day; amount = latest if steady within 10%, else average of last 3). You review, untick, tap Add (one month at a time, see the note above). Months that already have that merchant are skipped. New docs get `sched:true` and `rep:<key>`. `waitSheet(t)` (core.js) keeps sched transactions dated after today out of auto-send, the "not in your sheet" card and Send all, and labels them "scheduled". Editing one keeps `sched`/`rep`. "Remove filled-in" deletes future docs with `rep`. Release checks cover detection, dates, no doubles, and removal
 - Future months list their transactions by day right away (no collapsed "Upcoming" bar, which only applies to the current month): `fut` in `txHTML` (`src/js/budget.js`) is empty when `S.ym` is after this month
 - Future months: the month picker and the Calendar's next arrow now reach December of 5 years ahead (`FUTURE_YEARS`, `lastYm()` in `src/js/transactions.js`); before, they stopped at next month
 - Fix (live): the Settings gear had stopped appearing on Nov 13. `addGear()` placed it beside the header "+", which the UX pass removed. It now goes at the end of the header row (44px). The new sign-in checks caught it

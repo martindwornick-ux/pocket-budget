@@ -143,6 +143,3 @@ html[data-theme="dark"]{background:#000}
 .reprow .ra{font-weight:700;font-size:16px}
 .nsync.sched{color:var(--link)}
 .qlinks{flex-wrap:wrap}
-#repAhead{background:var(--bg);box-shadow:none}
-#repAhead button{color:var(--fg);font-size:15px;font-weight:600;background:transparent;box-shadow:none}
-#repAhead button[aria-pressed="true"]{background:var(--card);color:var(--link);box-shadow:0 1px 4px rgba(0,0,0,.12)}
