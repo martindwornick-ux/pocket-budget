@@ -212,6 +212,13 @@ if HAS_REP:
         seed["users/test-user/tx/gy" + ym] = {"date": ym + {"2026-08": "-15", "2026-09": "-16", "2026-10": "-14"}[ym], "amount": 35.0, "type": "expense", "merchant": "Planet Gym", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": ym + "-15T10:00:00Z"}
         for d in ("-05", "-12", "-20"):
             seed["users/test-user/tx/mj" + ym + d] = {"date": ym + d, "amount": 60.0, "type": "expense", "merchant": "Meijer", "itemId": "i-groc", "itemName": "Groceries", "groupName": "Food", "createdAt": ym + d + "T10:00:00Z"}
+    # yearly: Ring once last December (suggested, unticked), Amazon Prime every December (ticked),
+    # Target last December but also in recent months (regular shopping, skipped)
+    seed["users/test-user/tx/ring25"] = {"date": "2025-12-10", "amount": 99.99, "type": "expense", "merchant": "Ring", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": "2025-12-10T10:00:00Z"}
+    for y in ("2024", "2025"):
+        seed["users/test-user/tx/prime" + y] = {"date": y + "-12-05", "amount": 139.0, "type": "expense", "merchant": "Amazon Prime", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": y + "-12-05T10:00:00Z"}
+    for d in ("2025-12-20", "2026-09-08", "2026-10-11"):
+        seed["users/test-user/tx/tgt" + d] = {"date": d, "amount": 42.0, "type": "expense", "merchant": "Target", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": d + "T10:00:00Z"}
     seed["users/test-user/tx/concert"] = {"date": "2026-09-21", "amount": 80.0, "type": "expense", "merchant": "Concert", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": "2026-09-21T10:00:00Z"}
 
 
@@ -332,16 +339,18 @@ with sync_playwright() as p:
         pg.wait_for_timeout(800)
         pg.click("#openRepeats")
         pg.wait_for_timeout(1800)
-        names = pg.evaluate("[...document.querySelectorAll('.reprow .rl b')].map(e=>e.textContent)")
+        names = pg.evaluate("[...document.querySelectorAll('.reprow:not(.yr) .rl b')].map(e=>e.textContent)")
         ok(sorted(names) == ["Planet Gym", "Spotify"], "Repeats finds Spotify and the gym, not groceries or the one-off (%s)" % ", ".join(names))
+        yearly = pg.evaluate("[...document.querySelectorAll('.reprow.yr')].map(e=>[e.querySelector('b').textContent,e.querySelector('input').checked])")
+        ok(yearly == [["Amazon Prime", True], ["Ring", False]], "once a year: Amazon Prime (every December) ticked, Ring (once) suggested unticked, Target skipped (%s)" % yearly)
         shot("repeats-sheet")
-        ok(pg.inner_text("#repAdd") == "Add 2 bills to December", "the button offers December only: " + pg.inner_text("#repAdd"))
+        ok(pg.inner_text("#repAdd") == "Add 3 bills to December", "the button offers December only: " + pg.inner_text("#repAdd"))
         before = set(store_keys())
         pg.click("#repAdd")
         pg.wait_for_timeout(1200)
         added = [pg.evaluate("__fs.store()[%s]" % json.dumps(k)) for k in set(store_keys()) - before]
-        ok(len(added) == 2 and all(a.get("sched") and a.get("rep") for a in added), "2 transactions were added, both marked scheduled")
-        ok(sorted((a["merchant"], a["date"], a["amount"]) for a in added) == [("Planet Gym", "2026-12-15", 35.0), ("Spotify", "2026-12-03", 11.99)], "Spotify on Dec 3 and the gym on Dec 15, same amounts")
+        ok(len(added) == 3 and all(a.get("sched") and a.get("rep") for a in added), "3 transactions were added, all marked scheduled")
+        ok(sorted((a["merchant"], a["date"], a["amount"]) for a in added) == [("Amazon Prime", "2026-12-05", 139.0), ("Planet Gym", "2026-12-15", 35.0), ("Spotify", "2026-12-03", 11.99)], "Spotify Dec 3, Prime Dec 5, gym Dec 15, same amounts")
         pg.wait_for_timeout(500)
         ok("scheduled" in text() and "Planet Gym" in text(), "December lists them as scheduled, not 'not synced'")
         pg.click("#openRepeats")
@@ -350,7 +359,7 @@ with sync_playwright() as p:
         pg.click("#repDel")
         pg.click("#repDel")
         pg.wait_for_timeout(1200)
-        ok(set(store_keys()) == before, "Remove takes December's 2 back out")
+        ok(set(store_keys()) == before, "Remove takes December's 3 back out")
         # this month (Nov 14): Spotify on the 3rd has passed, so only the gym on the 15th is offered
         pg.click("#monthBtn")
         pg.wait_for_timeout(500)
