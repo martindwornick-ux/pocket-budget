@@ -325,6 +325,9 @@ async function planNextSheet(){
   /* bills set aside this month arrive next month already paid for: count them as starting money */
   const fwT=round2(asideFor(nx).reduce((a,z)=>a+(+z.it.planned||0),0));
   if(inc[0]){const pt=inc[0].parts||{};inc[0].planned=round2((+inc[0].planned||0)-(+pt.fwm||0)-(+pt.fwd||0)+fwT);if(inc[0].parts)inc[0].parts=Object.assign({},pt,{fwd:fwT,fwm:0})}
+  /* paydays move forward to next month's dates (a 3-paycheck month gets its third check, and Planned grows by it) */
+  if(inc[0]&&inc[0].parts){const old=partsPays(inc[0].parts),nw=rollPays(old,nx);if(nw&&nw!==old){const sum=a=>a.reduce((s,p)=>s+(+p.amt||0),0);
+    inc[0].planned=round2((+inc[0].planned||0)+sum(nw)-sum(old));const np=Object.assign({},inc[0].parts,{pays:nw});delete np.p1;delete np.p2;delete np.d1;delete np.d2;inc[0].parts=np}}
   const INC=incomeTotal(inc);
   const spentBy=(list,id)=>round2(list.filter(t=>t.itemId===id&&t.type!=="income").reduce((a,t)=>a+sAmt(t),0));
   const rows=[];groups.forEach(g=>g.items.forEach(it=>{

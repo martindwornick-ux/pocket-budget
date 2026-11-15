@@ -499,6 +499,15 @@ function scheduledPays(ym){
   if(!last)return null;const out=[];let d=new Date(last+"T12:00:00");
   for(let n=0;n<80;n++){d.setDate(d.getDate()+14);const iso=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());if(iso.slice(0,7)>ym)break;if(iso.slice(0,7)===ym)out.push({d:iso,amt})}
   return out.length?out:null}
+/* Paychecks copied from another month (Plan next month used to copy November's dates into December): if none of the
+   saved paydays fall in ym, use ym's own every-14-days dates instead, keeping the saved amounts in order. */
+function rollPays(saved,ym){if(!saved||!saved.length||!saved.some(p=>p.d)||saved.some(p=>p.d&&p.d.slice(0,7)===ym))return saved;
+  let sc=scheduledPays(ym);
+  if(!sc){/* no earlier month has paydays saved: count forward from the copied ones */
+    const last=saved.map(p=>p.d).filter(Boolean).sort().pop(),amt=saved[saved.length-1].amt;let d=new Date(last+"T12:00:00");const out=[];
+    for(let n=0;n<80;n++){d.setDate(d.getDate()+14);const iso=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());if(iso.slice(0,7)>ym)break;if(iso.slice(0,7)===ym)out.push({d:iso,amt})}
+    if(last>ym)return saved;sc=out.length?out:null}
+  if(!sc)return saved;return sc.map((p,i)=>({d:p.d,amt:saved[i]?saved[i].amt:p.amt}))}
 /* Venmo moves through MSUFCU 1–3 business days after the transaction. A Venmo transaction counts as
    "pending" (not yet in the MSUFCU balance) until 3 business days pass, unless marked: bankCleared true/false. */
 const isVenmoTx=t=>/^\s*venmo\s*:/i.test(t.merchant||"");
@@ -543,7 +552,7 @@ function venCardHTML(){const td=today(),open=venAll().filter(t=>venmoPending(t,t
     sec("Needs a check",late,true)+sec("Waiting on payment",req)+sec("Transferring",xf)+'</section>'}
 function plannedSheet(){
   const ym=S.ym,[y,m]=ym.split("-").map(Number),prev=ymAdd(ym,-1),inc=JSON.parse(JSON.stringify(incomeFor(ym)));
-  const x=inc[0]||{id:uid(),name:"Planned",planned:0},total0=round2(incomeTotal(inc)),pt=x.parts||null,saved=partsPays(pt),sched=saved&&saved.length?null:scheduledPays(ym);
+  const x=inc[0]||{id:uid(),name:"Planned",planned:0},total0=round2(incomeTotal(inc)),pt=x.parts||null,saved=rollPays(partsPays(pt),ym),sched=saved&&saved.length?null:scheduledPays(ym);
   const V={carry:pt?+pt.carry||0:0,rew:pt?+pt.rew||0:0,adj:pt?+pt.adj||0:0,pays:saved&&saved.length?saved:(sched||[{d:"",amt:0},{d:"",amt:0}]),bank:pt&&pt.bank||null};
   V.bankAmt=V.bank&&V.bank.amt!=null?+V.bank.amt:null;
   /* Credit card: available credit entered by hand; owed = limit − available. The payoff view is MSUFCU − (owed − rewards). */

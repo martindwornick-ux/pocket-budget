@@ -204,6 +204,10 @@ seed = {"users/test-user/budgets/" + YM: cache["budgets"][YM]}
 for t in tx:
     seed["users/test-user/tx/" + t["id"]] = {k: v for k, v in t.items() if k != "id"}
 HAS_REP = "repeatsSheet" in html
+HAS_ROLL = "rollPays" in html
+if HAS_ROLL:
+    # December made by "Plan next month" before the fix: it still holds November's paydays (Nov 6 and Nov 20)
+    seed["users/test-user/budgets/2026-12"] = {"groups": cache["budgets"][YM]["groups"], "income": [{"id": "inc1", "name": "Paycheck", "planned": 5604.6, "parts": {"pays": [{"d": "2026-11-06", "amt": 2784.82}, {"d": "2026-11-20", "amt": 2819.78}]}}]}
 if HAS_REP:
     # three past months of history for the Repeats check: Spotify on the 3rd and the gym around the 15th every month
     # (should be found), groceries several times a month and a one-off concert (should not)
@@ -364,6 +368,18 @@ with sync_playwright() as p:
         pg.click("#repDel")
         pg.wait_for_timeout(1200)
         ok(set(store_keys()) == before, "Remove takes December's 3 back out")
+        if HAS_ROLL:
+            # December's Planned sheet shows December paydays (every 14 days from Nov 20), not November's copied ones
+            pg.click("nav.tabs [data-tab=budget]")
+            pg.wait_for_timeout(500)
+            pg.click(".eqcard [data-iplan]")
+            pg.wait_for_timeout(900)
+            pt = pg.inner_text("#sheetRoot")
+            ok("coming Dec 4" in pt and "coming Dec 18" in pt and "Nov 6" not in pt and "$2,784.82" in pt, "December's Planned shows paychecks on Dec 4 and Dec 18 with the same amounts")
+            pg.keyboard.press("Escape")
+            pg.wait_for_timeout(500)
+            pg.click("nav.tabs [data-tab=tx]")
+            pg.wait_for_timeout(400)
         # this month (Nov 14): Spotify on the 3rd has passed, so only the gym on the 15th is offered
         pg.click("#monthBtn")
         pg.wait_for_timeout(500)

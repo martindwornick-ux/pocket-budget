@@ -8,7 +8,6 @@
    "Remove" deletes that month's future transactions that have rep set. Nothing is written until you tap Add. */
 const REP_MONTHS=6;
 function repKey(t){return String(t.merchant||"").toLowerCase().replace(/^venmo:\s*/,"venmo ").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim()}
-function ymAdd(ym,k){const [y,m]=ym.split("-").map(Number),d=new Date(y,m-1+k,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)}
 function dimYm(ym){const [y,m]=ym.split("-").map(Number);return new Date(y,m,0).getDate()}
 /* the pure part: txs = past transactions, months = the finished months looked at (oldest first) */
 function findRepeats(txs,months){
