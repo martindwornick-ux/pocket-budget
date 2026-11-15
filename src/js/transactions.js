@@ -372,6 +372,7 @@ function txSheetCore(existing){
         const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim()||catLabel()||(incSrc?incSrc.name:(f?f.it.name:""));return s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
         if(!body.merchant.replace(VP,"").trim()){const nm=itemId===MISC_ID&&body.sub?body.sub:(body.itemName||"");if(nm)body.merchant=(s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?"Venmo: ":"")+nm}
         if(locNow)body.loc=locNow;
+        if(existing&&existing.sched){body.sched=true;if(existing.rep)body.rep=existing.rep}
         /* you typed or picked a different spot while standing there: remember it for next time (only spots without a business name) */
         try{const fx=LOC.last;if(locNow&&locNow.src!=="gps"&&!locNow.name&&fx&&Date.now()-LOC.lastAt<15*60e3&&(fx.acc||0)<200&&date===today())LOC.learn(locNow.label,fx)}catch(_){}
         {const who=s.querySelector("#f-person").value.trim();if(s.querySelector("#f-venmo").checked&&who)body.person=who}

@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 15, 10:35 AM"</script>
+<script>window.PB_BUILD="Nov 15, 11:30 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -1315,6 +1315,18 @@ html[data-theme="dark"]{background:#000}
 :where(.hapon){position:relative}
 .hapsw{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;background:none!important;transform:none!important;display:block!important;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 :disabled>.hapsw.hapsw,[aria-disabled="true"]>.hapsw.hapsw{display:none!important}
+
+/* Repeating transactions sheet */
+.replist{display:flex;flex-direction:column;gap:2px;max-height:52vh;overflow:auto;margin:0 -4px;padding:0 4px}
+.reprow{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.reprow input{width:22px;height:22px;flex:none;accent-color:var(--g-blue,#1a73e8)}
+.reprow .rl{flex:1;min-width:0;display:flex;flex-direction:column}.reprow .rl b{font-size:16px;font-weight:600}.reprow .rl small{color:var(--muted);font-size:13px;line-height:1.3}
+.reprow .ra{font-weight:700;font-size:16px}
+.nsync.sched{color:var(--link)}
+.qlinks{flex-wrap:wrap}
+#repAhead{background:var(--bg);box-shadow:none}
+#repAhead button{color:var(--fg);font-size:15px;font-weight:600;background:transparent;box-shadow:none}
+#repAhead button[aria-pressed="true"]{background:var(--card);color:var(--link);box-shadow:0 1px 4px rgba(0,0,0,.12)}
 </style>
 
 <header>
@@ -1452,7 +1464,7 @@ function venmoPeople(){const seen={};txPool().forEach(t=>{[t.person,t.reimbFrom]
 const RC=new Set();let rcBusy=false;
 async function reconcileSheet(){
   if(rcBusy||S.readOnly||!S.db)return;const mcp=await getMcp();if(!mcp||!mcp.pbCheck)return;
-  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)&&!RC.has(t.id));if(!list.length)return;
+  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)&&!waitSheet(t)&&!RC.has(t.id));if(!list.length)return;
   rcBusy=true;list.forEach(t=>RC.add(t.id));
   try{const found=await mcp.pbCheck(list.map(t=>({id:t.id,row:sheetRow(t)})));for(const id of found||[])await markSheet(id,"synced","")}catch(e){}
   rcBusy=false;
@@ -1466,7 +1478,7 @@ async function autoSync(force){
   if(AS.busy||S.readOnly||!S.db||!S.txLoaded||S.fromCache)return;if(navigator.onLine===false)return;
   if(!force&&Date.now()-AS.last<60000)return;
   const mcp=await getMcp();const was0=AS.auto;AS.auto=!!(mcp&&mcp.pbAppend);if(was0!==AS.auto&&S.tab==="tx")render();if(!AS.auto)return;
-  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)).sort((a,b)=>(a.date+(a.createdAt||"")).localeCompare(b.date+(b.createdAt||"")));if(!list.length){AS.fail="";return}
+  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)&&!waitSheet(t)).sort((a,b)=>(a.date+(a.createdAt||"")).localeCompare(b.date+(b.createdAt||"")));if(!list.length){AS.fail="";return}
   AS.busy=true;AS.last=Date.now();
   try{await reconcileSheet()}catch(_){}
   let fail="";for(const t of list){const cur=S.tx.find(x=>x.id===t.id);if(!cur||cur.sheet==="synced")continue;
@@ -1514,6 +1526,8 @@ function histToTx(ym,data){
   return rows.map((r,i)=>{const t={id:"h:"+ym+":"+i,source:"history",date:r.d,merchant:r.m,itemId:r.i,itemName:r.n,groupName:r.g,sub:r.s||"",amount:+r.a||0,type:r.t==="refund"?"refund":"expense",note:r.o||"",sheet:"synced",createdAt:""};if(L[i])t.loc=L[i];return t});
 }
 const isHist=t=>t&&t.source==="history";
+/* filled-in repeating transactions (sched) dated after today wait: no auto-send, not counted as "not in your sheet" */
+const waitSheet=t=>!!(t&&t.sched&&t.date>today());
 async function retryOnce(fn){try{return await fn()}catch(e){if(e&&e.code==="unavailable"){await new Promise(r=>setTimeout(r,600+Math.random()*800));return fn()}throw e}}
 async function importHistory(){
   if(H.running)return;
@@ -2014,7 +2028,7 @@ function sortedTx(){return S.tx.slice().sort((a,b)=>a.date<b.date?1:a.date>b.dat
 function renderTx(groups){
   if(!S.txLoaded&&S.dbState!=="none")return '<div class="empty">Loading…</div>';
   const all=sortedTx();
-  const pending=all.filter(t=>t.sheet!=="synced");
+  const pending=all.filter(t=>t.sheet!=="synced"&&!waitSheet(t));
   const q=(S.q||"").trim().toLowerCase();
   let list=q?all.filter(t=>{const hay=[t.merchant,txLabel(t,groups),t.note,t.groupName,(+t.amount||0).toFixed(2),fmtDay(t.date)].join(" ").toLowerCase();return q.split(/\s+/).every(w=>hay.includes(w.replace(/^\$/,"")))}):all;
   let h=historyCardHTML();
@@ -2022,7 +2036,7 @@ function renderTx(groups){
     h+='<div class="fchip"><span>Upcoming after today · <b class="num">'+money(round2(list.reduce((a,t)=>a+sAmt(t),0)))+'</b></span><button id="clrUp">Show all</button></div>';
     if(!list.length)return h+'<div class="card empty">'+EMPTY_ART.cal+'<h3>Nothing scheduled</h3>No transactions are dated after today this month.</div>'}
   if(q)h+='<p class="note" style="margin:-6px 4px 0">'+list.length+' match'+(list.length===1?"":"es")+' · '+money(round2(list.reduce((a,t)=>a+sAmt(t),0)))+' spent</p>';
-  h+='<div class="qlinks"><a href="'+SHEET_URL+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></svg>Finance Tracker</a><a href="venmo://" id="openVenmo" aria-label="Open Venmo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>Venmo</a></div>';
+  h+='<div class="qlinks"><a href="'+SHEET_URL+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></svg>Finance Tracker</a><a href="venmo://" id="openVenmo" aria-label="Open Venmo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>Venmo</a><a href="#" id="openRepeats" role="button" aria-label="Fill in repeating transactions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 014-4h12M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 01-4 4H4"/></svg>Repeats</a></div>';
   const stuck=pending.length&&(AS.fail||AS.auto===false);
   if(stuck)h+='<div class="card" style="padding:14px 18px"><div class="irow" style="font-size:16px"><span class="nm"><b>'+(AS.fail?'Couldn\'t send '+pending.length+' to your sheet':pending.length+' not in your sheet yet')+'</b></span><button class="addlink" style="padding:0" id="syncAll">'+(AS.fail?'Try again':'Send to sheet')+'</button></div><p class="note" style="margin:6px 0 0">'+esc(AS.fail||(pending.find(t=>t.sheetMsg)||{}).sheetMsg||"")+'</p></div>';
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
@@ -2046,7 +2060,7 @@ function txDays(list,groups){
     const ref=t.type==="refund"||t.type==="income";
     const sw=!isHist(t);
     if(sw)h+='<div class="swr"><button class="swdel" data-del="'+esc(t.id)+'" tabindex="-1" aria-label="Delete '+esc(t.merchant||"Purchase")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>Delete</button>';
-    h+='<button class="txrow'+(S.flash===t.id?' flash':'')+'" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span class="nsync">not synced</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
+    h+='<button class="txrow'+(S.flash===t.id?' flash':'')+'" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(waitSheet(t)?' · <span class="nsync sched">scheduled</span>':t.sheet!=="synced"?' · <span class="nsync">not synced</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
   });
   if(open)h+="</section>";
   return h;
@@ -4116,6 +4130,7 @@ function txSheetCore(existing){
         const body={amount:a,type:incSrc?"income":kind,merchant:(()=>{const nm=s.querySelector("#f-mer").value.replace(VP,"").trim()||catLabel()||(incSrc?incSrc.name:(f?f.it.name:""));return s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?("Venmo: "+nm).trim():nm})(),itemId,itemName:incSrc?incSrc.name:(f?f.it.name:""),groupName:incSrc?"Income":(f?f.g.name:""),sub:itemId===MISC_ID?subSel.value:"",date,note:s.querySelector("#f-note").value.trim(),createdAt:existing?existing.createdAt:new Date().toISOString(),sheet:existing?(existing.sheet||"failed"):"sending",sheetMsg:existing?(existing.sheetMsg||""):""};
         if(!body.merchant.replace(VP,"").trim()){const nm=itemId===MISC_ID&&body.sub?body.sub:(body.itemName||"");if(nm)body.merchant=(s.querySelector("#f-venmo").checked&&!(vrow&&vrow.hidden)?"Venmo: ":"")+nm}
         if(locNow)body.loc=locNow;
+        if(existing&&existing.sched){body.sched=true;if(existing.rep)body.rep=existing.rep}
         /* you typed or picked a different spot while standing there: remember it for next time (only spots without a business name) */
         try{const fx=LOC.last;if(locNow&&locNow.src!=="gps"&&!locNow.name&&fx&&Date.now()-LOC.lastAt<15*60e3&&(fx.acc||0)<200&&date===today())LOC.learn(locNow.label,fx)}catch(_){}
         {const who=s.querySelector("#f-person").value.trim();if(s.querySelector("#f-venmo").checked&&who)body.person=who}
@@ -4479,6 +4494,85 @@ async function exportCsv(){
   try{await dl.save({filename:"transactions-"+S.ym+".csv",data:csv})}catch(e){/* viewer declined */}
 }
 
+/* ---------- Repeating transactions (Transactions tab → "Repeats") ----------
+   Looks through the last REP_MONTHS finished months (plus this month so far) for expenses that come back every month:
+   same merchant, at most once a month, in at least 3 of the last 4 months, still seen in the last 2, on about the same
+   day (days within 6 of each other). You review the list, pick how far ahead, and it adds them as future transactions.
+   Added ones carry sched:true and rep:<merchant key>. sched ones dated after today wait: they aren't auto-sent to the
+   Finance Tracker sheet, aren't counted as "not in your sheet", and show "scheduled" (see waitSheet in core.js).
+   "Remove filled-in" deletes future transactions that have rep set. Nothing is written until you tap Add. */
+const REP_MONTHS=6;
+function repKey(t){return String(t.merchant||"").toLowerCase().replace(/^venmo:\s*/,"venmo ").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim()}
+function ymAdd(ym,k){const [y,m]=ym.split("-").map(Number),d=new Date(y,m-1+k,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)}
+function dimYm(ym){const [y,m]=ym.split("-").map(Number);return new Date(y,m,0).getDate()}
+/* the pure part: txs = past transactions, months = the finished months looked at (oldest first) */
+function findRepeats(txs,months){
+  const by=new Map(),recent=months.slice(-4),last2=months.slice(-2);
+  txs.forEach(t=>{if(t.type!=="expense"||t.sched||!(+t.amount>0)||!t.date)return;const k=repKey(t);if(!k)return;let a=by.get(k);if(!a)by.set(k,a=[]);a.push(t)});
+  const out=[];
+  by.forEach((arr,k)=>{
+    const perM={};arr.forEach(t=>{const ym=t.date.slice(0,7);(perM[ym]=perM[ym]||[]).push(t)});
+    const hits=recent.filter(ym=>perM[ym]).length;if(hits<3)return;
+    if(!last2.some(ym=>perM[ym]))return;
+    if(recent.filter(ym=>perM[ym]&&perM[ym].length>1).length>1)return; /* more than once a month (groceries, coffee…) */
+    const seen=months.filter(ym=>perM[ym]).map(ym=>perM[ym].slice().sort((a,b)=>a.date<b.date?1:-1)[0]);
+    const days=seen.map(t=>+t.date.slice(8,10)).sort((a,b)=>a-b);if(days[days.length-1]-days[0]>6)return;
+    const day=days[Math.floor(days.length/2)];
+    const amts=seen.map(t=>+t.amount);const lo=Math.min(...amts),hi=Math.max(...amts),stable=hi<=lo*1.1+0.01;
+    const lastT=seen[seen.length-1],last3=amts.slice(-3);
+    const amount=stable?round2(+lastT.amount):round2(last3.reduce((a,x)=>a+x,0)/last3.length);
+    out.push({k,merchant:lastT.merchant,itemId:lastT.itemId||"",itemName:lastT.itemName||"",groupName:lastT.groupName||"",sub:lastT.sub||"",amount,day,stable,hits,of:recent.length});
+  });
+  return out.sort((a,b)=>a.day-b.day||a.merchant.localeCompare(b.merchant));
+}
+/* future dates for one repeat, from tomorrow through the end of month cur+ahead, skipping months that already have it */
+function repDates(r,cur,ahead,have){const td=today(),out=[];
+  for(let i=0;i<=ahead;i++){const ym=ymAdd(cur,i),d=ym+"-"+pad(Math.min(r.day,dimYm(ym)));if(d<=td)continue;if(have.has(ym+"|"+r.k))continue;out.push(d)}return out}
+async function repLoad(){
+  const cur=ymOf(today()),months=[];for(let i=REP_MONTHS;i>=1;i--)months.push(ymAdd(cur,-i));
+  await Promise.all(months.map(ym=>IS.fresh[ym]?null:fetchMonth(ym)));
+  const past=[];months.forEach(ym=>(IS.hist[ym]||[]).forEach(t=>past.push(t)));
+  /* this month and everything after it, to know what's already there */
+  const snap=await S.db.collection("tx").where("date",">=",cur+"-01").limit(3000).get();
+  const ahead=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+  const td=today(),reps=findRepeats(past,months);
+  const have=new Set();ahead.forEach(t=>have.add(t.date.slice(0,7)+"|"+repKey(t)));
+  const filled=ahead.filter(t=>t.rep&&t.date>td);
+  return{cur,months,reps,have,filled};
+}
+function repeatsSheet(){
+  if(!S.db||S.readOnly){toast("Sign in to fill in repeating transactions");return}
+  let st=null,ahead=+(ls.get("pb.repAhead")||6),off=new Set(),busy=false;
+  const draw=s=>{
+    if(!st){s.innerHTML='<div class="grab"></div><h3>Repeating transactions</h3><p class="note">Looking through your last '+REP_MONTHS+' months…</p>'+SKEL;return}
+    const {reps,filled,cur,have}=st;
+    let n=0;reps.forEach(r=>{if(!off.has(r.k))n+=repDates(r,cur,ahead,have).length});
+    let h='<div class="grab"></div><h3>Repeating transactions</h3>';
+    if(!reps.length)h+='<p class="note">Nothing in your last '+REP_MONTHS+' months repeats on a steady monthly schedule yet.</p>';
+    else{
+      h+='<p class="note" style="margin:0 0 10px">Found '+reps.length+' that come back every month. Untick any you don\'t want, then pick how far ahead. They go to your Finance Tracker sheet on their date, not before.</p>';
+      h+='<div class="seg" id="repAhead" style="margin:0 0 12px;grid-template-columns:repeat(3,1fr)">'+[3,6,12].map(k=>'<button data-ahead="'+k+'" aria-pressed="'+(k===ahead)+'">'+k+' months</button>').join("")+'</div>';
+      h+='<div class="replist">'+reps.map(r=>{const c=repDates(r,cur,ahead,have).length;return '<label class="reprow"><input type="checkbox" data-rk="'+esc(r.k)+'"'+(off.has(r.k)?"":" checked")+'><span class="rl"><b>'+esc(r.merchant)+'</b><small>'+esc(r.itemName||"Uncategorized")+' · around the '+ordinal(r.day)+' · seen '+r.hits+' of '+r.of+' months'+(r.stable?'':' · amount varies, using the average')+(c?'':' · already filled in')+'</small></span><span class="ra num">'+money(r.amount)+'</span></label>'}).join("")+'</div>';
+      h+='<button class="btn" id="repAdd" style="margin-top:14px;width:100%"'+(n&&!busy?'':' disabled')+'>'+(busy?'Adding…':n?'Add '+n+' upcoming transaction'+(n===1?'':'s'):'Nothing new to add')+'</button>';
+    }
+    if(filled.length)h+='<button class="addlink" id="repDel" style="margin:14px auto 0;display:block;color:var(--over)">Remove '+filled.length+' filled-in transaction'+(filled.length===1?'':'s')+'</button>';
+    s.innerHTML=h;
+    s.querySelectorAll("[data-ahead]").forEach(b=>b.onclick=()=>{ahead=+b.dataset.ahead;ls.set("pb.repAhead",String(ahead));draw(s)});
+    s.querySelectorAll("[data-rk]").forEach(c=>c.onchange=()=>{if(c.checked)off.delete(c.dataset.rk);else off.add(c.dataset.rk);draw(s)});
+    const add=s.querySelector("#repAdd");if(add)add.onclick=async()=>{if(busy)return;busy=true;draw(s);
+      const txc=S.db.collection("tx"),now=new Date().toISOString(),jobs=[];
+      reps.forEach(r=>{if(off.has(r.k))return;repDates(r,cur,ahead,have).forEach(d=>{
+        const body={amount:r.amount,type:"expense",merchant:r.merchant,itemId:r.itemId,itemName:r.itemName,groupName:r.groupName,sub:r.sub,date:d,note:"",createdAt:now,sched:true,rep:r.k};
+        jobs.push(txc.newId?S.db.doc("tx/"+txc.newId()).set(body):txc.add(body))})});
+      try{await Promise.all(jobs);closeSheet();toast("Added "+jobs.length+" upcoming transaction"+(jobs.length===1?"":"s"));render()}
+      catch(e){busy=false;draw(s);toast("Couldn't add them. Check your connection and try again.")}};
+    const del=s.querySelector("#repDel");if(del)del.onclick=async()=>{if(del.dataset.sure!=="1"){del.dataset.sure="1";del.textContent="Tap again to remove "+filled.length;return}
+      try{await Promise.all(filled.map(t=>S.db.doc("tx/"+t.id).delete()));closeSheet();toast("Removed "+filled.length+" filled-in transaction"+(filled.length===1?"":"s"));render()}
+      catch(e){toast("Couldn't remove them. Try again.")}};
+  };
+  openSheet('',s=>{draw(s);repLoad().then(r=>{st=r;if(s.isConnected)draw(s)}).catch(()=>{if(s.isConnected){s.innerHTML='<div class="grab"></div><h3>Repeating transactions</h3><p class="note">Couldn\'t read your history. Check your connection and try again.</p>'}})});
+}
+function ordinal(n){const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
 /* ---------- events ---------- */
 $("#seg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.view=b.dataset.v;ls.set("pb.view",S.view);render()});
 // Haptic tick: iOS Safari/WebKit fires a light haptic when a native switch toggles; Android uses vibrate.
@@ -4538,6 +4632,7 @@ $("#main").addEventListener("click",e=>{
   const isb=e.target.closest("[data-isub]");if(isb){IS.sub=isb.dataset.isub;ls.set("pb.isub",IS.sub);render();return}
   if(e.target.closest("#txqClear")){S.q="";render();const i=$("#txq");i&&i.focus();return}
   if(e.target.closest("#histImport")){importHistory();return}
+  if(e.target.closest("#openRepeats")){e.preventDefault();try{haptic()}catch(_){}repeatsSheet();return}
   if(e.target.closest("[data-upcoming]")){S.upcoming=true;S.q="";S.tab="tx";try{haptic()}catch(_){}render();window.scrollTo(0,0);return}
   const mtg=e.target.closest("#msTog");if(mtg){msToggle(mtg);return}
   const gt=e.target.closest("[data-gtog]");if(gt){let o={};try{o=JSON.parse(ls.get("pb.gopen")||"{}")||{}}catch(_){}const id=gt.dataset.gtog;if(o[id])delete o[id];else o[id]=1;ls.set("pb.gopen",JSON.stringify(o));try{haptic()}catch(_){}render();return}
@@ -4566,7 +4661,7 @@ $("#main").addEventListener("click",e=>{
   else if(t.id==="syncAll")syncAll(t);
 });
 async function syncAll(btn){AS.fail="";
-  const list=sortedTx().filter(t=>t.sheet!=="synced").reverse();
+  const list=sortedTx().filter(t=>t.sheet!=="synced"&&!waitSheet(t)).reverse();
   btn.disabled=true;btn.textContent="Sending…";let n=0;
   if(!list.length){btn.disabled=false;btn.textContent="Try again";return}
   let err="";for(const t of list){if(await pushToSheet(t.id,t))n++;else{const f=S.tx.find(x=>x.id===t.id);err=(f&&f.sheetMsg)||"";break}}

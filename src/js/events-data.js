@@ -57,6 +57,7 @@ $("#main").addEventListener("click",e=>{
   const isb=e.target.closest("[data-isub]");if(isb){IS.sub=isb.dataset.isub;ls.set("pb.isub",IS.sub);render();return}
   if(e.target.closest("#txqClear")){S.q="";render();const i=$("#txq");i&&i.focus();return}
   if(e.target.closest("#histImport")){importHistory();return}
+  if(e.target.closest("#openRepeats")){e.preventDefault();try{haptic()}catch(_){}repeatsSheet();return}
   if(e.target.closest("[data-upcoming]")){S.upcoming=true;S.q="";S.tab="tx";try{haptic()}catch(_){}render();window.scrollTo(0,0);return}
   const mtg=e.target.closest("#msTog");if(mtg){msToggle(mtg);return}
   const gt=e.target.closest("[data-gtog]");if(gt){let o={};try{o=JSON.parse(ls.get("pb.gopen")||"{}")||{}}catch(_){}const id=gt.dataset.gtog;if(o[id])delete o[id];else o[id]=1;ls.set("pb.gopen",JSON.stringify(o));try{haptic()}catch(_){}render();return}
@@ -85,7 +86,7 @@ $("#main").addEventListener("click",e=>{
   else if(t.id==="syncAll")syncAll(t);
 });
 async function syncAll(btn){AS.fail="";
-  const list=sortedTx().filter(t=>t.sheet!=="synced").reverse();
+  const list=sortedTx().filter(t=>t.sheet!=="synced"&&!waitSheet(t)).reverse();
   btn.disabled=true;btn.textContent="Sending…";let n=0;
   if(!list.length){btn.disabled=false;btn.textContent="Try again";return}
   let err="";for(const t of list){if(await pushToSheet(t.id,t))n++;else{const f=S.tx.find(x=>x.id===t.id);err=(f&&f.sheetMsg)||"";break}}

@@ -21,6 +21,7 @@
 | `js/insights-average.js` | Totals vs your average month, partial redraws, press effects, tab highlight, rolling numbers |
 | `js/sheets-numpad.js` | Sheet open/close behaviour, number pad for planned amounts |
 | `js/transactions.js` | Receipt scanning, add/edit transaction sheet, item/group/income/month sheets, Venmo, paychecks, CSV export |
+| `js/repeats.js` | Repeats: finds monthly repeating expenses in your history and fills them into future months (`sched` transactions wait for their date before going to the sheet) |
 | `js/events-data.js` | Click handlers, loading data from the database |
 | `js/gestures.js` | Pull to refresh, swipe between tabs |
 

@@ -419,7 +419,7 @@ function sortedTx(){return S.tx.slice().sort((a,b)=>a.date<b.date?1:a.date>b.dat
 function renderTx(groups){
   if(!S.txLoaded&&S.dbState!=="none")return '<div class="empty">Loading…</div>';
   const all=sortedTx();
-  const pending=all.filter(t=>t.sheet!=="synced");
+  const pending=all.filter(t=>t.sheet!=="synced"&&!waitSheet(t));
   const q=(S.q||"").trim().toLowerCase();
   let list=q?all.filter(t=>{const hay=[t.merchant,txLabel(t,groups),t.note,t.groupName,(+t.amount||0).toFixed(2),fmtDay(t.date)].join(" ").toLowerCase();return q.split(/\s+/).every(w=>hay.includes(w.replace(/^\$/,"")))}):all;
   let h=historyCardHTML();
@@ -427,7 +427,7 @@ function renderTx(groups){
     h+='<div class="fchip"><span>Upcoming after today · <b class="num">'+money(round2(list.reduce((a,t)=>a+sAmt(t),0)))+'</b></span><button id="clrUp">Show all</button></div>';
     if(!list.length)return h+'<div class="card empty">'+EMPTY_ART.cal+'<h3>Nothing scheduled</h3>No transactions are dated after today this month.</div>'}
   if(q)h+='<p class="note" style="margin:-6px 4px 0">'+list.length+' match'+(list.length===1?"":"es")+' · '+money(round2(list.reduce((a,t)=>a+sAmt(t),0)))+' spent</p>';
-  h+='<div class="qlinks"><a href="'+SHEET_URL+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></svg>Finance Tracker</a><a href="venmo://" id="openVenmo" aria-label="Open Venmo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>Venmo</a></div>';
+  h+='<div class="qlinks"><a href="'+SHEET_URL+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></svg>Finance Tracker</a><a href="venmo://" id="openVenmo" aria-label="Open Venmo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>Venmo</a><a href="#" id="openRepeats" role="button" aria-label="Fill in repeating transactions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 014-4h12M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 01-4 4H4"/></svg>Repeats</a></div>';
   const stuck=pending.length&&(AS.fail||AS.auto===false);
   if(stuck)h+='<div class="card" style="padding:14px 18px"><div class="irow" style="font-size:16px"><span class="nm"><b>'+(AS.fail?'Couldn\'t send '+pending.length+' to your sheet':pending.length+' not in your sheet yet')+'</b></span><button class="addlink" style="padding:0" id="syncAll">'+(AS.fail?'Try again':'Send to sheet')+'</button></div><p class="note" style="margin:6px 0 0">'+esc(AS.fail||(pending.find(t=>t.sheetMsg)||{}).sheetMsg||"")+'</p></div>';
   if(q&&!list.length)return h+'<div class="card empty"><h3>No matches</h3>Try a merchant, category, note or amount.</div>';
@@ -451,7 +451,7 @@ function txDays(list,groups){
     const ref=t.type==="refund"||t.type==="income";
     const sw=!isHist(t);
     if(sw)h+='<div class="swr"><button class="swdel" data-del="'+esc(t.id)+'" tabindex="-1" aria-label="Delete '+esc(t.merchant||"Purchase")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>Delete</button>';
-    h+='<button class="txrow'+(S.flash===t.id?' flash':'')+'" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(t.sheet!=="synced"?' · <span class="nsync">not synced</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
+    h+='<button class="txrow'+(S.flash===t.id?' flash':'')+'" data-tx="'+esc(t.id)+'"><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(txLabel(t,groups))+(t.person?" · "+(t.type==="refund"||t.type==="income"?"from ":"to ")+esc(t.person):"")+(t.note?" · "+esc(t.note):"")+(t.loc&&locShort(t.loc)?'<span class="tloc"> · '+PIN_SVG+esc(locShort(t.loc))+'</span>':'')+(waitSheet(t)?' · <span class="nsync sched">scheduled</span>':t.sheet!=="synced"?' · <span class="nsync">not synced</span>':'')+'</div></div><div class="a num"'+(ref?' style="color:var(--ok)"':'')+'>'+(ref?"+":"")+money(+t.amount||0)+'</div></button>'+(sw?'</div>':'');
   });
   if(open)h+="</section>";
   return h;

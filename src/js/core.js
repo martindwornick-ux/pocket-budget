@@ -106,7 +106,7 @@ function venmoPeople(){const seen={};txPool().forEach(t=>{[t.person,t.reimbFrom]
 const RC=new Set();let rcBusy=false;
 async function reconcileSheet(){
   if(rcBusy||S.readOnly||!S.db)return;const mcp=await getMcp();if(!mcp||!mcp.pbCheck)return;
-  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)&&!RC.has(t.id));if(!list.length)return;
+  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)&&!waitSheet(t)&&!RC.has(t.id));if(!list.length)return;
   rcBusy=true;list.forEach(t=>RC.add(t.id));
   try{const found=await mcp.pbCheck(list.map(t=>({id:t.id,row:sheetRow(t)})));for(const id of found||[])await markSheet(id,"synced","")}catch(e){}
   rcBusy=false;
@@ -120,7 +120,7 @@ async function autoSync(force){
   if(AS.busy||S.readOnly||!S.db||!S.txLoaded||S.fromCache)return;if(navigator.onLine===false)return;
   if(!force&&Date.now()-AS.last<60000)return;
   const mcp=await getMcp();const was0=AS.auto;AS.auto=!!(mcp&&mcp.pbAppend);if(was0!==AS.auto&&S.tab==="tx")render();if(!AS.auto)return;
-  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)).sort((a,b)=>(a.date+(a.createdAt||"")).localeCompare(b.date+(b.createdAt||"")));if(!list.length){AS.fail="";return}
+  const list=S.tx.filter(t=>t.sheet!=="synced"&&!isHist(t)&&!waitSheet(t)).sort((a,b)=>(a.date+(a.createdAt||"")).localeCompare(b.date+(b.createdAt||"")));if(!list.length){AS.fail="";return}
   AS.busy=true;AS.last=Date.now();
   try{await reconcileSheet()}catch(_){}
   let fail="";for(const t of list){const cur=S.tx.find(x=>x.id===t.id);if(!cur||cur.sheet==="synced")continue;
@@ -168,6 +168,8 @@ function histToTx(ym,data){
   return rows.map((r,i)=>{const t={id:"h:"+ym+":"+i,source:"history",date:r.d,merchant:r.m,itemId:r.i,itemName:r.n,groupName:r.g,sub:r.s||"",amount:+r.a||0,type:r.t==="refund"?"refund":"expense",note:r.o||"",sheet:"synced",createdAt:""};if(L[i])t.loc=L[i];return t});
 }
 const isHist=t=>t&&t.source==="history";
+/* filled-in repeating transactions (sched) dated after today wait: no auto-send, not counted as "not in your sheet" */
+const waitSheet=t=>!!(t&&t.sched&&t.date>today());
 async function retryOnce(fn){try{return await fn()}catch(e){if(e&&e.code==="unavailable"){await new Promise(r=>setTimeout(r,600+Math.random()*800));return fn()}throw e}}
 async function importHistory(){
   if(H.running)return;

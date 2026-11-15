@@ -203,6 +203,16 @@ FAKE = open(os.path.join(ROOT, "tools", "fake_firebase.js")).read()
 seed = {"users/test-user/budgets/" + YM: cache["budgets"][YM]}
 for t in tx:
     seed["users/test-user/tx/" + t["id"]] = {k: v for k, v in t.items() if k != "id"}
+HAS_REP = "repeatsSheet" in html
+if HAS_REP:
+    # three past months of history for the Repeats check: Spotify on the 3rd and the gym around the 15th every month
+    # (should be found), groceries several times a month and a one-off concert (should not)
+    for ym in ("2026-08", "2026-09", "2026-10"):
+        seed["users/test-user/tx/sp" + ym] = {"date": ym + "-03", "amount": 11.99, "type": "expense", "merchant": "Spotify", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": ym + "-03T10:00:00Z"}
+        seed["users/test-user/tx/gy" + ym] = {"date": ym + {"2026-08": "-15", "2026-09": "-16", "2026-10": "-14"}[ym], "amount": 35.0, "type": "expense", "merchant": "Planet Gym", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": ym + "-15T10:00:00Z"}
+        for d in ("-05", "-12", "-20"):
+            seed["users/test-user/tx/mj" + ym + d] = {"date": ym + d, "amount": 60.0, "type": "expense", "merchant": "Meijer", "itemId": "i-groc", "itemName": "Groceries", "groupName": "Food", "createdAt": ym + d + "T10:00:00Z"}
+    seed["users/test-user/tx/concert"] = {"date": "2026-09-21", "amount": 80.0, "type": "expense", "merchant": "Concert", "itemId": "i-fun", "itemName": "Fun", "groupName": "Lifestyle", "createdAt": "2026-09-21T10:00:00Z"}
 
 
 class H2(http.server.SimpleHTTPRequestHandler):
@@ -311,6 +321,36 @@ with sync_playwright() as p:
         pg.wait_for_timeout(4800)
         toasts = pg.evaluate("[...document.querySelectorAll('.toast')].map(t=>t.textContent).join(' | ')")
         ok("Google Drive backup hasn't worked since Oct 30" in toasts, "a stale Google Drive backup shows a warning")
+
+    if HAS_REP:
+        # Repeats: finds the monthly ones, adds them as scheduled future transactions, and can remove them again
+        pg.click("nav.tabs [data-tab=tx]")
+        pg.wait_for_timeout(500)
+        pg.click("#openRepeats")
+        pg.wait_for_timeout(1800)
+        names = pg.evaluate("[...document.querySelectorAll('.reprow .rl b')].map(e=>e.textContent)")
+        ok(sorted(names) == ["Planet Gym", "Spotify"], "Repeats finds Spotify and the gym, not groceries or the one-off (%s)" % ", ".join(names))
+        pg.click('[data-ahead="3"]')
+        pg.wait_for_timeout(300)
+        shot("repeats-sheet")
+        # today is the 14th: Spotify (3rd) next lands Dec 3, Jan 3, Feb 3; the gym (15th) Nov 15 … Feb 15
+        ok(pg.inner_text("#repAdd") == "Add 7 upcoming transactions", "3 months ahead adds 7 (3 Spotify, 4 gym)")
+        before = set(store_keys())
+        pg.click("#repAdd")
+        pg.wait_for_timeout(1200)
+        added = [pg.evaluate("__fs.store()[%s]" % json.dumps(k)) for k in set(store_keys()) - before]
+        ok(len(added) == 7 and all(a.get("sched") and a.get("rep") for a in added), "7 transactions were added, all marked scheduled")
+        ok(sorted(a["date"] for a in added if a["merchant"] == "Spotify") == ["2026-12-03", "2027-01-03", "2027-02-03"], "Spotify lands on the 3rd of Dec, Jan and Feb")
+        ok(all(a["amount"] == 35.0 for a in added if a["merchant"] == "Planet Gym"), "the gym keeps its $35.00")
+        pg.wait_for_timeout(500)
+        ok("scheduled" in text() and "Planet Gym" in text(), "the Nov 15 gym shows as scheduled, not 'not synced'")
+        pg.click("#openRepeats")
+        pg.wait_for_timeout(1800)
+        ok(pg.inner_text("#repAdd") == "Nothing new to add", "opening Repeats again doesn't add them twice")
+        pg.click("#repDel")
+        pg.click("#repDel")
+        pg.wait_for_timeout(1200)
+        ok(set(store_keys()) == before, "Remove filled-in takes all 7 back out")
 
     ok(not errs, "no errors with the sign-in layer" + (": " + " | ".join(errs)[:400] if errs else ""))
     br.close()
