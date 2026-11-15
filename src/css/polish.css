@@ -135,7 +135,8 @@ html[data-theme="dark"]{background:#000}
 :disabled>.hapsw.hapsw,[aria-disabled="true"]>.hapsw.hapsw{display:none!important}
 
 /* Repeating transactions sheet */
-.replist{display:flex;flex-direction:column;gap:2px;max-height:52vh;overflow:auto;margin:0 -4px;padding:0 4px}
+.replist{display:flex;flex-direction:column;gap:2px}
+#repAdd{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:2;box-shadow:0 6px 20px rgba(26,115,232,.3)}
 .reprow{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line);cursor:pointer}
 .reprow input{width:22px;height:22px;flex:none;accent-color:var(--g-blue,#1a73e8)}
 .reprow .rl{flex:1;min-width:0;display:flex;flex-direction:column}.reprow .rl b{font-size:16px;font-weight:600}.reprow .rl small{color:var(--muted);font-size:13px;line-height:1.3}
