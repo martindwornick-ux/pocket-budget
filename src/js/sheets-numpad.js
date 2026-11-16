@@ -68,12 +68,18 @@ function dragSheet(sc,sh){
   /* The keyboard covers the bottom of a sheet without shrinking it, so anything under it (e.g. the last location
      suggestions) couldn't be scrolled into view. While a field is focused and the keyboard is up, html.kbup adds the
      keyboard's height (--kbh) as extra room at the bottom of the sheet, so it all scrolls up above the keyboard. */
-  const de=document.documentElement;let kbr=0;
-  const kb=()=>{kbr=0;const vv=window.visualViewport;if(!vv)return;const h=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
-    const up=h>120&&isField(document.activeElement);de.style.setProperty("--kbh",(up?h:0)+"px");de.classList.toggle("kbup",up)};
+  /* Full height = the tallest the visible area has been with no field focused (iOS shrinks window.innerHeight along with
+     the visible area when the keyboard opens, so innerHeight can't be the yardstick). */
+  const de=document.documentElement;let kbr=0,full=0;
+  const kb=()=>{kbr=0;const vv=window.visualViewport;if(!vv)return;const typing=isField(document.activeElement);
+    if(!typing||!full)full=Math.max(full,de.clientHeight,Math.round(vv.height+vv.offsetTop));
+    if(!typing&&Math.abs(full-Math.round(vv.height))>120&&Math.round(vv.height)>=de.clientHeight-40)full=Math.round(vv.height); /* rotated or resized */
+    const h=Math.max(0,Math.round(full-vv.height-vv.offsetTop)),up=typing&&full-vv.height>120;
+    de.style.setProperty("--kbh",(up?h:0)+"px");de.classList.toggle("kbup",up)};
   const kbSoon=()=>{if(!kbr)kbr=requestAnimationFrame(kb)};
   if(window.visualViewport){visualViewport.addEventListener("resize",kbSoon);visualViewport.addEventListener("scroll",kbSoon)}
-  document.addEventListener("focusin",()=>setTimeout(kb,60),true);document.addEventListener("focusout",()=>setTimeout(kb,60),true);
+  document.addEventListener("focusin",()=>{setTimeout(kb,60);setTimeout(kb,350);setTimeout(kb,700)},true);document.addEventListener("focusout",()=>setTimeout(kb,60),true);
+  window.addEventListener("orientationchange",()=>{full=0;setTimeout(kb,400)});kb();
 })();
 function askDiscard(sc,sh){if(sc.querySelector(".discard"))return;try{haptic()}catch(_){}
   const d=document.createElement("div");d.className="discard";d.setAttribute("role","alertdialog");
