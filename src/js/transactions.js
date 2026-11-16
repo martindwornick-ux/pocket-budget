@@ -80,6 +80,8 @@ function txLayoutA(s,existing){try{
   refresh();
 }catch(e){console.warn("layout A",e)}}
 function txSheet(existing,opts){txSheetCore(existing);if(!opts||existing)return;const sh=$("#sheetRoot .sheet");if(!sh)return;
+  /* opened from an item's "Log purchase": that item is already picked (counts as your pick, so a merchant guess won't replace it) */
+  if(opts.item){const c=sh.querySelector("#f-cat");if(c&&[...c.options].some(o=>o.value===opts.item)){c.value=opts.item;c.dispatchEvent(new Event("change",{bubbles:true}))}}
   if(opts.kind==="refund"){const b=sh.querySelector('[data-k="refund"]');b&&b.click()}
   if(opts.venmo){const v=sh.querySelector("#f-venmo");if(v){v.checked=true;v.dispatchEvent(new Event("change",{bubbles:true}))}}
   if(opts.scan){const c=sh.querySelector("#f-cam");c&&c.click()}}
@@ -450,7 +452,7 @@ function itemSheet(id,preSub){
       };
       planIn.addEventListener("input",upd);upd();
       s.querySelector("#i-save").onclick=async()=>{const p=parseAmt(s.querySelector("#i-plan").value);const n=s.querySelector("#i-name").value.trim();if(!n){toast("Give the item a name");shake(s.querySelector("#i-name"));return}if(isNaN(p)||p<0){toast("Planned must be $0 or more");shake(s.querySelector("#i-plan"));return}f.it.name=n;f.it.planned=p;if(await saveGroups(groups)){closeSheet();toast("Saved")}};
-      s.querySelector("#i-add").onclick=()=>{ls.set("pb.lastItem",id);txSheet()};
+      s.querySelector("#i-add").onclick=()=>{ls.set("pb.lastItem",id);txSheet(null,{item:id})};
       s.querySelectorAll("[data-tx]").forEach(b=>b.onclick=e=>{if(e.target.closest(".iamt"))return;const t=S.tx.find(x=>x.id===b.dataset.tx);if(t)isHist(t)?histSheet(t):txSheet(t)});
       const gp=sheetPad(s);
       s.querySelectorAll("[data-amt]").forEach(b=>b.onclick=e=>{e.stopPropagation();const t=S.tx.find(x=>x.id===b.dataset.amt);if(!t)return;if(gp.active()===b){gp.finish(true);return}

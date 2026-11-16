@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 15, 2026 (build "Nov 15, 12:50 PM", sw `pb-2026-11-15h`)_
+_Last updated: Nov 15, 2026 (build "Nov 15, 10:55 PM", sw `pb-2026-11-15i`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic is one page, `index.html` (about 4,780 lines). Its source is split by screen under `src/` and assembled by `tools/build.py` (see Files). The owner uses it on an iPhone from the home screen.
@@ -37,7 +37,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files: the page under `src/` (see `src/README.md`), then `python3 tools/build.py` to rebuild `index.html`. `platform.js`, `sw.js` etc. are edited directly.
 2. Bump `window.PB_BUILD` (in `src/index.html`, near the top) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`, and rebuild.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-15i`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-15j`, or `pb-<new date>a` on a new day).
 4. Run the checks: `python3 tools/check.py`. Part 4 of the checks runs the real `platform.js` (sign-in, Settings gear, backups, restore, Drive warning, privacy check) against `tools/fake_firebase.js`, which enforces the same owner-only rule as `firestore.rules`; it takes ~25 s. It checks that all scripts parse, loads every screen on sample data with no sign-in, and compares the money shown (remaining, per day, spent of planned, refunds, calendar totals, bills left out) with figures worked out separately. All lines must say `ok`. `PB_SHOTS=/some/folder` also saves screenshots. When a change adds money logic, add a check for it. The same checks run on GitHub after every push (Actions tab).
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -110,6 +110,7 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–15, 2026 (newest first)
+- "Log purchase" on an item's sheet opens Add Transaction with that item already picked: `txSheet(null,{item:id})` sets `#f-cat` and fires its change event, so it counts as your pick and a merchant guess won't replace it. The plain + still starts empty on purpose. Release check added
 - Fix: December's Planned showed November's paydays ("received Nov 6", "coming Nov 20"), because Plan next month copied the income parts with their dates. `rollPays(saved, ym)` (src/js/transactions.js): if none of a month's saved paydays fall in that month, it uses that month's own every-14-days dates (from `scheduledPays`, or else counted forward from the copied dates), keeping the saved amounts in order. Used by `plannedSheet`, and by `planNextSheet` when it copies income (a 3-paycheck month gets its third check and Planned grows by it). Release check: copied December shows Dec 4 / Dec 18
 - Repeats also suggests charges **every few months** (`findPeriodic` in `src/js/repeats.js`, e.g. a water bill every 3 months). It looks at the last 24 months plus this month so far, for merchants charged at most once a month on an exact steady gap of 2, 3, 4 or 6 months, last seen within one gap. A charge is offered when the month on screen is a whole number of gaps after the last one. 3+ charges = ticked, 2 = unticked. Shown under "Every few months", between monthly and "Once a year"; yearly skips anything found here. Release check: water bill Feb/May/Aug → offered in Nov at the $84.33 average, not in Dec
 - Repeats also suggests **yearly** charges (`findYearly` in `src/js/repeats.js`): it looks at the same month 1 and 2 years before the month on screen. It skips merchants already monthly, merchants seen in 2+ of the last 6 months, more than one charge that month, and amounts under $1. Seen in both years = ticked; seen once = listed under "Once a year" but unticked (could be a one-off). Release checks: Prime ticked, Ring unticked, Target skipped

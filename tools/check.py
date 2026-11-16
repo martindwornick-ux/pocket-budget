@@ -336,6 +336,24 @@ with sync_playwright() as p:
         toasts = pg.evaluate("[...document.querySelectorAll('.toast')].map(t=>t.textContent).join(' | ')")
         ok("Google Drive backup hasn't worked since Oct 30" in toasts, "a stale Google Drive backup shows a warning")
 
+    if "opts.item" in html:
+        # "Log purchase" from an item's sheet opens Add Transaction with that item already picked
+        pg.click("nav.tabs [data-tab=budget]")
+        pg.wait_for_timeout(400)
+        pg.evaluate("()=>{const g=[...document.querySelectorAll('#main .gcard')].find(c=>c.querySelector('[data-item=\"i-groc\"]')||/Food/.test(c.textContent));if(g&&!g.classList.contains('open')){const t=g.querySelector('[data-gtog]');t&&t.click()}}")
+        pg.wait_for_timeout(500)
+        pg.locator('#main [data-item="i-groc"]').first.click()
+        pg.wait_for_timeout(700)
+        pg.click("#i-add")
+        pg.wait_for_timeout(900)
+        ok(pg.input_value("#f-cq") == "Groceries" and pg.eval_on_selector("#f-cat", "e=>e.value") == "i-groc", "Log purchase from Groceries opens Add Transaction with Groceries picked (%s)" % pg.input_value("#f-cq"))
+        shot("log-purchase")
+        pg.keyboard.press("Escape")
+        pg.wait_for_timeout(600)
+        if pg.locator("#sheetRoot .sheet").count():
+            pg.keyboard.press("Escape")
+            pg.wait_for_timeout(600)
+
     if HAS_REP:
         # Repeats fills one month at a time: the month on screen (here December)
         pg.click("nav.tabs [data-tab=tx]")
