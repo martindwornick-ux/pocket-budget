@@ -1,5 +1,5 @@
 /* Pocket Budget service worker: opens offline, picks up updates when online. */
-const VERSION = "pb-2026-11-15i";
+const VERSION = "pb-2026-11-15j";
 const SHELL = ["./", "./index.html", "./platform.js", "./config.js", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png", "./hanken-grotesk.woff2"];
 const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 // Every cache except the long-lived library cache belongs to one release and is deleted when a newer one activates.

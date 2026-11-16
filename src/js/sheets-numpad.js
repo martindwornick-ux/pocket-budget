@@ -65,6 +65,15 @@ function dragSheet(sc,sh){
   if(window.visualViewport){let last=visualViewport.height;visualViewport.addEventListener("resize",()=>{const h=visualViewport.height;if(h>last+80)settle();last=h})}
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")settle()});
   window.addEventListener("orientationchange",settle);
+  /* The keyboard covers the bottom of a sheet without shrinking it, so anything under it (e.g. the last location
+     suggestions) couldn't be scrolled into view. While a field is focused and the keyboard is up, html.kbup adds the
+     keyboard's height (--kbh) as extra room at the bottom of the sheet, so it all scrolls up above the keyboard. */
+  const de=document.documentElement;let kbr=0;
+  const kb=()=>{kbr=0;const vv=window.visualViewport;if(!vv)return;const h=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
+    const up=h>120&&isField(document.activeElement);de.style.setProperty("--kbh",(up?h:0)+"px");de.classList.toggle("kbup",up)};
+  const kbSoon=()=>{if(!kbr)kbr=requestAnimationFrame(kb)};
+  if(window.visualViewport){visualViewport.addEventListener("resize",kbSoon);visualViewport.addEventListener("scroll",kbSoon)}
+  document.addEventListener("focusin",()=>setTimeout(kb,60),true);document.addEventListener("focusout",()=>setTimeout(kb,60),true);
 })();
 function askDiscard(sc,sh){if(sc.querySelector(".discard"))return;try{haptic()}catch(_){}
   const d=document.createElement("div");d.className="discard";d.setAttribute("role","alertdialog");

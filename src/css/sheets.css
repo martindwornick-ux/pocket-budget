@@ -308,3 +308,7 @@ body.padopen .fab{display:none}
 @keyframes celup{to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.cel.in .box,.cel .ring,.cel .ring path,.cel .cstreak{animation:none;opacity:1;transform:none;stroke-dashoffset:0}}
 
+
+/* keyboard up (see kbFix in sheets-numpad.js): room under the sheet's content so the bottom can scroll above the keyboard */
+html.kbup .sheet:not(.txs){padding-bottom:calc(22px + var(--kbh,0px) + env(safe-area-inset-bottom,0px))}
+html.kbup .sheet.txs .tbody{padding-bottom:calc(16px + var(--kbh,0px))}
