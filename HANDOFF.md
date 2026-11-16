@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 15, 2026 (build "Nov 15, 11:15 PM", sw `pb-2026-11-15k`)_
+_Last updated: Nov 15, 2026 (build "Nov 15, 11:20 PM", sw `pb-2026-11-15l`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic is one page, `index.html` (about 4,780 lines). Its source is split by screen under `src/` and assembled by `tools/build.py` (see Files). The owner uses it on an iPhone from the home screen.
@@ -37,7 +37,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files: the page under `src/` (see `src/README.md`), then `python3 tools/build.py` to rebuild `index.html`. `platform.js`, `sw.js` etc. are edited directly.
 2. Bump `window.PB_BUILD` (in `src/index.html`, near the top) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`, and rebuild.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-15l`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-15m`, or `pb-<new date>a` on a new day).
 4. Run the checks: `python3 tools/check.py`. Part 4 of the checks runs the real `platform.js` (sign-in, Settings gear, backups, restore, Drive warning, privacy check) against `tools/fake_firebase.js`, which enforces the same owner-only rule as `firestore.rules`; it takes ~25 s. It checks that all scripts parse, loads every screen on sample data with no sign-in, and compares the money shown (remaining, per day, spent of planned, refunds, calendar totals, bills left out) with figures worked out separately. All lines must say `ok`. `PB_SHOTS=/some/folder` also saves screenshots. When a change adds money logic, add a check for it. The same checks run on GitHub after every push (Actions tab).
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -110,6 +110,7 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 `--brand:#17885c --over:#c8372d --ok:#17885c --link --muted --line --card --fg`. Cards use `border-radius:22px`. Light and dark themes are defined in `:root` blocks.
 
 ## Changes Nov 12–15, 2026 (newest first)
+- Fix (the real cause of "can't scroll the location list with the keyboard up"): the sheet rubber band (`dragSheet` mode 2) started whenever the **sheet** couldn't scroll. The add sheet never scrolls itself (its `.tbody` does), so every upward drag became a rubber band whose `preventDefault` blocked the list. Now `canScroll(target)` checks the finger's element and its ancestors up to the sheet for an `overflow:auto/scroll` box with room. If one exists, the drag scrolls it; the rubber band is only for sheets with nothing to scroll. Finger-drag test with the keyboard up: live build 0 px, fixed 285 px
 - Fix to the keyboard fix: iOS shrinks `window.innerHeight` with the keyboard, so measuring against it found no keyboard. `kbFix` now measures against `full`: the tallest the page has been with no field focused (`documentElement.clientHeight`, `visualViewport.height + offsetTop`), reset on rotation. It re-measures at 60/350/700 ms after focus while the keyboard animates. Tested with an iPhone-style fake (innerHeight shrinking too): the old build found 0 px, the new one 336 px
 - Fix: with the keyboard up, the bottom of a sheet (e.g. location suggestions in Add Transaction) couldn't be scrolled into view, because iOS covers the sheet without shrinking it. `kbFix` (src/js/sheets-numpad.js) sets `html.kbup` and `--kbh` (keyboard height from `visualViewport`) while a field is focused. sheets.css adds that as bottom room to `.sheet` (or to `.txs .tbody`, the add sheet's scroller). Tested with a faked visualViewport: the last suggestion now ends above the keyboard (410 px vs keyboard top 508; before it was at 754)
 - "Log purchase" on an item's sheet opens Add Transaction with that item already picked: `txSheet(null,{item:id})` sets `#f-cat` and fires its change event, so it counts as your pick and a merchant guess won't replace it. The plain + still starts empty on purpose. Release check added

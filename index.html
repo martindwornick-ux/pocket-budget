@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 15, 11:15 PM"</script>
+<script>window.PB_BUILD="Nov 15, 11:20 PM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -3563,11 +3563,14 @@ function slideIn(sc,sh){
   });
 }
 function dragSheet(sc,sh){
-  let y0=0,x0=0,dy=0,t0=0,pts=[],mode=0;// 0 undecided, 1 dragging, -1 not
+  let y0=0,x0=0,dy=0,t0=0,pts=[],mode=0,tgt=null;// 0 undecided, 1 dragging, -1 not, 2 rubber band
   const scrolledAbove=el=>{for(;el&&el!==sh.parentNode;el=el.parentNode){if(el.scrollTop>0)return true}return false};
-  sh.addEventListener("touchstart",e=>{if(e.touches.length!==1){mode=-1;return}const t=e.touches[0];y0=t.clientY;x0=t.clientX;dy=0;t0=Date.now();pts=[[t0,y0]];mode=scrolledAbove(e.target)?-1:0},{passive:true});
+  /* anything under the finger (the sheet or a box inside it, like the add sheet's .tbody) that has room to scroll:
+     then an upward drag scrolls it; the rubber band is only for sheets with nothing to scroll */
+  const canScroll=el=>{for(;el&&el!==sh.parentNode;el=el.parentNode){if(el.nodeType===1&&el.scrollHeight>el.clientHeight+1){const o=getComputedStyle(el).overflowY;if(o==="auto"||o==="scroll")return true}}return false};
+  sh.addEventListener("touchstart",e=>{if(e.touches.length!==1){mode=-1;return}const t=e.touches[0];y0=t.clientY;x0=t.clientX;dy=0;t0=Date.now();pts=[[t0,y0]];tgt=e.target;mode=scrolledAbove(e.target)?-1:0},{passive:true});
   sh.addEventListener("touchmove",e=>{if(mode===-1)return;const t=e.touches[0],d=t.clientY-y0;
-    if(mode===0){if(Math.abs(t.clientX-x0)>Math.abs(d)&&Math.abs(t.clientX-x0)>8){mode=-1;return}if(d>8){mode=1;sh._opening=false;sh.style.transition="none";sh.style.animation="none";if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}else if(d<-4){if(sh.scrollHeight<=sh.clientHeight+1){mode=2;sh._opening=false;sh.style.transition="none"}else{mode=-1;return}}else return}
+    if(mode===0){if(Math.abs(t.clientX-x0)>Math.abs(d)&&Math.abs(t.clientX-x0)>8){mode=-1;return}if(d>8){mode=1;sh._opening=false;sh.style.transition="none";sh.style.animation="none";if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}else if(d<-4){if(!canScroll(tgt)){mode=2;sh._opening=false;sh.style.transition="none"}else{mode=-1;return}}else return}
     if(mode===2){e.preventDefault();const up=Math.min(28,Math.pow(Math.max(0,-d),.62));sh.style.transform="translateY("+(-up)+"px)";return}
     e.preventDefault();dy=Math.max(0,d-8);sh.style.transform="translateY("+dy+"px)";sc.style.background="rgba(5,15,10,"+(0.45*Math.max(0,1-dy/(sh.offsetHeight||1))).toFixed(3)+")";
     const now=Date.now();pts.push([now,t.clientY]);while(pts.length>2&&now-pts[0][0]>100)pts.shift()},{passive:false});
