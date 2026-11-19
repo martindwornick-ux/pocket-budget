@@ -209,6 +209,7 @@ body.padopen .fab{display:none}
 .padfoot{display:flex;align-items:center;gap:12px;margin-top:12px}
 .tgl{display:flex;align-items:center;gap:10px;flex:1;min-width:0;font-size:18px;cursor:pointer}
 .plro{background:none!important;border-color:transparent!important;box-shadow:none!important;opacity:.85}.plahn{margin:8px 2px 0;font-size:13.5px;line-height:1.4;color:var(--muted)}
+.fdcard{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,#188038 35%,transparent)}.fnote{margin-top:3px;font-size:13px;color:var(--muted)}
 .ascard .icap>span{display:none}.ascard .icap::before{content:"Setting aside";margin-right:2px}
 #pl-fwmv{display:table;margin:5px 0 0}
 .ashint{margin:-2px 0 6px;font-size:13.5px;line-height:1.4;color:var(--muted)}.ascard{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,#1a73e8 35%,transparent)}

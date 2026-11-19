@@ -71,7 +71,7 @@ $("#main").addEventListener("click",e=>{
   if(COMBINED&&e.target.closest(".eqcard #addIncome")){plannedSheet();return}
   if(e.target.closest("[data-plannext]")){planNextSheet();return}
   if(e.target.closest("[data-mlmiss]")){mlMissing();return}
-  const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#addAside,#exportCsv,#syncAll");if(!t)return;
+  const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#addAside,#addFund,#exportCsv,#syncAll");if(!t)return;
   if(t.dataset.income)incomeSheet(t.dataset.income);
   else if(t.id==="addIncome")incomeSheet(null);
   else if(t.dataset.item&&t.dataset.msub)subSheet(t.dataset.msub);
@@ -81,6 +81,7 @@ $("#main").addEventListener("click",e=>{
   else if(t.dataset.tx){const x=S.tx.find(y=>y.id===t.dataset.tx);if(x)isHist(x)?histSheet(x):txSheet(x)}
   else if(t.dataset.tabGo){S.tab=t.dataset.tabGo;render()}
   else if(t.id==="addGroup")groupSheet(null);
+  else if(t.id==="addFund")groupSheet(null,true);
   else if(t.id==="addAside"){const gs=JSON.parse(JSON.stringify(groupsFor(S.ym))),g={id:uid(),name:"Set aside",aside:true,items:[]};gs.push(g);saveGroups(gs).then(ok=>{if(ok)setTimeout(()=>newItemSheet(g.id),60)})}
   else if(t.id==="exportCsv")exportCsv();
   else if(t.id==="syncAll")syncAll(t);
@@ -122,7 +123,7 @@ async function init(){
   S.db=db;S.dbState="ok";loadSubs();
   const user=await (window.claude?.use?.("user")||Promise.resolve(null)).catch(()=>null);
   if(user){try{S.readOnly=!(await user.isOwner())}catch(e){}}
-  db.collection("budgets").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());S.budgets=m;S.budgetsLoaded=true;S.fromCache=false;render();cacheSave()},()=>{S.budgetsLoaded=true;render()});
+  db.collection("budgets").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());S.budgets=m;S.budgetsLoaded=true;S.fromCache=false;fundWatch();render();cacheSave()},()=>{S.budgetsLoaded=true;render()});
   db.doc("meta/history").onSnapshot(snap=>{H.meta=snap.exists?snap.data():null;H.metaLoaded=true;render()},()=>{H.metaLoaded=true;render()});
   subscribeTx();
   setTimeout(merchLoad,1200);

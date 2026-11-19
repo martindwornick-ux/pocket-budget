@@ -186,6 +186,32 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     ok("Cinema" in pg.inner_text("#calpanel") and money(103) in pg.inner_text("#calpanel"), "tapping Nov 5 lists the $103.00 Cinema purchase")
 
+    print("Savings fund")
+    # Wedding fund: $500 added in October, $300 in November, $100 used in November (paid from the fund, not spending)
+    fg = lambda amt: {"id": "g-wed", "name": "Wedding savings", "fund": True, "items": [{"id": "i-wed", "name": "Wedding Fund", "planned": amt}]}
+    fcache = {"v": 1, "ym": YM, "at": 0, "budgets": {
+        "2026-10": {"groups": [groups[0], fg(500)], "income": [{"id": "inc1", "name": "Paycheck", "planned": 2000}]},
+        YM: {"groups": [groups[0], fg(300)], "income": [{"id": "inc1", "name": "Paycheck", "planned": 2000}]}},
+        "tx": [x for x in tx if x["itemId"] == "i-groc"] + [{"id": "w1", "date": YM + "-09", "amount": 100, "type": "expense", "itemId": "i-wed", "merchant": "Florist deposit"}]}
+    fctx = br.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, service_workers="block")
+    fctx.add_init_script("localStorage.setItem('pb.cache',%s);localStorage.setItem('pb.gopen','{\"g-wed\":1,\"g-food\":1}');" % json.dumps(json.dumps(fcache)))
+    fctx.route(lambda u: not u.startswith("http://127.0.0.1"), lambda r: r.abort())
+    pg = fctx.new_page()
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.clock.set_fixed_time("%s-%02dT14:00:00" % (YM, TODAY_DAY))
+    pg.goto(URL)
+    pg.wait_for_timeout(1200)
+    pg.click("nav.tabs [data-tab=budget]")
+    pg.wait_for_timeout(500)
+    t = text()
+    shot("budget-fund")
+    frem = 2000 - groc_spent - 300
+    ok("%s remaining of %s" % (money(frem), money(2000)) in t, "fund: this month's add and the use paid from the fund leave %s remaining" % money(frem))
+    ok("Wedding savings $700.00 saved" in t, "fund: $500 + $300 added - $100 used = $700.00 saved")
+    ok("Adding $300.00 in November" in t, "fund: caption shows what's added this month")
+    ok("$800.00 saved · $100.00 used" in t, "fund: shows total added and used")
+    fctx.close()
+
     print("No JavaScript errors")
     ok(not errs, "no errors on any screen" + (": " + " | ".join(errs)[:400] if errs else ""))
     br.close()

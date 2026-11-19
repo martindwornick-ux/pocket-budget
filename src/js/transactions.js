@@ -389,7 +389,7 @@ function txSheetCore(existing){
           else ref=await addFast(body);
           ls.set("pb.lastItem",itemId);closeSheet();
           const moved=ymOf(date)!==S.ym;
-          if(!existing){let left=null;try{if(body.type!=="income"&&ymOf(body.date)===S.ym){const f=findItem(groupsFor(S.ym),itemId);if(f&&+f.it.planned>0){const sp=S.tx.filter(t=>t.itemId===itemId&&!(ref&&t.id===ref.id)).reduce((x,t)=>x+sAmt(t),0)+sAmt(body);left={n:f.it.name,v:round2(+f.it.planned-sp)}}}}catch(_){}
+          if(!existing){let left=null;try{if(body.type!=="income"&&ymOf(body.date)===S.ym){const f=findItem(groupsFor(S.ym),itemId);if(f&&(f.g.fund||+f.it.planned>0)){const sp=S.tx.filter(t=>t.itemId===itemId&&!(ref&&t.id===ref.id)).reduce((x,t)=>x+sAmt(t),0)+sAmt(body);left={n:f.it.name,v:f.g.fund?fundInfo(itemId,S.ym,{[itemId]:sp}).bal:round2(+f.it.planned-sp)}}}}catch(_){}
             FLY={item:body.type==="income"?null:itemId,amt:rOn?round2(a-rAmt):a,kind:body.type,over:!!(left&&left.v<0)};
             setTimeout(()=>celebrate(rOn?round2(a-rAmt):a,body.merchant,body.type,left),180)}else if(!moved)toast("Saved");
           if(moved)goMonth(ymOf(date),existing?existing.id:ref.id,!existing);
@@ -429,14 +429,15 @@ function itemSheet(id,preSub){
   /* rows are divs so the amount can be its own tap target: tap the amount to type a new one right there */
   let tx=list.map(t=>'<div class="txrow" role="button" tabindex="0" data-tx="'+esc(t.id)+'"'+(isM?' data-sub="'+esc(subOf(t))+'"':'')+'><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(fmtDay(t.date))+(isM?' · '+esc(subOf(t)):'')+'</div></div>'+
     (isHist(t)?'<div class="a num"'+(t.type==="refund"||t.type==="income"?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</div>':'<button type="button" class="a num iamt" data-amt="'+esc(t.id)+'"'+(t.type==="refund"||t.type==="income"?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</button>')+'</div>').join("");
-  const NX=nextMonthName(),isAs=!!f.g.aside;
+  const NX=nextMonthName(),isAs=!!f.g.aside,isF=!!f.g.fund,MN=MONTHS[+S.ym.slice(5)-1],fi=isF?fundInfo(id,S.ym,spentMap()):null;
+  const fH=isF?'<div class="ahbox fhbox"><b class="num">'+money(fi.bal)+' saved</b><span class="num">'+money(fi.added)+' added so far'+(fi.used>0?', '+money(fi.used)+' used':'')+'. Adding is what goes in this '+MN+'. It isn\'t spending and stays saved until you use it. To use some, log a purchase here; it comes out of the fund, not '+MN+'\'s budget.</span></div>':'';
   const asH=isAs?'<div class="ahbox"><b>Set aside for '+NX+'</b><span>Saved from '+MONTHS[+S.ym.slice(5)-1]+'\'s money. It isn\'t counted as spending here and shows up in '+NX+'\'s Planned as starting money. Log the real payment in '+NX+' on its regular item.</span></div>':'';
   openSheet('<h3>'+esc(f.it.name)+'</h3>'+
-    '<div class="two"><div class="field"><label for="i-name">Name</label><input id="i-name" value="'+esc(f.it.name)+'"></div><div class="field"><label for="i-plan">Planned</label><input id="i-plan" inputmode="decimal" value="'+(+f.it.planned||0).toFixed(2)+'"></div></div>'+
-    asH+'<div class="ltb" id="i-ltb"></div>'+
+    '<div class="two"><div class="field"><label for="i-name">Name</label><input id="i-name" value="'+esc(f.it.name)+'"></div><div class="field"><label for="i-plan">'+(isF?"Adding in "+MN.slice(0,3):"Planned")+'</label><input id="i-plan" inputmode="decimal" value="'+(+f.it.planned||0).toFixed(2)+'"></div></div>'+
+    asH+fH+(isAs?'<button class="addlink" id="i-tofund" style="padding:0;margin:-4px 0 12px">Move to a savings fund (no pay date)</button>':'')+'<div class="ltb" id="i-ltb"></div>'+
 
     '<p class="note num" style="margin:0 0 14px">'+money(spent)+' spent in '+MONTHS[+S.ym.slice(5)-1]+(back?' (after '+money(back)+' back)':'')+'. Planned amounts carry into new months until you change them.</p>'+
-    '<div class="btnrow"><button class="btn" id="i-save">Save</button><button class="btn sec" id="i-add">Log purchase</button></div>'+
+    '<div class="btnrow"><button class="btn" id="i-save">Save</button><button class="btn sec" id="i-add">'+(isF?"Use money":"Log purchase")+'</button></div>'+
     (subsH?'<div style="margin-top:16px">'+subsH+'</div>':'')+
     (tx?'<div style="margin-top:'+(subsH?4:16)+'px" id="i-txs">'+tx+'</div>':'')+
     '<div class="btnrow" style="margin-top:16px"><button class="btn danger" id="i-del">Remove item</button></div><div id="i-conf"></div>',
@@ -452,6 +453,9 @@ function itemSheet(id,preSub){
       };
       planIn.addEventListener("input",upd);upd();
       s.querySelector("#i-save").onclick=async()=>{const p=parseAmt(s.querySelector("#i-plan").value);const n=s.querySelector("#i-name").value.trim();if(!n){toast("Give the item a name");shake(s.querySelector("#i-name"));return}if(isNaN(p)||p<0){toast("Planned must be $0 or more");shake(s.querySelector("#i-plan"));return}f.it.name=n;f.it.planned=p;if(await saveGroups(groups)){closeSheet();toast("Saved")}};
+      const tf=s.querySelector("#i-tofund");if(tf)tf.onclick=async()=>{let fg=groups.find(g=>g.fund);if(!fg){fg={id:uid(),name:"Savings funds",fund:true,items:[]};groups.push(fg)}
+        f.g.items=f.g.items.filter(x=>x.id!==id);fg.items.push(f.it);const p=parseAmt(planIn.value);if(!isNaN(p)&&p>=0)f.it.planned=p;
+        if(await saveGroups(groups)){closeSheet();toast("Moved to "+fg.name)}};
       s.querySelector("#i-add").onclick=()=>{ls.set("pb.lastItem",id);txSheet(null,{item:id})};
       s.querySelectorAll("[data-tx]").forEach(b=>b.onclick=e=>{if(e.target.closest(".iamt"))return;const t=S.tx.find(x=>x.id===b.dataset.tx);if(t)isHist(t)?histSheet(t):txSheet(t)});
       const gp=sheetPad(s);
@@ -471,17 +475,17 @@ function itemSheet(id,preSub){
 }
 function newItemSheet(gid){
   const groups=JSON.parse(JSON.stringify(groupsFor(S.ym)));const g=groups.find(x=>x.id===gid);if(!g)return;
-  openSheet('<h3>Add item to '+esc(groupLbl(g))+'</h3><div class="two"><div class="field"><label for="n-name">Name</label><input id="n-name" placeholder="e.g. Coffee"></div><div class="field"><label for="n-plan">Planned</label><input id="n-plan" inputmode="decimal" placeholder="0.00"></div></div><div class="btnrow"><button class="btn" id="n-save">Add item</button></div>',
+  openSheet('<h3>Add item to '+esc(groupLbl(g))+'</h3><div class="two"><div class="field"><label for="n-name">Name</label><input id="n-name" placeholder="'+(g.fund?"e.g. Wedding Fund":"e.g. Coffee")+'"></div><div class="field"><label for="n-plan">'+(g.fund?"Adding in "+MONTHS[+S.ym.slice(5)-1].slice(0,3):"Planned")+'</label><input id="n-plan" inputmode="decimal" placeholder="0.00"></div></div><div class="btnrow"><button class="btn" id="n-save">Add item</button></div>',
     s=>{setTimeout(()=>s.querySelector("#n-name").focus(),60);s.querySelector("#n-save").onclick=async()=>{const n=s.querySelector("#n-name").value.trim();const p=parseAmt(s.querySelector("#n-plan").value||"0");if(!n){toast("Give the item a name");return}g.items.push({id:uid(),name:n,planned:isNaN(p)?0:p});if(await saveGroups(groups)){closeSheet();toast("Added "+n)}}});
 }
-function groupSheet(gid){
-  const groups=JSON.parse(JSON.stringify(groupsFor(S.ym)));const isNew=!gid;const g=isNew?{id:uid(),name:"",items:[]}:groups.find(x=>x.id===gid);if(!g)return;
+function groupSheet(gid,fund){
+  const groups=JSON.parse(JSON.stringify(groupsFor(S.ym)));const isNew=!gid;const g=isNew?(fund?{id:uid(),name:"",fund:true,items:[]}:{id:uid(),name:"",items:[]}):groups.find(x=>x.id===gid);if(!g)return;
   const idx=groups.indexOf(g);
-  openSheet('<h3>'+(isNew?"New group":esc(groupLbl(g)))+'</h3>'+(g.aside?'<p class="note" style="margin:-4px 0 12px">Its name follows the month: next month it reads Set aside for '+esc(nextMonthName(ymAdd(S.ym,1)))+'.</p>':'')+'<div class="field"'+(g.aside?" hidden":"")+'><label for="g-name">Group name</label><input id="g-name" placeholder="e.g. Giving" value="'+esc(g.name)+'"></div><div class="btnrow"'+(g.aside?" hidden":"")+'><button class="btn" id="g-save">'+(isNew?"Add group":"Rename")+'</button></div>'+
+  openSheet('<h3>'+(isNew?(g.fund?"New savings fund":"New group"):esc(groupLbl(g)))+'</h3>'+(g.fund?'<p class="note" style="margin:-4px 0 12px">For money you\'re saving up with no set date to use it. What you add each month isn\'t spending, and it stays saved month to month until you use it.</p>':'')+(g.aside?'<p class="note" style="margin:-4px 0 12px">Its name follows the month: next month it reads Set aside for '+esc(nextMonthName(ymAdd(S.ym,1)))+'.</p>':'')+'<div class="field"'+(g.aside?" hidden":"")+'><label for="g-name">Group name</label><input id="g-name" placeholder="'+(g.fund?"e.g. Wedding":"e.g. Giving")+'" value="'+esc(g.name)+'"></div><div class="btnrow"'+(g.aside?" hidden":"")+'><button class="btn" id="g-save">'+(isNew?"Add group":"Rename")+'</button></div>'+
     (isNew?'':'<div class="btnrow" style="margin-top:10px"><button class="btn sec" id="g-up"'+(idx===0?" disabled":"")+'>Move up</button><button class="btn sec" id="g-down"'+(idx===groups.length-1?" disabled":"")+'>Move down</button></div><div class="btnrow" style="margin-top:10px"><button class="btn danger" id="g-del">Remove group</button></div><div id="g-conf"></div>'),
     s=>{
       if(isNew)setTimeout(()=>s.querySelector("#g-name").focus(),60);
-      s.querySelector("#g-save").onclick=async()=>{const n=s.querySelector("#g-name").value.trim();if(!n){toast("Give the group a name");return}g.name=n;if(isNew)groups.push(g);if(await saveGroups(groups)){closeSheet();toast("Saved")}};
+      s.querySelector("#g-save").onclick=async()=>{const n=s.querySelector("#g-name").value.trim();if(!n){toast("Give the group a name");return}g.name=n;if(isNew)groups.push(g);if(await saveGroups(groups)){closeSheet();if(isNew&&g.fund)setTimeout(()=>newItemSheet(g.id),60);else toast("Saved")}};
       if(isNew)return;
       const mv=async d=>{groups.splice(idx,1);groups.splice(idx+d,0,g);if(await saveGroups(groups))closeSheet()};
       s.querySelector("#g-up").onclick=()=>mv(-1);s.querySelector("#g-down").onclick=()=>mv(1);

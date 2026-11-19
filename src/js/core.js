@@ -44,6 +44,22 @@ function groupsFor(ym){const b=S.budgets[ym];const g=withCarry(b?(b.groups||[]):
    was already there for this month's bills. */
 function asideItems(groups){const o=[];(groups||[]).forEach(g=>{if(g.aside)(g.items||[]).forEach(it=>o.push({g,it}))});return o}
 function asideFor(ym){const b=S.budgets[ymAdd(ym,-1)];return b&&Array.isArray(b.groups)?asideItems(b.groups):[]}
+/* Savings funds. A group with fund:true (e.g. "Wedding savings") holds money saved up with no set month to use it.
+   An item's planned amount is what's added that month. Like Set aside, it isn't spending (Remaining and $/day leave it
+   out), but nothing moves to next month's starting money: the balance (all months' adds minus what's been used) just
+   stays in the fund. Using it = logging a purchase on the fund's item. That's paid from the fund, not the month's
+   money, so it only counts as spending past what's in the fund. FUND.tx: every transaction on a fund item (all months). */
+const FUND={ids:"",tx:[],unsub:null};
+function fundIdSet(){const s=new Set();Object.keys(S.budgets).forEach(k=>{const b=S.budgets[k];((b&&b.groups)||[]).forEach(g=>{if(g.fund)(g.items||[]).forEach(it=>s.add(it.id))})});return s}
+function fundAdded(id,ym){let a=0;Object.keys(S.budgets).forEach(k=>{if(k>=ym)return;const b=S.budgets[k];((b&&b.groups)||[]).forEach(g=>{if(g.fund)(g.items||[]).forEach(it=>{if(it.id===id)a+=+it.planned||0})})});
+  const f=findItem(groupsFor(ym),id);if(f&&f.g.fund)a+=+f.it.planned||0;return round2(a)}
+/* sm = spending this month by item. bal: in the fund after this month. over: this month's use past what was in it. */
+function fundInfo(id,ym,sm){const added=fundAdded(id,ym),before=round2(FUND.tx.filter(t=>t.itemId===id&&(t.date||"")<ym+"-01").reduce((a,t)=>a+sAmt(t),0)),now=round2((sm||{})[id]||0),avail=round2(added-before);
+  return{added,used:round2(before+now),now,bal:round2(avail-now),over:round2(Math.max(0,now-Math.max(0,avail)))}}
+const fundItemIds=groups=>new Set(allItems(groups).filter(x=>x.g.fund).map(x=>x.it.id));
+function fundWatch(){if(!S.db)return;const ids=[...fundIdSet()].sort().slice(0,30),k=ids.join(",");if(k===FUND.ids)return;
+  FUND.ids=k;if(FUND.unsub)try{FUND.unsub()}catch(_){}FUND.unsub=null;FUND.tx=[];if(!ids.length)return;
+  FUND.unsub=S.db.collection("tx").where("itemId","in",ids).limit(2000).onSnapshot(snap=>{FUND.tx=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render()},()=>{})}
 function withCarry(groups,ym){
   /* move items from the short-lived per-item switch (ahead/once/from) into the group */
   if(!groups.some(g=>(g.items||[]).some(it=>it.ahead||it.once||it.from)))return groups;

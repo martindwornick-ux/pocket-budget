@@ -1,6 +1,6 @@
 # Pocket Budget: Session Handoff
 
-_Last updated: Nov 15, 2026 (build "Nov 15, 11:20 PM", sw `pb-2026-11-15l`)_
+_Last updated: Nov 19, 2026 (build "Nov 19, 7:45 AM", sw `pb-2026-11-19a`)_
 
 ## What this is
 A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martindwornick-ux.github.io/pocket-budget`, repo `martindwornick-ux/pocket-budget`. It's a single-page app: nearly all the logic is one page, `index.html` (about 4,780 lines). Its source is split by screen under `src/` and assembled by `tools/build.py` (see Files). The owner uses it on an iPhone from the home screen.
@@ -37,7 +37,7 @@ A personal budgeting PWA (Progressive Web App) hosted on GitHub Pages at `martin
 ## Release process
 1. Edit files: the page under `src/` (see `src/README.md`), then `python3 tools/build.py` to rebuild `index.html`. `platform.js`, `sw.js` etc. are edited directly.
 2. Bump `window.PB_BUILD` (in `src/index.html`, near the top) to the current local date/time, e.g. `"Nov 13, 11:45 PM"`, and rebuild.
-3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-15m`, or `pb-<new date>a` on a new day).
+3. Bump `VERSION` in `sw.js`, line 2: `pb-YYYY-MM-DD` plus a letter (next is `pb-2026-11-19b`, or `pb-<new date>a` on a new day).
 4. Run the checks: `python3 tools/check.py`. Part 4 of the checks runs the real `platform.js` (sign-in, Settings gear, backups, restore, Drive warning, privacy check) against `tools/fake_firebase.js`, which enforces the same owner-only rule as `firestore.rules`; it takes ~25 s. It checks that all scripts parse, loads every screen on sample data with no sign-in, and compares the money shown (remaining, per day, spent of planned, refunds, calendar totals, bills left out) with figures worked out separately. All lines must say `ok`. `PB_SHOTS=/some/folder` also saves screenshots. When a change adds money logic, add a check for it. The same checks run on GitHub after every push (Actions tab).
 5. `git add` the changed files (any new asset must also go into `SHELL` in `sw.js`) `&& git commit`, then `git fetch origin main && git rebase origin/main && git push origin main`.
 
@@ -77,6 +77,7 @@ Closure functions can't be called from the page. To test one (e.g. `celebrate`),
 - Transactions shortcuts are a slim `.qlinks` pill row (Finance Tracker, Venmo).
 - Merchant → item auto-pick already exists: `autoCat()` in the tx sheet uses `merchIndex()` history, then `catGuess()`.
 - **Home / regular-spot address**: `LOC.mySpot(fix)` first checks hand-corrected spots on this phone (`pb.mySpots`, set by `LOC.learn`), then `LOC.pastSpot(fix)`. That looks at your saved transactions (synced) for street addresses you typed or picked (`loc.src!=="gps"`, no business name) within 120–220 m and picks the most used one. This fixes GPS drift at home showing a neighbour's number (e.g. 2976 instead of 2944 Gerald Ave NE).
+- **Savings funds** (`g.fund:true`, core.js `fundInfo()` / `fundWatch()`, budget.js `fundItemHTML()`): money saved with no pay date (e.g. Wedding savings). An item's `planned` is what's *added* that month. Like Set aside it's left out of Remaining/$ per day (`totals()` puts it in `a`), but it does NOT become next month's starting money: the balance = all months' adds (`S.budgets` fund groups, plus this month) minus all use (`FUND.tx`, a live `tx where itemId in [fund ids]` query, ≤30 ids). Purchases on a fund item are paid from the fund, so only use past the balance counts as spending (`fundInfo().over`). Created with "+ Savings fund" (`#addFund` → `groupSheet(null,true)`); a Set-aside item's sheet has "Move to a savings fund". Checked in `tools/check.py` → "Savings fund".
 - **Doodle mood** (header month doodle, e.g. November's turkey): `doodleMood()` compares flexible spending (fixed bills and set-aside groups left out) with the plan. It returns `good` (steam/sparkles), `warn` (ahead of the calendar by more than 8 points, blue sweat drop) or `over` (past plan: `.dbody` filtered to look burnt, grey smoke). Classes are `.doodle.m-*`. Tapping the doodle toasts `MOOD_MSG` (the turkey wording is used in November; its sweat drop is shifted beside the head).
 - **Premium pass (Nov 14)**:
   - **Appearance**: `localStorage["pb.theme"]` is `light` (default), `dark` or `auto`. It's set by a tiny script right after `<div id="padRoot">` (it used to hard-code light because dark was broken). The dark layer is the `:root[data-theme="dark"]` block at the end of the last `<style>`. It must stay after the Google light layer, which re-sets the variables on `:root`. Settings → Personal touches has the picker (platform.js). The settings sheet itself stays light.

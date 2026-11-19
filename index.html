@@ -30,7 +30,7 @@ body:not(.padopen){padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 #updpill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);translate:-50% -140%;z-index:60;padding:10px 16px;border-radius:22px;background:#202124;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:translate .35s cubic-bezier(.2,.9,.3,1);white-space:nowrap}
 #updpill.on{translate:-50% 0}#updpill b{color:#8ab4f8;margin-left:6px}
 </style>
-<script>window.PB_BUILD="Nov 15, 11:20 PM"</script>
+<script>window.PB_BUILD="Nov 19, 7:45 AM"</script>
 <script src="config.js"></script>
 <script src="platform.js"></script>
 </head><body>
@@ -617,6 +617,7 @@ body.padopen .fab{display:none}
 .padfoot{display:flex;align-items:center;gap:12px;margin-top:12px}
 .tgl{display:flex;align-items:center;gap:10px;flex:1;min-width:0;font-size:18px;cursor:pointer}
 .plro{background:none!important;border-color:transparent!important;box-shadow:none!important;opacity:.85}.plahn{margin:8px 2px 0;font-size:13.5px;line-height:1.4;color:var(--muted)}
+.fdcard{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,#188038 35%,transparent)}.fnote{margin-top:3px;font-size:13px;color:var(--muted)}
 .ascard .icap>span{display:none}.ascard .icap::before{content:"Setting aside";margin-right:2px}
 #pl-fwmv{display:table;margin:5px 0 0}
 .ashint{margin:-2px 0 6px;font-size:13.5px;line-height:1.4;color:var(--muted)}.ascard{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,#1a73e8 35%,transparent)}
@@ -1405,6 +1406,22 @@ function groupsFor(ym){const b=S.budgets[ym];const g=withCarry(b?(b.groups||[]):
    was already there for this month's bills. */
 function asideItems(groups){const o=[];(groups||[]).forEach(g=>{if(g.aside)(g.items||[]).forEach(it=>o.push({g,it}))});return o}
 function asideFor(ym){const b=S.budgets[ymAdd(ym,-1)];return b&&Array.isArray(b.groups)?asideItems(b.groups):[]}
+/* Savings funds. A group with fund:true (e.g. "Wedding savings") holds money saved up with no set month to use it.
+   An item's planned amount is what's added that month. Like Set aside, it isn't spending (Remaining and $/day leave it
+   out), but nothing moves to next month's starting money: the balance (all months' adds minus what's been used) just
+   stays in the fund. Using it = logging a purchase on the fund's item. That's paid from the fund, not the month's
+   money, so it only counts as spending past what's in the fund. FUND.tx: every transaction on a fund item (all months). */
+const FUND={ids:"",tx:[],unsub:null};
+function fundIdSet(){const s=new Set();Object.keys(S.budgets).forEach(k=>{const b=S.budgets[k];((b&&b.groups)||[]).forEach(g=>{if(g.fund)(g.items||[]).forEach(it=>s.add(it.id))})});return s}
+function fundAdded(id,ym){let a=0;Object.keys(S.budgets).forEach(k=>{if(k>=ym)return;const b=S.budgets[k];((b&&b.groups)||[]).forEach(g=>{if(g.fund)(g.items||[]).forEach(it=>{if(it.id===id)a+=+it.planned||0})})});
+  const f=findItem(groupsFor(ym),id);if(f&&f.g.fund)a+=+f.it.planned||0;return round2(a)}
+/* sm = spending this month by item. bal: in the fund after this month. over: this month's use past what was in it. */
+function fundInfo(id,ym,sm){const added=fundAdded(id,ym),before=round2(FUND.tx.filter(t=>t.itemId===id&&(t.date||"")<ym+"-01").reduce((a,t)=>a+sAmt(t),0)),now=round2((sm||{})[id]||0),avail=round2(added-before);
+  return{added,used:round2(before+now),now,bal:round2(avail-now),over:round2(Math.max(0,now-Math.max(0,avail)))}}
+const fundItemIds=groups=>new Set(allItems(groups).filter(x=>x.g.fund).map(x=>x.it.id));
+function fundWatch(){if(!S.db)return;const ids=[...fundIdSet()].sort().slice(0,30),k=ids.join(",");if(k===FUND.ids)return;
+  FUND.ids=k;if(FUND.unsub)try{FUND.unsub()}catch(_){}FUND.unsub=null;FUND.tx=[];if(!ids.length)return;
+  FUND.unsub=S.db.collection("tx").where("itemId","in",ids).limit(2000).onSnapshot(snap=>{FUND.tx=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render()},()=>{})}
 function withCarry(groups,ym){
   /* move items from the short-lived per-item switch (ahead/once/from) into the group */
   if(!groups.some(g=>(g.items||[]).some(it=>it.ahead||it.once||it.from)))return groups;
@@ -1630,7 +1647,7 @@ const DOODLES=[
 /* Doodle mood: the month's doodle reacts to how flexible spending (fixed bills left out) is going.
    good = at or under pace, warn = ahead of the calendar, over = past the plan (November's turkey gets roasted and smokes). */
 function doodleMood(){try{const td=today(),cur=ymOf(td),ym=S.ym;if(ym>cur)return"";const gs=groupsFor(ym),fx=new Set();let p=0;
-  gs.forEach(g=>g.items.forEach(it=>{if(isFixed(it,g)){fx.add(it.id);return}if(g.aside)return;p+=+it.planned||0}));if(p<=0)return"";
+  gs.forEach(g=>g.items.forEach(it=>{if(g.fund){fx.add(it.id);return}if(isFixed(it,g)){fx.add(it.id);return}if(g.aside)return;p+=+it.planned||0}));if(p<=0)return"";
   const sp=S.tx.filter(t=>t.type!=="income"&&!fx.has(t.itemId)&&(t.date||"")<=td).reduce((a,t)=>a+sAmt(t),0),r=sp/p;
   if(r>1.0001)return"over";if(ym<cur)return"good";const [y,m]=ym.split("-").map(Number),mp=+td.slice(8,10)/new Date(y,m,0).getDate();return r>mp+.08?"warn":"good"}catch(_){return""}}
 const MOOD_MSG={good:["Right on track","On track, the turkey's strutting"],warn:["A bit ahead of pace","Careful, the turkey's sweating"],over:["Over budget this month","Over budget, the turkey got roasted"]};
@@ -1733,7 +1750,7 @@ function renderHeader(){
   if(onTx){const i=$("#txq");i.placeholder="Search "+MONTHS[+S.ym.slice(5)-1]+" transactions";if(document.activeElement!==i&&i.value!==(S.q||""))i.value=S.q||"";$("#txqClear").hidden=!(S.q||"").trim()}
   document.querySelectorAll("nav.tabs button").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});moveTabInd();
 }
-function totals(groups,sm){let p=0,s=0,a=0;allItems(groups).forEach(({g,it})=>{p+=+it.planned||0;s+=sm[it.id]||0;if(g.aside)a+=Math.max(0,(+it.planned||0)-(sm[it.id]||0))});const known=new Set(allItems(groups).map(x=>x.it.id));S.tx.forEach(t=>{if(!known.has(t.itemId))s+=sAmt(t)});return{p:round2(p),s:round2(s),r:round2(p-s),a:round2(a)}}
+function totals(groups,sm){let p=0,s=0,a=0;allItems(groups).forEach(({g,it})=>{p+=+it.planned||0;if(g.fund){a+=+it.planned||0;s+=fundInfo(it.id,S.ym,sm).over;return}s+=sm[it.id]||0;if(g.aside)a+=Math.max(0,(+it.planned||0)-(sm[it.id]||0))});const known=new Set(allItems(groups).map(x=>x.it.id));S.tx.forEach(t=>{if(!known.has(t.itemId))s+=sAmt(t)});return{p:round2(p),s:round2(s),r:round2(p-s),a:round2(a)}}
 /* The moment every dollar has a job: confetti from the banner, a little pop, a haptic. Only on the change, never on load. */
 const ZB={};
 function zeroParty(b){if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;try{haptic()}catch(_){}
@@ -1813,6 +1830,15 @@ function itemComboHTML(it,sm,solo){
   return '<div class="item citem"><button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm'+(solo?" solo":"")+'">'+(solo&&!it.ahead&&!it.from?(over?"Over":"Left"):itemNmHTML(it))+'</span><span class="v num'+(over?" neg":"")+'"><span data-roll="it:'+esc(it.id)+'" data-v="'+rem+'">'+money(rem)+'</span></span></button><button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true">'+bar+'</button>'+
     '<div class="icap"><span class="num'+(over?" neg":"")+'">'+money(spent)+' spent</span><span>of</span><button class="capb num'+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Planned for '+esc(it.name)+', '+money(planned)+'. Tap to change">'+money(planned)+PENCIL+'</button></div></div>';
 }
+/* Savings fund item: the big number is what's in the fund; the caption is what's added this month (tap to change). */
+function fundItemHTML(it,sm){
+  const fi=fundInfo(it.id,S.ym,sm),planned=+it.planned||0,neg=fi.bal<0,ed=PAD&&PAD.kind==="item"&&PAD.id===it.id;
+  const pct=fi.added>0?Math.max(0,Math.min(100,fi.bal/fi.added*100)):0;
+  return '<div class="item citem fitem"><button class="irow cirow" data-item="'+esc(it.id)+'"><span class="nm">'+itemNmHTML(it)+'</span><span class="v num'+(neg?" neg":"")+'"><span data-roll="it:'+esc(it.id)+'" data-v="'+fi.bal+'">'+money(fi.bal)+'</span></span></button>'+
+    '<button class="tapbar" data-item="'+esc(it.id)+'" tabindex="-1" aria-hidden="true"><div class="track fill cb">'+(neg?'<i class="ov" style="width:100%;margin-left:0"></i>':'<i style="width:'+pct.toFixed(1)+'%"></i>')+'</div></button>'+
+    '<div class="icap"><span>Adding</span><button class="capb num'+(ed?" editing":"")+'" data-plan="'+esc(it.id)+'" aria-label="Adding to '+esc(it.name)+' this month, '+money(planned)+'. Tap to change">'+money(planned)+PENCIL+'</button><span>in '+MONTHS[+S.ym.slice(5)-1]+'</span></div>'+
+    (fi.used>0?'<div class="fnote num">'+money(fi.added)+' saved · '+money(fi.used)+' used</div>':'')+'</div>';
+}
 /* little Google-palette illustrations for empty screens */
 const EMPTY_ART={
  receipt:'<svg class="eart" viewBox="0 0 64 64" aria-hidden="true"><path d="M17 8h30v48l-5-3.5-5 3.5-5-3.5-5 3.5-5-3.5-5 3.5z" fill="#fff" stroke="#dadce0" stroke-width="2" stroke-linejoin="round"/><path d="M23 19h18M23 26h12M23 33h15" stroke="#4285f4" stroke-width="3" stroke-linecap="round"/><path d="M23 43h8" stroke="#34a853" stroke-width="3" stroke-linecap="round"/><circle cx="48" cy="14" r="8" fill="#fbbc04"/><path d="M48 10v8M44 14h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>',
@@ -1864,7 +1890,7 @@ function dateCardHTML(itot,t0){
 function todayTileHTML(itot,t0){
   const td=today(),d=daysLeftAfterToday(S.ym);
   if(S.ym!==ymOf(td)||!d)return '<div class="pday"><small>Today</small><b class="num">—</b><span>'+(S.ym<ymOf(td)?"Month is over":"Not started")+'</span></div>';
-  const st=round2(S.tx.filter(t=>t.date===td&&t.type!=="income").reduce((a,t)=>a+sAmt(t),0));
+  const fids=fundItemIds(groupsFor(S.ym)),st=round2(S.tx.filter(t=>t.date===td&&t.type!=="income"&&!fids.has(t.itemId)).reduce((a,t)=>a+sAmt(t),0));
   const allow=round2(Math.max(0,(itot-(t0.a||0)-(t0.s-st))/d)),over=st>allow+.004,pc=allow>0?Math.max(0,Math.min(100,st/allow*100)):(st>0?100:0);
   return '<div class="pday ptoday"><small>Today</small><b class="num"'+(over?' style="color:var(--over)"':'')+'>'+money(st)+'</b><span class="num">of '+money(allow)+'</span><i class="ptb"><i style="width:'+pc.toFixed(1)+'%'+(over?';background:var(--over)':'')+'"></i></i></div>';
 }
@@ -1949,7 +1975,7 @@ async function planNextSheet(){
     const curList=txs[2].filter(t=>t.itemId===it.id&&t.type!=="income"),big=curList.reduce((b,t)=>(+t.amount||0)>(b?+b.amount:0)?t:b,null);
     const prevAvg=(sp[0]+sp[1])/2,spike=big&&+big.amount>200&&sp[2]>2*Math.max(prevAvg,1)&&+big.amount>sp[2]*.4;
     let note=fixed?"Fixed: same every month":spike?MONTHS[m-1]+" had a one-time "+money(+big.amount).replace(/\.00$/,"")+(big.merchant?" ("+big.merchant+")":""):over?"Over plan 3 months in a row":"";
-    if(g.aside)note="Set aside for "+nextMonthName(nx);
+    if(g.aside)note="Set aside for "+nextMonthName(nx);if(g.fund)note="Savings fund: adds to what's saved";
     rows.push({id:it.id,name:it.name,keep,avg,over,fixed,note,half:over?Math.round(keep+(avg-keep)/2):null,v:keep})}));
   const sav=rows.find(r=>/saving/i.test(r.name));
   const chip=(r,label,val)=>'<button class="pnc'+(Math.round(r.v)===Math.round(val)?" on":"")+'" data-pk="'+esc(r.id)+'" data-pv="'+val+'">'+label+' '+money(val).replace(/\.00$/,"")+'</button>';
@@ -2012,18 +2038,21 @@ function renderBudget(groups,sm){
     const editing=PAD&&PAD.kind==="item"&&g.items.some(it=>it.id===PAD.id),open=!!gopen[g.id]||editing;
     const gp=round2(g.items.reduce((a,it)=>a+(+it.planned||0),0)),gs=round2(g.items.reduce((a,it)=>a+(sm[it.id]||0),0)),gl=round2(gp-gs),gov=gl<0;
     const glp=gov?Math.min(100,gp>0?-gl/gp*100:100):(gp>0?Math.max(0,gl/gp*100):0),glow=!gov&&gp>0&&gs>0&&glp<=15;
-    const gsum=g.aside?money(gp):(gov?money(-gl)+' over':money(gl)+' left');
-    h+='<section class="card gcard'+(open?' open':'')+(g.aside?' ascard':'')+'"><div class="chead"><button class="gtog" data-gtog="'+esc(g.id)+'" aria-expanded="'+open+'"><h2>'+esc(groupLbl(g))+'</h2><span class="gsum num'+(gov?' neg':'')+'">'+gsum+'</span><svg class="gchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><button class="dots" data-gmenu="'+esc(g.id)+'" aria-label="Options for '+esc(groupLbl(g))+'"><svg width="26" height="8" viewBox="0 0 26 8" fill="currentColor"><circle cx="4" cy="4" r="3"/><circle cx="13" cy="4" r="3"/><circle cx="22" cy="4" r="3"/></svg></button></div>';
-    if(!open){h+='<button class="gmini" data-gtog="'+esc(g.id)+'" tabindex="-1" aria-hidden="true">'+(g.aside?'':'<div class="track fill cb"><i class="'+(gov?'ov':glow?'low':'')+'" style="width:'+(gov?Math.max(4,glp):glp).toFixed(1)+'%;margin-left:0"></i></div>')+'<span class="num">'+(g.aside?'Setting aside for '+esc(nextMonthName()):money(gs)+' spent of '+money(gp))+' · '+g.items.length+' item'+(g.items.length===1?'':'s')+'</span></button></section>';return}
+    const fbal=g.fund?round2(g.items.reduce((a,it)=>a+fundInfo(it.id,S.ym,sm).bal,0)):0;
+    const gsum=g.fund?money(fbal)+' saved':g.aside?money(gp):(gov?money(-gl)+' over':money(gl)+' left');
+    h+='<section class="card gcard'+(open?' open':'')+(g.aside?' ascard':'')+(g.fund?' fdcard':'')+'"><div class="chead"><button class="gtog" data-gtog="'+esc(g.id)+'" aria-expanded="'+open+'"><h2>'+esc(groupLbl(g))+'</h2><span class="gsum num'+(gov?' neg':'')+'">'+gsum+'</span><svg class="gchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><button class="dots" data-gmenu="'+esc(g.id)+'" aria-label="Options for '+esc(groupLbl(g))+'"><svg width="26" height="8" viewBox="0 0 26 8" fill="currentColor"><circle cx="4" cy="4" r="3"/><circle cx="13" cy="4" r="3"/><circle cx="22" cy="4" r="3"/></svg></button></div>';
+    if(!open){h+='<button class="gmini" data-gtog="'+esc(g.id)+'" tabindex="-1" aria-hidden="true">'+(g.aside||g.fund?'':'<div class="track fill cb"><i class="'+(gov?'ov':glow?'low':'')+'" style="width:'+(gov?Math.max(4,glp):glp).toFixed(1)+'%;margin-left:0"></i></div>')+'<span class="num">'+(g.fund?'Adding '+money(gp)+' in '+MONTHS[+S.ym.slice(5)-1]:g.aside?'Setting aside for '+esc(nextMonthName()):money(gs)+' spent of '+money(gp))+' · '+g.items.length+' item'+(g.items.length===1?'':'s')+'</span></button></section>';return}
     const solo=g.items.length===1&&g.items[0].name.trim().toLowerCase()===g.name.trim().toLowerCase();
     if(g.aside)h+='<p class="ashint">Saved from '+MONTHS[+S.ym.slice(5)-1]+'\'s money, paid in '+nextMonthName()+'. Not counted as spending. It carries into '+nextMonthName()+' as starting money.</p>';
-    g.items.forEach(it=>{h+=itemHTML(it,sm,solo)});
+    if(g.fund)h+='<p class="ashint">Money you\'re saving up, with no set date to use it. Not counted as spending, and it stays saved month to month. When you use some, log it on its item.</p>';
+    g.items.forEach(it=>{h+=g.fund?fundItemHTML(it,sm):itemHTML(it,sm,solo)});
     h+='<button class="addlink quiet" data-additem="'+esc(g.id)+'">Add item</button></section>';
   });
   const known=new Set(allItems(groups).map(x=>x.it.id));
   const orphan=round2(S.tx.filter(t=>!known.has(t.itemId)).reduce((a,t)=>a+sAmt(t),0));
   if(orphan)h+='<section class="card"><div class="chead"><h2>Uncategorized</h2></div><button class="item" data-tab-go="tx"><div class="irow"><span class="nm">Needs a category</span><span class="v num">'+money(orphan)+'</span></div></button></section>';
   h+='<button class="ghost" id="addGroup">+ Add Group</button>';
+  h+='<button class="ghost" id="addFund">+ Savings fund</button>';
   if(!groups.some(g=>g.aside))h+='<button class="ghost" id="addAside">+ Set aside for '+esc(nextMonthName())+'</button>';
   return h;
 }
@@ -4171,7 +4200,7 @@ function txSheetCore(existing){
           else ref=await addFast(body);
           ls.set("pb.lastItem",itemId);closeSheet();
           const moved=ymOf(date)!==S.ym;
-          if(!existing){let left=null;try{if(body.type!=="income"&&ymOf(body.date)===S.ym){const f=findItem(groupsFor(S.ym),itemId);if(f&&+f.it.planned>0){const sp=S.tx.filter(t=>t.itemId===itemId&&!(ref&&t.id===ref.id)).reduce((x,t)=>x+sAmt(t),0)+sAmt(body);left={n:f.it.name,v:round2(+f.it.planned-sp)}}}}catch(_){}
+          if(!existing){let left=null;try{if(body.type!=="income"&&ymOf(body.date)===S.ym){const f=findItem(groupsFor(S.ym),itemId);if(f&&(f.g.fund||+f.it.planned>0)){const sp=S.tx.filter(t=>t.itemId===itemId&&!(ref&&t.id===ref.id)).reduce((x,t)=>x+sAmt(t),0)+sAmt(body);left={n:f.it.name,v:f.g.fund?fundInfo(itemId,S.ym,{[itemId]:sp}).bal:round2(+f.it.planned-sp)}}}}catch(_){}
             FLY={item:body.type==="income"?null:itemId,amt:rOn?round2(a-rAmt):a,kind:body.type,over:!!(left&&left.v<0)};
             setTimeout(()=>celebrate(rOn?round2(a-rAmt):a,body.merchant,body.type,left),180)}else if(!moved)toast("Saved");
           if(moved)goMonth(ymOf(date),existing?existing.id:ref.id,!existing);
@@ -4211,14 +4240,15 @@ function itemSheet(id,preSub){
   /* rows are divs so the amount can be its own tap target: tap the amount to type a new one right there */
   let tx=list.map(t=>'<div class="txrow" role="button" tabindex="0" data-tx="'+esc(t.id)+'"'+(isM?' data-sub="'+esc(subOf(t))+'"':'')+'><div class="l"><div class="m">'+esc(t.merchant||"Purchase")+'</div><div class="c">'+esc(fmtDay(t.date))+(isM?' · '+esc(subOf(t)):'')+'</div></div>'+
     (isHist(t)?'<div class="a num"'+(t.type==="refund"||t.type==="income"?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</div>':'<button type="button" class="a num iamt" data-amt="'+esc(t.id)+'"'+(t.type==="refund"||t.type==="income"?' style="color:var(--ok)">+':'>')+money(+t.amount)+'</button>')+'</div>').join("");
-  const NX=nextMonthName(),isAs=!!f.g.aside;
+  const NX=nextMonthName(),isAs=!!f.g.aside,isF=!!f.g.fund,MN=MONTHS[+S.ym.slice(5)-1],fi=isF?fundInfo(id,S.ym,spentMap()):null;
+  const fH=isF?'<div class="ahbox fhbox"><b class="num">'+money(fi.bal)+' saved</b><span class="num">'+money(fi.added)+' added so far'+(fi.used>0?', '+money(fi.used)+' used':'')+'. Adding is what goes in this '+MN+'. It isn\'t spending and stays saved until you use it. To use some, log a purchase here; it comes out of the fund, not '+MN+'\'s budget.</span></div>':'';
   const asH=isAs?'<div class="ahbox"><b>Set aside for '+NX+'</b><span>Saved from '+MONTHS[+S.ym.slice(5)-1]+'\'s money. It isn\'t counted as spending here and shows up in '+NX+'\'s Planned as starting money. Log the real payment in '+NX+' on its regular item.</span></div>':'';
   openSheet('<h3>'+esc(f.it.name)+'</h3>'+
-    '<div class="two"><div class="field"><label for="i-name">Name</label><input id="i-name" value="'+esc(f.it.name)+'"></div><div class="field"><label for="i-plan">Planned</label><input id="i-plan" inputmode="decimal" value="'+(+f.it.planned||0).toFixed(2)+'"></div></div>'+
-    asH+'<div class="ltb" id="i-ltb"></div>'+
+    '<div class="two"><div class="field"><label for="i-name">Name</label><input id="i-name" value="'+esc(f.it.name)+'"></div><div class="field"><label for="i-plan">'+(isF?"Adding in "+MN.slice(0,3):"Planned")+'</label><input id="i-plan" inputmode="decimal" value="'+(+f.it.planned||0).toFixed(2)+'"></div></div>'+
+    asH+fH+(isAs?'<button class="addlink" id="i-tofund" style="padding:0;margin:-4px 0 12px">Move to a savings fund (no pay date)</button>':'')+'<div class="ltb" id="i-ltb"></div>'+
 
     '<p class="note num" style="margin:0 0 14px">'+money(spent)+' spent in '+MONTHS[+S.ym.slice(5)-1]+(back?' (after '+money(back)+' back)':'')+'. Planned amounts carry into new months until you change them.</p>'+
-    '<div class="btnrow"><button class="btn" id="i-save">Save</button><button class="btn sec" id="i-add">Log purchase</button></div>'+
+    '<div class="btnrow"><button class="btn" id="i-save">Save</button><button class="btn sec" id="i-add">'+(isF?"Use money":"Log purchase")+'</button></div>'+
     (subsH?'<div style="margin-top:16px">'+subsH+'</div>':'')+
     (tx?'<div style="margin-top:'+(subsH?4:16)+'px" id="i-txs">'+tx+'</div>':'')+
     '<div class="btnrow" style="margin-top:16px"><button class="btn danger" id="i-del">Remove item</button></div><div id="i-conf"></div>',
@@ -4234,6 +4264,9 @@ function itemSheet(id,preSub){
       };
       planIn.addEventListener("input",upd);upd();
       s.querySelector("#i-save").onclick=async()=>{const p=parseAmt(s.querySelector("#i-plan").value);const n=s.querySelector("#i-name").value.trim();if(!n){toast("Give the item a name");shake(s.querySelector("#i-name"));return}if(isNaN(p)||p<0){toast("Planned must be $0 or more");shake(s.querySelector("#i-plan"));return}f.it.name=n;f.it.planned=p;if(await saveGroups(groups)){closeSheet();toast("Saved")}};
+      const tf=s.querySelector("#i-tofund");if(tf)tf.onclick=async()=>{let fg=groups.find(g=>g.fund);if(!fg){fg={id:uid(),name:"Savings funds",fund:true,items:[]};groups.push(fg)}
+        f.g.items=f.g.items.filter(x=>x.id!==id);fg.items.push(f.it);const p=parseAmt(planIn.value);if(!isNaN(p)&&p>=0)f.it.planned=p;
+        if(await saveGroups(groups)){closeSheet();toast("Moved to "+fg.name)}};
       s.querySelector("#i-add").onclick=()=>{ls.set("pb.lastItem",id);txSheet(null,{item:id})};
       s.querySelectorAll("[data-tx]").forEach(b=>b.onclick=e=>{if(e.target.closest(".iamt"))return;const t=S.tx.find(x=>x.id===b.dataset.tx);if(t)isHist(t)?histSheet(t):txSheet(t)});
       const gp=sheetPad(s);
@@ -4253,17 +4286,17 @@ function itemSheet(id,preSub){
 }
 function newItemSheet(gid){
   const groups=JSON.parse(JSON.stringify(groupsFor(S.ym)));const g=groups.find(x=>x.id===gid);if(!g)return;
-  openSheet('<h3>Add item to '+esc(groupLbl(g))+'</h3><div class="two"><div class="field"><label for="n-name">Name</label><input id="n-name" placeholder="e.g. Coffee"></div><div class="field"><label for="n-plan">Planned</label><input id="n-plan" inputmode="decimal" placeholder="0.00"></div></div><div class="btnrow"><button class="btn" id="n-save">Add item</button></div>',
+  openSheet('<h3>Add item to '+esc(groupLbl(g))+'</h3><div class="two"><div class="field"><label for="n-name">Name</label><input id="n-name" placeholder="'+(g.fund?"e.g. Wedding Fund":"e.g. Coffee")+'"></div><div class="field"><label for="n-plan">'+(g.fund?"Adding in "+MONTHS[+S.ym.slice(5)-1].slice(0,3):"Planned")+'</label><input id="n-plan" inputmode="decimal" placeholder="0.00"></div></div><div class="btnrow"><button class="btn" id="n-save">Add item</button></div>',
     s=>{setTimeout(()=>s.querySelector("#n-name").focus(),60);s.querySelector("#n-save").onclick=async()=>{const n=s.querySelector("#n-name").value.trim();const p=parseAmt(s.querySelector("#n-plan").value||"0");if(!n){toast("Give the item a name");return}g.items.push({id:uid(),name:n,planned:isNaN(p)?0:p});if(await saveGroups(groups)){closeSheet();toast("Added "+n)}}});
 }
-function groupSheet(gid){
-  const groups=JSON.parse(JSON.stringify(groupsFor(S.ym)));const isNew=!gid;const g=isNew?{id:uid(),name:"",items:[]}:groups.find(x=>x.id===gid);if(!g)return;
+function groupSheet(gid,fund){
+  const groups=JSON.parse(JSON.stringify(groupsFor(S.ym)));const isNew=!gid;const g=isNew?(fund?{id:uid(),name:"",fund:true,items:[]}:{id:uid(),name:"",items:[]}):groups.find(x=>x.id===gid);if(!g)return;
   const idx=groups.indexOf(g);
-  openSheet('<h3>'+(isNew?"New group":esc(groupLbl(g)))+'</h3>'+(g.aside?'<p class="note" style="margin:-4px 0 12px">Its name follows the month: next month it reads Set aside for '+esc(nextMonthName(ymAdd(S.ym,1)))+'.</p>':'')+'<div class="field"'+(g.aside?" hidden":"")+'><label for="g-name">Group name</label><input id="g-name" placeholder="e.g. Giving" value="'+esc(g.name)+'"></div><div class="btnrow"'+(g.aside?" hidden":"")+'><button class="btn" id="g-save">'+(isNew?"Add group":"Rename")+'</button></div>'+
+  openSheet('<h3>'+(isNew?(g.fund?"New savings fund":"New group"):esc(groupLbl(g)))+'</h3>'+(g.fund?'<p class="note" style="margin:-4px 0 12px">For money you\'re saving up with no set date to use it. What you add each month isn\'t spending, and it stays saved month to month until you use it.</p>':'')+(g.aside?'<p class="note" style="margin:-4px 0 12px">Its name follows the month: next month it reads Set aside for '+esc(nextMonthName(ymAdd(S.ym,1)))+'.</p>':'')+'<div class="field"'+(g.aside?" hidden":"")+'><label for="g-name">Group name</label><input id="g-name" placeholder="'+(g.fund?"e.g. Wedding":"e.g. Giving")+'" value="'+esc(g.name)+'"></div><div class="btnrow"'+(g.aside?" hidden":"")+'><button class="btn" id="g-save">'+(isNew?"Add group":"Rename")+'</button></div>'+
     (isNew?'':'<div class="btnrow" style="margin-top:10px"><button class="btn sec" id="g-up"'+(idx===0?" disabled":"")+'>Move up</button><button class="btn sec" id="g-down"'+(idx===groups.length-1?" disabled":"")+'>Move down</button></div><div class="btnrow" style="margin-top:10px"><button class="btn danger" id="g-del">Remove group</button></div><div id="g-conf"></div>'),
     s=>{
       if(isNew)setTimeout(()=>s.querySelector("#g-name").focus(),60);
-      s.querySelector("#g-save").onclick=async()=>{const n=s.querySelector("#g-name").value.trim();if(!n){toast("Give the group a name");return}g.name=n;if(isNew)groups.push(g);if(await saveGroups(groups)){closeSheet();toast("Saved")}};
+      s.querySelector("#g-save").onclick=async()=>{const n=s.querySelector("#g-name").value.trim();if(!n){toast("Give the group a name");return}g.name=n;if(isNew)groups.push(g);if(await saveGroups(groups)){closeSheet();if(isNew&&g.fund)setTimeout(()=>newItemSheet(g.id),60);else toast("Saved")}};
       if(isNew)return;
       const mv=async d=>{groups.splice(idx,1);groups.splice(idx+d,0,g);if(await saveGroups(groups))closeSheet()};
       s.querySelector("#g-up").onclick=()=>mv(-1);s.querySelector("#g-down").onclick=()=>mv(1);
@@ -4727,7 +4760,7 @@ $("#main").addEventListener("click",e=>{
   if(COMBINED&&e.target.closest(".eqcard #addIncome")){plannedSheet();return}
   if(e.target.closest("[data-plannext]")){planNextSheet();return}
   if(e.target.closest("[data-mlmiss]")){mlMissing();return}
-  const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#addAside,#exportCsv,#syncAll");if(!t)return;
+  const t=e.target.closest("[data-income],#addIncome,[data-item],[data-gmenu],[data-additem],[data-tx],[data-tab-go],#addGroup,#addAside,#addFund,#exportCsv,#syncAll");if(!t)return;
   if(t.dataset.income)incomeSheet(t.dataset.income);
   else if(t.id==="addIncome")incomeSheet(null);
   else if(t.dataset.item&&t.dataset.msub)subSheet(t.dataset.msub);
@@ -4737,6 +4770,7 @@ $("#main").addEventListener("click",e=>{
   else if(t.dataset.tx){const x=S.tx.find(y=>y.id===t.dataset.tx);if(x)isHist(x)?histSheet(x):txSheet(x)}
   else if(t.dataset.tabGo){S.tab=t.dataset.tabGo;render()}
   else if(t.id==="addGroup")groupSheet(null);
+  else if(t.id==="addFund")groupSheet(null,true);
   else if(t.id==="addAside"){const gs=JSON.parse(JSON.stringify(groupsFor(S.ym))),g={id:uid(),name:"Set aside",aside:true,items:[]};gs.push(g);saveGroups(gs).then(ok=>{if(ok)setTimeout(()=>newItemSheet(g.id),60)})}
   else if(t.id==="exportCsv")exportCsv();
   else if(t.id==="syncAll")syncAll(t);
@@ -4778,7 +4812,7 @@ async function init(){
   S.db=db;S.dbState="ok";loadSubs();
   const user=await (window.claude?.use?.("user")||Promise.resolve(null)).catch(()=>null);
   if(user){try{S.readOnly=!(await user.isOwner())}catch(e){}}
-  db.collection("budgets").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());S.budgets=m;S.budgetsLoaded=true;S.fromCache=false;render();cacheSave()},()=>{S.budgetsLoaded=true;render()});
+  db.collection("budgets").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());S.budgets=m;S.budgetsLoaded=true;S.fromCache=false;fundWatch();render();cacheSave()},()=>{S.budgetsLoaded=true;render()});
   db.doc("meta/history").onSnapshot(snap=>{H.meta=snap.exists?snap.data():null;H.metaLoaded=true;render()},()=>{H.metaLoaded=true;render()});
   subscribeTx();
   setTimeout(merchLoad,1200);
