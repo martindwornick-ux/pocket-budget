@@ -127,7 +127,7 @@ function txSheetCore(existing){
       '<div class="tcard"><input class="tnote" id="f-note" autocomplete="off" placeholder="Add a Note" value="'+esc(existing?existing.note:"")+'"></div>'+
       (existing?'<div class="textra">'+(existing.sheet!=="synced"?'<div class="btnrow" style="margin-bottom:10px"><button class="btn sec" id="f-sync">Send to sheet</button></div>':'')+
         '<p class="note" style="margin:0 4px 10px">'+(existing.sheet==="synced"?"This is already in your Finance Tracker. Changes or a delete here won't update that row, so fix it in the sheet too.":esc(existing.sheetMsg||"Not in your Finance Tracker yet."))+'</p>'+
-        '<div class="btnrow"><button class="btn danger" id="f-del">Delete transaction</button></div><div id="f-conf"></div></div>':'')+
+        '<div class="btnrow"><button class="btn danger" id="f-del">Delete transaction</button></div></div>':'')+
     '</div>'+
     '<div class="tpad" id="f-pad"></div>'+
     '<div class="tsave"><button class="btn" id="f-save2">'+(existing?"Save":"Done")+'</button></div>',
@@ -403,11 +403,8 @@ function txSheetCore(existing){
           if(ref&&!locNow&&LF.pending()){const id=ref.id;LF.pending().then(l=>{if(l)S.db.doc("tx/"+id).update({loc:l}).catch(()=>{})})}
         }catch(e){busy=false;toast(e&&e.code==="quota_exceeded"?"Storage is full":"Couldn't save. Check your connection.")}
       }
-      if(existing)s.querySelector("#f-del").onclick=()=>{
-        const c=s.querySelector("#f-conf");c.innerHTML='<div class="confirm">Delete this '+money(+existing.amount)+' transaction? This can\'t be undone.<div class="btnrow" style="margin-top:10px"><button class="btn sec" id="cn">Keep it</button><button class="btn" style="background:var(--over)" id="cy">Delete</button></div></div>';
-        c.querySelector("#cn").onclick=()=>c.innerHTML="";
-        c.querySelector("#cy").onclick=()=>{Promise.resolve(S.db.doc("tx/"+existing.id).delete()).catch(()=>toast("Couldn't delete. Try again."));closeSheet();toast("Deleted")};
-      };
+      /* the confirm pops up over everything: one written under the button was hidden behind the number pad */
+      if(existing)s.querySelector("#f-del").onclick=()=>confirmDelete(existing.id,closeSheet);
     });
 }
 // Just the transactions in one Misc subcategory this month

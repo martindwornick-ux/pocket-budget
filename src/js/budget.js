@@ -74,7 +74,8 @@ document.addEventListener("scroll",()=>{if(SW.openRow)swClose(SW.openRow)},{pass
 (()=>{let y0=scrollY,idle=0;addEventListener("scroll",()=>{const y=scrollY,f=document.getElementById("fab");if(!f)return;
   if(y>y0+6&&y>120)f.classList.add("tuck");else if(y<y0-6||y<120)f.classList.remove("tuck");if(Math.abs(y-y0)>6||y<120)y0=y;
   clearTimeout(idle);if(f.classList.contains("tuck"))idle=setTimeout(()=>f.classList.remove("tuck"),550)},{passive:true})})();
-function confirmDelete(id){
+/* after(): runs once the delete goes through (the edit sheet uses it to close itself) */
+function confirmDelete(id,after){
   const t=S.tx.find(x=>x.id===id);if(!t)return;
   const synced=t.sheet==="synced";
   const root=document.createElement("div");root.className="alrt";root.setAttribute("role","alertdialog");root.setAttribute("aria-modal","true");
@@ -86,7 +87,7 @@ function confirmDelete(id){
   root.querySelector("#dk").onclick=()=>{done();if(SW.openRow)swClose(SW.openRow)};
   root.querySelector("#dy").onclick=async()=>{const b=root.querySelector("#dy");b.disabled=true;
     if(!S.db||S.readOnly){toast("Saving isn't available here");b.disabled=false;return}
-    Promise.resolve(S.db.doc("tx/"+id).delete()).catch(()=>toast("Couldn't delete. Try again."));SW.openRow=null;done();SND.play("swish");toast("Deleted")};
+    Promise.resolve(S.db.doc("tx/"+id).delete()).catch(()=>toast("Couldn't delete. Try again."));SW.openRow=null;done();if(after)after();SND.play("swish");toast("Deleted")};
   root.querySelector("#dy").focus();
   return;
   openSheet('<h3>Delete transaction?</h3><p style="margin:0 0 6px;font-size:17px">Do you want to delete <b>'+esc(t.merchant||"Purchase")+'</b> for <b class="num">'+money(+t.amount||0)+'</b> on '+esc(fmtLong(t.date))+'?</p>'+
